@@ -587,7 +587,7 @@
     padding: 28px 32px;
   }
   .aroc-header {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
     padding-bottom: 16px; border-bottom: 1px solid var(--border);
   }
   .aroc-header h2 { font-size: 18px; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 10px; }
@@ -599,13 +599,64 @@
   .aroc-close:hover { background: var(--bg3); color: var(--text); }
   .aroc-close svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
+  .aroc-stepper {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; margin: 16px 0 20px; padding: 0 20px;
+  }
+  .aroc-step {
+    display: flex; align-items: center; gap: 8px; font-size: 12px;
+    font-weight: 600; color: var(--text3); transition: color 0.2s;
+  }
+  .aroc-step.active { color: var(--primary); }
+  .aroc-step.done { color: var(--teal600); }
+  .aroc-step-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; border: 1.5px solid currentColor;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .aroc-step.active .aroc-step-num { background: var(--primary); color: white; border-color: var(--primary); }
+  .aroc-step.done .aroc-step-num { background: var(--teal600); color: white; border-color: var(--teal600); }
+  .aroc-step-line {
+    width: 40px; height: 1.5px; background: var(--border); margin: 0 10px;
+    transition: background 0.2s;
+  }
+  .aroc-step-line.done { background: var(--teal600); }
+
   .aroc-section {
     border: 1px solid var(--border); border-radius: var(--radius-lg);
     padding: 14px 16px; margin-bottom: 16px; background: var(--bg);
+    transition: opacity 0.2s, max-height 0.3s ease;
+  }
+  .aroc-section.locked {
+    opacity: 0.4; pointer-events: none; max-height: 52px; overflow: hidden;
   }
   .aroc-section-label {
     font-size: 10px; font-weight: 600; text-transform: uppercase;
     letter-spacing: 0.06em; color: var(--text3); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .aroc-badge {
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 10px; text-transform: none; letter-spacing: 0;
+  }
+  .aroc-badge-ok { background: var(--teal50); color: var(--teal800); }
+  .aroc-badge-err { background: var(--coral50); color: var(--coral800); }
+
+  .aroc-progress {
+    width: 100%; height: 3px; background: var(--border); border-radius: 2px;
+    margin-bottom: 12px; overflow: hidden; display: none;
+  }
+  .aroc-progress.visible { display: block; }
+  .aroc-progress-bar {
+    height: 100%; background: var(--primary); border-radius: 2px;
+    transition: width 0.3s ease; width: 0%;
+  }
+
+  .aroc-cat-header td {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text3); padding: 10px 4px 4px;
+    border-bottom: 1px solid var(--border2);
   }
 
   .aroc-auth { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -1040,8 +1091,16 @@
       <button class="aroc-close" onclick="closeArocModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
 
-    <div class="aroc-section">
-      <div class="aroc-section-label">Connection</div>
+    <div class="aroc-stepper">
+      <div class="aroc-step active" id="aroc-step-1"><span class="aroc-step-num">1</span>Connect</div>
+      <div class="aroc-step-line" id="aroc-line-1"></div>
+      <div class="aroc-step" id="aroc-step-2"><span class="aroc-step-num">2</span>Configure</div>
+      <div class="aroc-step-line" id="aroc-line-2"></div>
+      <div class="aroc-step" id="aroc-step-3"><span class="aroc-step-num">3</span>Export</div>
+    </div>
+
+    <div class="aroc-section" id="aroc-sec-connect">
+      <div class="aroc-section-label">Connection <span class="aroc-badge aroc-badge-ok" id="aroc-conn-badge" style="display:none">Connected</span></div>
       <div class="aroc-auth">
         <input type="password" id="aroc-token" placeholder="Paste AROC bearer token">
         <button class="aroc-auth-btn" onclick="connectAroc()">Connect</button>
@@ -1054,7 +1113,7 @@
       </div>
     </div>
 
-    <div class="aroc-section">
+    <div class="aroc-section locked" id="aroc-sec-options">
       <div class="aroc-section-label">Options</div>
       <div class="aroc-options">
         <label class="aroc-cvp-toggle">
@@ -1077,8 +1136,9 @@
       <div class="aroc-license-note" id="aroc-license-note">License default: E (all switches) — connect to load available options</div>
     </div>
 
-    <div class="aroc-section">
+    <div class="aroc-section locked" id="aroc-sec-items">
       <div class="aroc-section-label">Items</div>
+      <div class="aroc-progress" id="aroc-progress"><div class="aroc-progress-bar" id="aroc-progress-bar"></div></div>
       <table class="aroc-items-table">
         <thead><tr><th>Item</th><th>SKU / Optic</th><th style="text-align:center">Qty</th><th>Status</th></tr></thead>
         <tbody id="aroc-items-body"></tbody>
@@ -3728,15 +3788,46 @@ function buildCalcResult(tierNum, ctx) {
   lastCalcResult = { tierNum, items, ctx };
 }
 
+function updateArocStepper() {
+  const connected = !!arocToken && arocRegions.length > 0;
+  const s1 = document.getElementById('aroc-step-1');
+  const s2 = document.getElementById('aroc-step-2');
+  const s3 = document.getElementById('aroc-step-3');
+  const l1 = document.getElementById('aroc-line-1');
+  const l2 = document.getElementById('aroc-line-2');
+  const badge = document.getElementById('aroc-conn-badge');
+  const secOpts = document.getElementById('aroc-sec-options');
+  const secItems = document.getElementById('aroc-sec-items');
+
+  s1.className = 'aroc-step ' + (connected ? 'done' : 'active');
+  s2.className = 'aroc-step ' + (connected ? 'active' : '');
+  s3.className = 'aroc-step';
+  l1.className = 'aroc-step-line' + (connected ? ' done' : '');
+  l2.className = 'aroc-step-line';
+  badge.style.display = connected ? 'inline' : 'none';
+
+  if (connected) {
+    secOpts.classList.remove('locked');
+    secItems.classList.remove('locked');
+  } else {
+    secOpts.classList.add('locked');
+    secItems.classList.add('locked');
+  }
+}
+
 function openArocModal() {
   if (!lastCalcResult || !lastCalcResult.items.length) return;
   document.getElementById('aroc-cvp-extra').style.display = document.getElementById('aroc-cvp-check').checked ? 'flex' : 'none';
   populateArocItems();
   document.getElementById('aroc-modal').classList.add('open');
+  document.getElementById('aroc-progress').classList.remove('visible');
+  document.getElementById('aroc-progress-bar').style.width = '0%';
+  document.getElementById('aroc-summary').innerHTML = '';
   if (arocToken) {
     document.getElementById('aroc-token').value = arocToken;
     if (arocRegions.length) updateRegionDropdown();
   }
+  updateArocStepper();
   updateGoButton();
 }
 
@@ -3772,7 +3863,15 @@ function populateArocItems() {
   const includeCvp = document.getElementById('aroc-cvp-check')?.checked || false;
   const cvpMonths = parseInt(document.getElementById('aroc-cvp-months')?.value) || 36;
 
+  let lastType = '';
   lastCalcResult.items.forEach((item, i) => {
+    if (item.type !== lastType) {
+      lastType = item.type;
+      const catTr = document.createElement('tr');
+      catTr.className = 'aroc-cat-header';
+      catTr.innerHTML = '<td colspan="4">' + (item.type === 'switch' ? 'Switches' : 'Optics') + '</td>';
+      body.appendChild(catTr);
+    }
     const tr = document.createElement('tr');
     let skuCell = '';
     if (item.type === 'switch') {
@@ -3882,16 +3981,18 @@ async function connectAroc() {
     arocToken = token;
     updateRegionDropdown();
     updateGoButton();
+    updateArocStepper();
     status.innerHTML = '<span style="color:var(--text3)">Loading platforms…</span>';
     await fetchPlatformAccessories(token, arocRegions[0]?.id);
     const loaded = Object.keys(platformData).length;
-    status.innerHTML = '<span class="aroc-status-ok">Connected (' + arocRegions.length + ' regions, ' + loaded + ' platforms loaded)</span>';
+    status.innerHTML = '<span class="aroc-status-ok">' + arocRegions.length + ' regions, ' + loaded + ' platforms loaded</span>';
     if (lastCalcResult) populateArocItems();
   } catch (e) {
     arocRegions = [];
     arocToken = null;
     platformData = {};
     updateGoButton();
+    updateArocStepper();
     if (e instanceof TypeError && e.message === 'Failed to fetch') {
       status.innerHTML = '<span class="aroc-status-err">CORS blocked — try running this page from the same domain as AROC.</span>';
     } else {
@@ -3911,10 +4012,20 @@ async function exportToAroc() {
   const regionId = document.getElementById('aroc-region').value;
   const btn = document.getElementById('aroc-go-btn');
   const summary = document.getElementById('aroc-summary');
+  const progressWrap = document.getElementById('aroc-progress');
+  const progressBar = document.getElementById('aroc-progress-bar');
   const includeCvp = document.getElementById('aroc-cvp-check')?.checked || false;
   const cvpMonths = parseInt(document.getElementById('aroc-cvp-months')?.value) || 36;
   btn.disabled = true;
   summary.innerHTML = '';
+
+  document.getElementById('aroc-step-2').className = 'aroc-step done';
+  document.getElementById('aroc-step-3').className = 'aroc-step active';
+  document.getElementById('aroc-line-2').className = 'aroc-step-line done';
+
+  progressWrap.classList.add('visible');
+  progressBar.style.width = '0%';
+
   let ok = 0, fail = 0;
   const items = lastCalcResult.items;
 
@@ -4004,9 +4115,12 @@ async function exportToAroc() {
         fail++;
       }
     }
+    progressBar.style.width = Math.round(((i + 1) / items.length) * 100) + '%';
   }
 
   btn.disabled = false;
+  progressBar.style.width = '100%';
+  document.getElementById('aroc-step-3').className = 'aroc-step done';
   const color = fail === 0 ? 'var(--teal50)' : 'var(--coral50)';
   const textColor = fail === 0 ? 'var(--teal800)' : 'var(--coral800)';
   summary.style.background = color;
