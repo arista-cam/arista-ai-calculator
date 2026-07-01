@@ -2399,7 +2399,6 @@ function calculate() {
   if (tierNum !== 4) {
     const hasCustom = document.getElementById('spine-radix').value === 'other' || (tierNum >= 2 && document.getElementById('leaf-radix').value === 'other');
     buildCalcResult(tierNum, { spinePlatform, leafPlatform, totalSpine, totalLeaf, spineSpeed, hostSpeed, breakout, totalHostLinks, planes });
-    if (!hasCustom) out += '<button class="aroc-btn" onclick="openArocModal()"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Export to AROC</button>';
   }
 
   el.dataset.opticMode = 'conventional';
@@ -2409,8 +2408,11 @@ function calculate() {
   diagPanel.dataset.opticMode = 'conventional';
   diagPanel.innerHTML = diagramHtml;
   if (lastTopoConfig) {
-    document.getElementById('diagram-panel').innerHTML +=
-      '<div style="text-align:center"><button class="view-topo-btn" onclick="openTopoModal()">View Full Topology</button></div>';
+    const hasCustom = tierNum !== 4 && (document.getElementById('spine-radix').value === 'other' || (tierNum >= 2 && document.getElementById('leaf-radix').value === 'other'));
+    let btns = '<div style="text-align:center"><button class="view-topo-btn" onclick="openTopoModal()">View Full Topology</button>';
+    if (tierNum !== 4 && !hasCustom) btns += '<br><button class="aroc-btn" onclick="openArocModal()" style="margin:10px auto 0"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Export to AROC</button>';
+    btns += '</div>';
+    document.getElementById('diagram-panel').innerHTML += btns;
   }
 }
 
