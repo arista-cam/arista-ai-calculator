@@ -629,7 +629,7 @@
     transition: opacity 0.2s, max-height 0.3s ease;
   }
   .aroc-section.locked {
-    opacity: 0.4; pointer-events: none; max-height: 52px; overflow: hidden;
+    display: none;
   }
   .aroc-section-label {
     font-size: 10px; font-weight: 600; text-transform: uppercase;
@@ -696,6 +696,7 @@
     border-radius: 6px; border: 1px solid var(--border); background: var(--bg2); color: var(--text);
   }
   .aroc-license-note { font-size: 11px; color: var(--text3); font-style: italic; margin-top: 6px; }
+  .aroc-connect-hint { font-size: 12px; color: var(--text3); margin-top: 12px; line-height: 1.4; }
 
   .aroc-items-table { width: 100%; font-size: 12px; border-collapse: collapse; }
   .aroc-items-table th {
@@ -1111,6 +1112,7 @@
         <label>Region</label>
         <select id="aroc-region"></select>
       </div>
+      <div class="aroc-connect-hint" id="aroc-connect-hint">Paste your AROC bearer token to load options and configure your order.</div>
     </div>
 
     <div class="aroc-section locked" id="aroc-sec-options">
@@ -3805,6 +3807,10 @@ function updateArocStepper() {
   l1.className = 'aroc-step-line' + (connected ? ' done' : '');
   l2.className = 'aroc-step-line';
   badge.style.display = connected ? 'inline' : 'none';
+
+  var hint = document.getElementById('aroc-connect-hint');
+  if (hint) hint.style.display = connected ? 'none' : 'block';
+  document.getElementById('aroc-go-btn').style.display = connected ? '' : 'none';
 
   if (connected) {
     secOpts.classList.remove('locked');
