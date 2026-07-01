@@ -1133,7 +1133,8 @@ const AROC_SKUS = {
   '7800R4-8':   'DCS-7808R4-BNDS-U',
   '7800R4-12':  'DCS-7812R4-BNDS-U',
   '7800R4-16':  'DCS-7816LR4-BND-S2',
-  'linecard':   'DCS-7800R4-36PE-LC',
+  'linecard':   'DCS-7800R4C-36PE-LC',
+  'linecard-vxlan': 'DCS-7800R4-36PE-LC',
 };
 
 const AROC_OPTICS = {
@@ -3643,7 +3644,8 @@ function buildCalcResult(tierNum, ctx) {
     if (spinePlatform.type === 'chassis') {
       const portsNeeded = Math.ceil((totalHostLinks / planes) / breakout);
       const cardsNeeded = Math.ceil(portsNeeded / (spinePlatform.portsPerSlot || 36));
-      items.push({ desc: 'Line cards (36-port)', qty: totalSpine * cardsNeeded, type: 'switch', skuKey: 'linecard', role: null });
+      const lcKey = (document.getElementById('aroc-vxlan-check')?.checked) ? 'linecard-vxlan' : 'linecard';
+      items.push({ desc: 'Line cards (36-port)', qty: totalSpine * cardsNeeded, type: 'switch', skuKey: lcKey, role: null });
     }
     const hOptSwitchBase = Math.ceil(totalHostLinks / breakout);
     const hostOptBase = hOptSwitchBase + totalHostLinks;
@@ -3778,7 +3780,10 @@ function refreshArocItems() {
   document.getElementById('aroc-license-note').textContent = vxlan
     ? 'License default: E (spine) · FLX-L (leaf)'
     : 'License default: E (all switches)';
-  if (lastCalcResult) populateArocItems();
+  if (lastCalcResult) {
+    buildCalcResult(lastCalcResult.tierNum, lastCalcResult.ctx);
+    populateArocItems();
+  }
 }
 
 function closeArocModal() {
