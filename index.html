@@ -563,6 +563,99 @@
   .diagram-wrapper > svg { width: 100%; height: auto; margin: 0 auto; display: block; }
   .diagram-wrapper svg text { font-family: 'Barlow', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 
+  /* ── AROC button & modal ── */
+  .aroc-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin: 20px auto 0; padding: 10px 24px; font-size: 13px; font-weight: 600;
+    border-radius: var(--radius); border: 1.5px solid var(--primary);
+    background: transparent; color: var(--primary); cursor: pointer;
+    font-family: inherit; transition: all 0.15s ease;
+  }
+  .aroc-btn:hover { background: var(--primary); color: white; }
+  .aroc-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .aroc-overlay {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .aroc-overlay.open { display: flex; }
+  .aroc-panel {
+    background: var(--bg); border-radius: var(--radius-lg);
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);
+    width: 90vw; max-width: 720px; max-height: 85vh; overflow-y: auto;
+    padding: 24px 28px;
+  }
+  .aroc-panel h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .aroc-close {
+    margin-left: auto; background: none; border: none; cursor: pointer;
+    font-size: 20px; color: var(--text3); padding: 4px 8px; border-radius: var(--radius);
+  }
+  .aroc-close:hover { background: var(--bg3); color: var(--text); }
+
+  .aroc-auth { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .aroc-auth input {
+    flex: 1; min-width: 180px; font-family: inherit; font-size: 12px;
+    padding: 8px 10px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--bg2); color: var(--text);
+  }
+  .aroc-auth-btn {
+    padding: 8px 16px; font-size: 12px; font-weight: 600; border-radius: 6px;
+    border: none; background: var(--primary); color: white; cursor: pointer; font-family: inherit;
+  }
+  .aroc-auth-btn:hover { background: var(--primary-hover); }
+  .aroc-auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .aroc-auth-link { font-size: 11px; color: var(--primary); text-decoration: none; }
+  .aroc-auth-link:hover { text-decoration: underline; }
+  .aroc-auth-status { font-size: 12px; width: 100%; margin-top: 4px; }
+
+  .aroc-region { margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .aroc-region label { font-size: 13px; font-weight: 500; color: var(--text2); }
+  .aroc-region select {
+    font-family: inherit; font-size: 12px; padding: 7px 10px;
+    border-radius: 6px; border: 1px solid var(--border); background: var(--bg2); color: var(--text);
+  }
+
+  .aroc-options { margin-bottom: 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .aroc-cvp-toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text); }
+  .aroc-cvp-toggle input { width: 15px; height: 15px; accent-color: var(--primary); cursor: pointer; }
+  .aroc-cvp-extra { display: flex; align-items: center; gap: 6px; }
+  .aroc-cvp-extra label { font-size: 12px; color: var(--text2); white-space: nowrap; }
+  .aroc-cvp-extra input {
+    width: 70px; font-family: inherit; font-size: 12px; padding: 5px 8px;
+    border-radius: 6px; border: 1px solid var(--border); background: var(--bg2); color: var(--text);
+  }
+  .aroc-cvp-extra select {
+    font-family: inherit; font-size: 12px; padding: 5px 8px;
+    border-radius: 6px; border: 1px solid var(--border); background: var(--bg2); color: var(--text);
+  }
+  .aroc-license-note { font-size: 11px; color: var(--text3); font-style: italic; }
+
+  .aroc-items-table { width: 100%; font-size: 12px; border-collapse: collapse; margin-bottom: 16px; }
+  .aroc-items-table th {
+    text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text3); font-weight: 600; padding: 6px 4px; border-bottom: 2px solid var(--border2);
+  }
+  .aroc-items-table td { padding: 8px 4px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .aroc-items-table select {
+    font-family: inherit; font-size: 11px; padding: 5px 6px; width: 100%;
+    border-radius: 5px; border: 1px solid var(--border); background: var(--bg2); color: var(--text);
+  }
+  .aroc-items-table .qty { text-align: center; font-weight: 600; font-size: 13px; }
+  .aroc-status-ok { color: var(--teal600); font-weight: 600; }
+  .aroc-status-err { color: var(--coral600); font-weight: 600; font-size: 11px; }
+  .aroc-status-pending { color: var(--text3); }
+
+  .aroc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .aroc-actions button {
+    padding: 9px 18px; font-size: 13px; font-weight: 600; border-radius: var(--radius);
+    border: none; cursor: pointer; font-family: inherit; transition: all 0.15s;
+  }
+  .aroc-export-go { background: var(--primary); color: white; }
+  .aroc-export-go:hover { background: var(--primary-hover); }
+  .aroc-export-go:disabled { opacity: 0.5; cursor: not-allowed; }
+  .aroc-summary { margin-top: 12px; font-size: 12px; padding: 10px; border-radius: var(--radius); }
+
   /* ── Responsive ── */
   @media (max-width: 1200px) {
     .diagram-col { width: 280px; }
@@ -604,7 +697,7 @@
     .results-layout { flex-direction: column; }
     .diagram-col { width: 100%; }
     .metric-card, .result-section, .diagram-wrapper { box-shadow: none; border-color: #ccc; }
-    .calc-btn, .reset-btn { display: none; }
+    .calc-btn, .reset-btn, .aroc-btn { display: none; }
     .result-section, .diagram-wrapper { break-inside: avoid; }
   }
 
@@ -919,6 +1012,54 @@
   </div>
 </div>
 
+<!-- AROC Modal -->
+<div class="aroc-overlay" id="aroc-modal" onclick="if(event.target===this)closeArocModal()">
+  <div class="aroc-panel">
+    <h2>
+      <svg viewBox="0 0 24 24" width="20" height="20" stroke="var(--primary)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Export to AROC
+      <button class="aroc-close" onclick="closeArocModal()">&times;</button>
+    </h2>
+    <div class="aroc-auth">
+      <input type="password" id="aroc-token" placeholder="Paste AROC bearer token">
+      <button class="aroc-auth-btn" onclick="connectAroc()">Connect</button>
+      <a class="aroc-auth-link" href="https://aroc.aristanetworks.com" target="_blank" rel="noopener">Login to AROC &#8599;</a>
+      <div class="aroc-auth-status" id="aroc-auth-status"></div>
+    </div>
+    <div class="aroc-region" id="aroc-region-row" style="display:none">
+      <label>Region</label>
+      <select id="aroc-region"></select>
+    </div>
+    <div class="aroc-options">
+      <label class="aroc-cvp-toggle">
+        <input type="checkbox" id="aroc-cvp-check" onchange="refreshArocItems()">
+        <span>Include CloudVision</span>
+      </label>
+      <div class="aroc-cvp-extra" id="aroc-cvp-extra" style="display:none">
+        <select id="aroc-cvp-type" onchange="refreshArocItems()">
+          <option value="onprem">CVP On-Prem</option>
+          <option value="cvaas">CVaaS</option>
+        </select>
+        <label>Months</label>
+        <input type="number" id="aroc-cvp-months" min="1" value="36" onchange="refreshArocItems()">
+      </div>
+      <label class="aroc-cvp-toggle">
+        <input type="checkbox" id="aroc-vxlan-check" onchange="refreshArocItems()">
+        <span>VXLAN (multi-tenancy)</span>
+      </label>
+      <div class="aroc-license-note" id="aroc-license-note">License default: E (all switches) — connect to load available options</div>
+    </div>
+    <table class="aroc-items-table">
+      <thead><tr><th>Item</th><th>SKU / Optic</th><th style="text-align:center">Qty</th><th>Status</th></tr></thead>
+      <tbody id="aroc-items-body"></tbody>
+    </table>
+    <div class="aroc-actions">
+      <button class="aroc-export-go" id="aroc-go-btn" onclick="exportToAroc()" disabled>Add All to Cart</button>
+    </div>
+    <div class="aroc-summary" id="aroc-summary"></div>
+  </div>
+</div>
+
 <script>
 function toggleSection(id) {
   document.getElementById(id).classList.toggle('collapsed');
@@ -980,6 +1121,75 @@ const PLATFORMS = [
 
 let pendingSuggestion = null;
 let suggestionDismissed = false;
+
+const AROC_ENDPOINT = 'https://aroc.aristanetworks.com/api/graphql';
+
+const AROC_SKUS = {
+  '7060X6-32':  'DCS-7060X6-32PE-F',
+  '7060X6-64':  'DCS-7060X6-64PE-F',
+  '7700R4-38':  'DCS-DL-7700R4C-38PE-B-F',
+  '7700R4-128': 'DCS-DS-7720R4-128PE',
+  '7800R4-4':   'DCS-7804R4-BNDS-U',
+  '7800R4-8':   'DCS-7808R4-BNDS-U',
+  '7800R4-12':  'DCS-7812R4-BNDS-U',
+  '7800R4-16':  'DCS-7816LR4-BND-S2',
+  'linecard':   'DCS-7800R4-36PE-LC',
+};
+
+const AROC_OPTICS = {
+  '800-osfp': [
+    { label: '2x400G-VSR4 (50m MMF)',  sku: 'OSFP-800G-2VSR4' },
+    { label: '2x400G-XDR4 (2km SMF)',  sku: 'OSFP-800G-2XDR4' },
+    { label: '2x400G-FR4 (2km SMF)',   sku: 'OSFP-800G-2FR4' },
+    { label: '2x400G-PLR4 (10km SMF)', sku: 'OSFP-800G-2PLR4' },
+    { label: '2x400G-LR4 (10km SMF)',  sku: 'OSFP-800G-2LR4' },
+  ],
+  '800-qsfpdd': [
+    { label: '2x400G-VSR4 (50m MMF)',  sku: 'QDD-800G-2VSR4' },
+    { label: '2x400G-XDR4 (2km SMF)',  sku: 'QDD-800G-2XDR4' },
+    { label: '2x400G-FR4 (2km SMF)',   sku: 'QDD-800G-2FR4' },
+    { label: '2x400G-PLR4 (10km SMF)', sku: 'QDD-800G-2PLR4' },
+    { label: '2x400G-LR4 (10km SMF)',  sku: 'QDD-800G-2LR4' },
+  ],
+  '400-osfp': [
+    { label: 'SR8 (100m MMF)',    sku: 'OSFP-400G-SR8-P' },
+    { label: 'SRBD (100m MMF)',   sku: 'OSFP-400G-SRBD' },
+    { label: 'DR4 (500m SMF)',    sku: 'OSFP-400G-DR4' },
+    { label: 'XDR4 (2km SMF)',    sku: 'OSFP-400G-XDR4' },
+    { label: 'FR4 (2km SMF)',     sku: 'OSFP-400G-FR4' },
+    { label: 'PLR4 (10km SMF)',   sku: 'OSFP-400G-PLR4-P' },
+  ],
+  '400-qsfpdd': [
+    { label: 'SR8 (100m MMF)',    sku: 'QDD-400G-SR8-C-P' },
+    { label: 'SRBD (100m MMF)',   sku: 'QDD-400G-SRBD' },
+    { label: 'DR4 (500m SMF)',    sku: 'QDD-400G-DR4-P' },
+    { label: 'XDR4 (2km SMF)',    sku: 'QDD-400G-XDR4' },
+    { label: 'FR4 (2km SMF)',     sku: 'QDD-400G-FR4' },
+    { label: 'PLR4 (10km SMF)',   sku: 'QDD-400G-PLR4-S' },
+    { label: 'LR4 (10km SMF)',    sku: 'QDD-400G-LR4' },
+    { label: 'LR8 (10km SMF)',    sku: 'QDD-400G-LR8' },
+  ],
+};
+
+let lastCalcResult = null;
+let arocToken = null;
+let arocRegions = [];
+let platformData = {};
+
+function getArocSkuKey(platform) {
+  if (!platform) return null;
+  if (platform.type === 'chassis') {
+    const slots = platform.slots;
+    return '7800R4-' + slots;
+  }
+  return platform.name + '-' + platform.radix;
+}
+
+function getOpticCategory(speed) {
+  if (speed === 800) return '800-osfp';
+  if (speed === 400) return '400-qsfpdd';
+  return null;
+}
 
 function getPlatformByRadix(radix) {
   return PLATFORMS.find(p => p.radix === radix) || { name: 'Custom', radix, type: 'custom', desc: radix + '-port (custom)' };
@@ -2185,6 +2395,12 @@ function calculate() {
   powerHtml += '</div>';
 
   out += switchHtml + optHtml + powerHtml;
+
+  if (tierNum !== 4) {
+    const hasCustom = document.getElementById('spine-radix').value === 'other' || (tierNum >= 2 && document.getElementById('leaf-radix').value === 'other');
+    buildCalcResult(tierNum, { spinePlatform, leafPlatform, totalSpine, totalLeaf, spineSpeed, hostSpeed, breakout, totalHostLinks, planes });
+    if (!hasCustom) out += '<button class="aroc-btn" onclick="openArocModal()"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Export to AROC</button>';
+  }
 
   el.dataset.opticMode = 'conventional';
   el.dataset.powerMode = 'eightyPct';
@@ -3413,6 +3629,350 @@ function fitTopology() {
   );
 }
 
+function buildCalcResult(tierNum, ctx) {
+  const items = [];
+  const { spinePlatform, leafPlatform, totalSpine, totalLeaf, spineSpeed, hostSpeed, breakout, totalHostLinks, planes } = ctx;
+  const spineOpticCat = getOpticCategory(spineSpeed);
+  const hostOpticCat  = getOpticCategory(hostSpeed);
+
+  if (tierNum === 1) {
+    const spineKey = getArocSkuKey(spinePlatform);
+    if (spineKey) items.push({ desc: 'Spine: ' + spinePlatform.desc, qty: totalSpine, type: 'switch', skuKey: spineKey, role: 'leaf' });
+    if (spinePlatform.type === 'chassis') {
+      const portsNeeded = Math.ceil((totalHostLinks / planes) / breakout);
+      const cardsNeeded = Math.ceil(portsNeeded / (spinePlatform.portsPerSlot || 36));
+      items.push({ desc: 'Line cards (36-port)', qty: totalSpine * cardsNeeded, type: 'switch', skuKey: 'linecard', role: null });
+    }
+    const hOptSwitchBase = Math.ceil(totalHostLinks / breakout);
+    const hostOptBase = hOptSwitchBase + totalHostLinks;
+    if (hostOpticCat) items.push({ desc: 'Host optics · ' + hostSpeed + 'G', qty: hostOptBase, type: 'optic', opticCat: hostOpticCat });
+  } else if (tierNum === 2) {
+    const leafKey  = getArocSkuKey(leafPlatform);
+    const spineKey = getArocSkuKey(spinePlatform);
+    if (leafKey)  items.push({ desc: 'Leaf: ' + leafPlatform.desc,  qty: totalLeaf,  type: 'switch', skuKey: leafKey, role: 'leaf' });
+    if (spineKey) items.push({ desc: 'Spine: ' + spinePlatform.desc, qty: totalSpine, type: 'switch', skuKey: spineKey, role: 'spine' });
+    const leafRadix = leafPlatform.radix;
+    const physDown  = Math.floor(leafRadix * (parseFloat(document.getElementById('oversub').value) || 1) / (1 + (parseFloat(document.getElementById('oversub').value) || 1)));
+    const uplinks   = leafRadix - physDown;
+    const leafPerPlane = Math.ceil((totalHostLinks / planes) / (physDown * breakout));
+    const spineLinks = leafPerPlane * uplinks * planes;
+    const spOptBase = spineLinks * 2;
+    const hOptBase  = Math.ceil(totalHostLinks / breakout) + totalHostLinks;
+    if (spineOpticCat) items.push({ desc: 'Spine-tier optics · ' + spineSpeed + 'G', qty: spOptBase, type: 'optic', opticCat: spineOpticCat });
+    if (hostOpticCat)  items.push({ desc: 'Host-tier optics · ' + hostSpeed + 'G',   qty: hOptBase,  type: 'optic', opticCat: hostOpticCat });
+  } else {
+    const leafKey  = getArocSkuKey(leafPlatform);
+    const spineKey = getArocSkuKey(spinePlatform);
+    const leafRadix  = leafPlatform.radix;
+    const oversub    = parseFloat(document.getElementById('oversub').value) || 1;
+    const physDown   = Math.floor(leafRadix * oversub / (1 + oversub));
+    const uplinks    = leafRadix - physDown;
+    const leafPerPlane = Math.ceil((totalHostLinks / planes) / (physDown * breakout));
+    const totalLeaf2 = leafPerPlane * planes;
+    const a2sDown    = leafPerPlane * uplinks;
+    const leaf1PP    = Math.ceil(a2sDown / physDown);
+    const totalLeaf1 = leaf1PP * planes;
+
+    if (leafKey)  items.push({ desc: 'Edge leaf: ' + leafPlatform.desc, qty: totalLeaf2, type: 'switch', skuKey: leafKey, role: 'leaf' });
+    if (leafKey)  items.push({ desc: 'Agg leaf: ' + leafPlatform.desc,  qty: totalLeaf1, type: 'switch', skuKey: leafKey, role: 'leaf' });
+    if (spineKey) items.push({ desc: 'Spine: ' + spinePlatform.desc,    qty: totalSpine, type: 'switch', skuKey: spineKey, role: 'spine' });
+
+    const e2aLinks = leafPerPlane * uplinks * planes;
+    const a2sLinks = leaf1PP * uplinks * planes;
+    const a2sBase = a2sLinks * 2;
+    const e2aBase = e2aLinks * 2;
+    const hBase   = Math.ceil(totalHostLinks / breakout) + totalHostLinks;
+
+    if (spineOpticCat) items.push({ desc: 'Spine-tier optics · ' + spineSpeed + 'G', qty: a2sBase, type: 'optic', opticCat: spineOpticCat });
+    if (spineOpticCat) items.push({ desc: 'Agg-tier optics · ' + spineSpeed + 'G',   qty: e2aBase, type: 'optic', opticCat: spineOpticCat });
+    if (hostOpticCat)  items.push({ desc: 'Host-tier optics · ' + hostSpeed + 'G',   qty: hBase,   type: 'optic', opticCat: hostOpticCat });
+  }
+
+  lastCalcResult = { tierNum, items, ctx };
+}
+
+function openArocModal() {
+  if (!lastCalcResult || !lastCalcResult.items.length) return;
+  document.getElementById('aroc-cvp-extra').style.display = document.getElementById('aroc-cvp-check').checked ? 'flex' : 'none';
+  populateArocItems();
+  document.getElementById('aroc-modal').classList.add('open');
+  if (arocToken) {
+    document.getElementById('aroc-token').value = arocToken;
+    if (arocRegions.length) updateRegionDropdown();
+  }
+  updateGoButton();
+}
+
+function getDefaultLicense(skuKey, role) {
+  const pd = platformData[skuKey];
+  if (!pd || !pd.licenses.length) return null;
+  const vxlan = document.getElementById('aroc-vxlan-check')?.checked || false;
+  const wantFlx = vxlan && role === 'leaf';
+  const eLic = pd.licenses.find(l => /Basic/i.test(l.name)) || pd.licenses[0];
+  if (wantFlx) {
+    const flx = pd.licenses.find(l => /VXLAN|EVPN|FLX|FLEX/i.test(l.name));
+    if (flx) return flx;
+  }
+  return eLic;
+}
+
+function getDefaultSubscription(skuKey) {
+  const pd = platformData[skuKey];
+  if (!pd || !pd.subscriptions.length) return null;
+  const cvpType = document.getElementById('aroc-cvp-type')?.value || 'onprem';
+  const isCvaas = cvpType === 'cvaas';
+  if (isCvaas) {
+    const cvaas = pd.subscriptions.find(s => /CVS/i.test(s.name));
+    if (cvaas) return cvaas;
+  }
+  const onprem = pd.subscriptions.find(s => /CV[^S]/i.test(s.name) || (/CV/i.test(s.name) && !/CVS/i.test(s.name)));
+  return onprem || pd.subscriptions[0];
+}
+
+function populateArocItems() {
+  const body = document.getElementById('aroc-items-body');
+  body.innerHTML = '';
+  const includeCvp = document.getElementById('aroc-cvp-check')?.checked || false;
+  const cvpMonths = parseInt(document.getElementById('aroc-cvp-months')?.value) || 36;
+
+  lastCalcResult.items.forEach((item, i) => {
+    const tr = document.createElement('tr');
+    let skuCell = '';
+    if (item.type === 'switch') {
+      const skuName = AROC_SKUS[item.skuKey];
+      skuCell = skuName ? '<span style="font-size:11px;font-family:monospace">' + skuName + '</span>' : '<span style="color:var(--text3)">Unknown</span>';
+    } else if (item.type === 'optic') {
+      const opts = AROC_OPTICS[item.opticCat] || [];
+      skuCell = '<select id="aroc-optic-' + i + '">' + opts.map((o, j) => '<option value="' + j + '">' + o.label + '</option>').join('') + '</select>';
+    }
+    tr.innerHTML = '<td>' + item.desc + '</td><td>' + skuCell + '</td><td class="qty">' + fmtN(item.qty) + '</td><td id="aroc-status-' + i + '" class="aroc-status-pending">—</td>';
+    body.appendChild(tr);
+
+    if (item.type === 'switch' && item.role) {
+      const pd = platformData[item.skuKey];
+      if (pd && pd.licenses.length) {
+        const defLic = getDefaultLicense(item.skuKey, item.role);
+        const licTr = document.createElement('tr');
+        licTr.style.background = 'var(--bg2)';
+        const licOpts = pd.licenses.map(l => '<option value="' + l.name + '"' + (defLic && l.name === defLic.name ? ' selected' : '') + '>' + l.name + '</option>').join('');
+        licTr.innerHTML = '<td style="padding-left:20px;font-size:11px;color:var(--text2)">↳ License</td><td><select id="aroc-lic-' + i + '" style="font-size:10px">' + licOpts + '</select></td><td class="qty">' + fmtN(item.qty) + '</td><td id="aroc-lic-status-' + i + '" class="aroc-status-pending">—</td>';
+        body.appendChild(licTr);
+      }
+      if (includeCvp && pd && pd.subscriptions.length) {
+        const defSub = getDefaultSubscription(item.skuKey);
+        const subTr = document.createElement('tr');
+        subTr.style.background = 'var(--bg2)';
+        const subOpts = pd.subscriptions.map(s => '<option value="' + s.name + '"' + (defSub && s.name === defSub.name ? ' selected' : '') + '>' + s.name + '</option>').join('');
+        subTr.innerHTML = '<td style="padding-left:20px;font-size:11px;color:var(--text2)">↳ Subscription (' + cvpMonths + 'mo)</td><td><select id="aroc-sub-' + i + '" style="font-size:10px">' + subOpts + '</select></td><td class="qty">' + fmtN(item.qty) + '</td><td id="aroc-sub-status-' + i + '" class="aroc-status-pending">—</td>';
+        body.appendChild(subTr);
+      }
+    }
+  });
+}
+
+function refreshArocItems() {
+  document.getElementById('aroc-cvp-extra').style.display = document.getElementById('aroc-cvp-check').checked ? 'flex' : 'none';
+  const vxlan = document.getElementById('aroc-vxlan-check').checked;
+  document.getElementById('aroc-license-note').textContent = vxlan
+    ? 'License default: E (spine) · FLX-L (leaf)'
+    : 'License default: E (all switches)';
+  if (lastCalcResult) populateArocItems();
+}
+
+function closeArocModal() {
+  document.getElementById('aroc-modal').classList.remove('open');
+}
+
+function updateRegionDropdown() {
+  const sel = document.getElementById('aroc-region');
+  sel.innerHTML = arocRegions.map(r => '<option value="' + r.id + '">' + r.name + '</option>').join('');
+  document.getElementById('aroc-region-row').style.display = 'flex';
+}
+
+function updateGoButton() {
+  document.getElementById('aroc-go-btn').disabled = !arocToken || !arocRegions.length;
+}
+
+async function arocFetch(query, token, variables) {
+  const body = { query };
+  if (variables) body.variables = variables;
+  const resp = await fetch(AROC_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  return resp.json();
+}
+
+async function fetchPlatformAccessories(token, regionId) {
+  const skuFragment = 'id name accessories { id name description type { name } } accessoryLicenses { id name } accessorySoftwareSubscriptions { id name group { name } }';
+  const entries = Object.entries(AROC_SKUS);
+  const batchSize = 5;
+  for (let b = 0; b < entries.length; b += batchSize) {
+    const batch = entries.slice(b, b + batchSize);
+    const aliases = batch.map(([key, skuName], i) =>
+      'p' + (b + i) + ': sku(name: "' + skuName + '") { ' + skuFragment + ' }'
+    ).join('\n');
+    const data = await arocFetch('{ ' + aliases + ' }', token);
+    if (data.errors) continue;
+    batch.forEach(([key], i) => {
+      const sku = data.data['p' + (b + i)];
+      if (!sku) return;
+      platformData[key] = {
+        skuId: sku.id,
+        skuName: sku.name,
+        licenses: sku.accessoryLicenses || [],
+        subscriptions: sku.accessorySoftwareSubscriptions || [],
+        allAccessories: sku.accessories || [],
+      };
+    });
+  }
+}
+
+async function connectAroc() {
+  const token = document.getElementById('aroc-token').value.trim();
+  if (!token) return;
+  const status = document.getElementById('aroc-auth-status');
+  status.innerHTML = '<span style="color:var(--text3)">Connecting…</span>';
+  try {
+    const data = await arocFetch('{ regions(first: 50) { edges { node { id name } } } }', token);
+    if (data.errors) throw new Error(data.errors[0].message);
+    arocRegions = data.data.regions.edges.map(e => e.node);
+    arocToken = token;
+    updateRegionDropdown();
+    updateGoButton();
+    status.innerHTML = '<span style="color:var(--text3)">Loading platforms…</span>';
+    await fetchPlatformAccessories(token, arocRegions[0]?.id);
+    const loaded = Object.keys(platformData).length;
+    status.innerHTML = '<span class="aroc-status-ok">Connected (' + arocRegions.length + ' regions, ' + loaded + ' platforms loaded)</span>';
+    if (lastCalcResult) populateArocItems();
+  } catch (e) {
+    arocRegions = [];
+    arocToken = null;
+    platformData = {};
+    updateGoButton();
+    if (e instanceof TypeError && e.message === 'Failed to fetch') {
+      status.innerHTML = '<span class="aroc-status-err">CORS blocked — try running this page from the same domain as AROC.</span>';
+    } else {
+      status.innerHTML = '<span class="aroc-status-err">Error: ' + esc(e.message) + '</span>';
+    }
+  }
+}
+
+async function resolveOpticSkuId(skuName) {
+  const data = await arocFetch('{ skus(first: 1, searchFor: { term: "' + skuName + '", field: NAME }) { edges { node { id name } } } }', arocToken);
+  const edges = data?.data?.skus?.edges;
+  return edges?.length ? edges[0].node.id : null;
+}
+
+async function exportToAroc() {
+  if (!arocToken || !lastCalcResult) return;
+  const regionId = document.getElementById('aroc-region').value;
+  const btn = document.getElementById('aroc-go-btn');
+  const summary = document.getElementById('aroc-summary');
+  const includeCvp = document.getElementById('aroc-cvp-check')?.checked || false;
+  const cvpMonths = parseInt(document.getElementById('aroc-cvp-months')?.value) || 36;
+  btn.disabled = true;
+  summary.innerHTML = '';
+  let ok = 0, fail = 0;
+  const items = lastCalcResult.items;
+
+  const addToCartMutation = 'mutation AddToCartMutation($input: AddToCartInput!) { addToCart(input: $input) { cartItems { id } validationErrors { message } } }';
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const statusEl = document.getElementById('aroc-status-' + i);
+
+    if (item.type === 'switch') {
+      const pd = platformData[item.skuKey];
+      if (!pd) { statusEl.innerHTML = '<span class="aroc-status-err">Platform not loaded</span>'; fail++; continue; }
+
+      statusEl.innerHTML = '<span style="color:var(--text3)">Adding to cart…</span>';
+      try {
+        const accessories = [];
+        const licSel = document.getElementById('aroc-lic-' + i);
+        if (licSel?.value) {
+          const licSkuId = await resolveOpticSkuId(licSel.value);
+          if (licSkuId) accessories.push({ skuId: licSkuId, quantity: item.qty, discount: null, months: null, remarks: '', shippingType: null });
+        }
+        const subSel = document.getElementById('aroc-sub-' + i);
+        if (includeCvp && subSel?.value) {
+          const subSkuId = await resolveOpticSkuId(subSel.value);
+          if (subSkuId) accessories.push({ skuId: subSkuId, quantity: item.qty, discount: null, months: cvpMonths, remarks: '', shippingType: null });
+        }
+
+        const variables = {
+          input: {
+            regionId: regionId,
+            sku: { skuId: pd.skuId, quantity: item.qty, discount: null, months: null, applianceQuantity: null, remarks: '', tagIds: [] },
+            accessories: accessories,
+          }
+        };
+        const result = await arocFetch(addToCartMutation, arocToken, variables);
+
+        if (result.errors) throw new Error(result.errors[0].message);
+        const payload = result.data?.addToCart;
+        if (payload?.validationErrors?.length) {
+          statusEl.innerHTML = '<span class="aroc-status-err">' + esc(payload.validationErrors[0].message) + '</span>';
+          fail++;
+        } else {
+          statusEl.innerHTML = '<span class="aroc-status-ok">✓ Added</span>';
+          ok++;
+          const licStatus = document.getElementById('aroc-lic-status-' + i);
+          if (licStatus && licSel?.value) licStatus.innerHTML = '<span class="aroc-status-ok">✓</span>';
+          const subStatus = document.getElementById('aroc-sub-status-' + i);
+          if (subStatus && includeCvp && subSel?.value) subStatus.innerHTML = '<span class="aroc-status-ok">✓</span>';
+        }
+      } catch (e) {
+        statusEl.innerHTML = '<span class="aroc-status-err">' + esc(e.message) + '</span>';
+        fail++;
+      }
+
+    } else if (item.type === 'optic') {
+      statusEl.innerHTML = '<span style="color:var(--text3)">Resolving SKU…</span>';
+      try {
+        const opts = AROC_OPTICS[item.opticCat] || [];
+        const sel = document.getElementById('aroc-optic-' + i);
+        const optic = opts[parseInt(sel?.value || '0')];
+        if (!optic) { statusEl.innerHTML = '<span class="aroc-status-err">No optic selected</span>'; fail++; continue; }
+
+        const skuId = await resolveOpticSkuId(optic.sku);
+        if (!skuId) { statusEl.innerHTML = '<span class="aroc-status-err">SKU not found</span>'; fail++; continue; }
+
+        statusEl.innerHTML = '<span style="color:var(--text3)">Adding to cart…</span>';
+        const variables = {
+          input: {
+            regionId: regionId,
+            sku: { skuId: skuId, quantity: item.qty, discount: null, months: null, applianceQuantity: null, remarks: '', tagIds: [] },
+            accessories: [],
+          }
+        };
+        const result = await arocFetch(addToCartMutation, arocToken, variables);
+
+        if (result.errors) throw new Error(result.errors[0].message);
+        const payload = result.data?.addToCart;
+        if (payload?.validationErrors?.length) {
+          statusEl.innerHTML = '<span class="aroc-status-err">' + esc(payload.validationErrors[0].message) + '</span>';
+          fail++;
+        } else {
+          statusEl.innerHTML = '<span class="aroc-status-ok">✓ Added</span>';
+          ok++;
+        }
+      } catch (e) {
+        statusEl.innerHTML = '<span class="aroc-status-err">' + esc(e.message) + '</span>';
+        fail++;
+      }
+    }
+  }
+
+  btn.disabled = false;
+  const color = fail === 0 ? 'var(--teal50)' : 'var(--coral50)';
+  const textColor = fail === 0 ? 'var(--teal800)' : 'var(--coral800)';
+  summary.style.background = color;
+  summary.style.color = textColor;
+  summary.innerHTML = ok + ' item(s) added to cart' + (fail ? ', ' + fail + ' failed' : '') + '. <a href="https://aroc.aristanetworks.com" target="_blank" style="color:inherit;font-weight:600">Open AROC ↗</a>';
+}
 
 </script>
 </body>
