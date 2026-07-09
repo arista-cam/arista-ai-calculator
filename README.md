@@ -4,11 +4,12 @@ A browser-based tool for sizing AI backend network fabrics. Enter your GPU clust
 
 ## Features
 
-- **Four fabric tiers** — single-tier (collapsed spine), two-tier (leaf-spine Clos), three-tier (hyperscale Clos), and DES (Distributed Etherlink Switch)
+- **Four fabric tiers** — single-tier (collapsed spine), two-tier (leaf-spine Clos), three-tier (super-spine / spine / leaf), and DES (Distributed Etherlink Switch)
 - **Platform suggestions** — suggests the smallest balanced switch combination based on cluster size, with Apply/Dismiss controls
-- **Full optics breakdown** — per-device transceiver counts (spine, leaf uplink/downlink, host NIC) with Conventional/LPO toggle, OSFP form factor for all switch ports
-- **Interactive topology** — D3-powered diagrams with MRC multi-plane view; click any compute node to expand GPU/NIC detail with plane-colored connectivity lines
-- **MRC NIC breakout** — correctly models single-NIC hosts across multiple planes (e.g. 1×800G NIC → 4×200G links, one per plane)
+- **Full optics breakdown** — per-device transceiver counts (spine, leaf uplink/downlink, host NIC) with Conventional/LPO toggle (LPO available at 800G only), OSFP form factor for all switch ports
+- **Interactive topology** — D3-powered diagrams with multi-plane view; click any compute node to expand GPU/NIC detail with plane-colored connectivity lines
+- **Multi-plane NIC breakout** — correctly models single-NIC hosts across multiple planes (e.g. 1×800G NIC → 4×200G links, one per plane)
+- **Spine-link breakout** — host port breakout (e.g. 800G → 2×400G) automatically applies to spine-facing uplinks too, doubling effective connectivity with 800G breakout optics
 - **Built-in validation** — hard errors for invalid topologies and warnings for unbalanced fabrics, with minimum platform suggestions
 - **Light/dark theme** — follows system preference automatically
 - **Print-friendly** — clean output for reports and proposals
@@ -65,13 +66,13 @@ The tool suggests optimal switch platforms based on your inputs. Apply the sugge
 | Leaf / Spine switch | Arista platform or custom port count |
 | Planes | Redundant parallel fabrics (1–8) |
 | Downlink:Uplink ratio | Port allocation ratio (1 = non-blocking, <1 = more uplinks) |
-| Host port breakout | Switch-to-host port splitting (1:1, 1:2, 1:4) |
-| Spine / Host link speed | 400G or 800G spine links, 100G–800G host links |
+| Host port breakout | Switch port splitting (1:1, 1:2, 1:4) — applies to both host-facing and spine-facing ports |
+| Spine / Host link speed | Spine link speed auto-syncs with breakout (e.g. 1:2 → 400G). 100G–800G host links |
 
 ## Output
 
 - **Metrics grid** — total GPUs, backend links, spine/leaf/total switch counts
 - **Switch breakdown** — per-tier tables with platform names, switch counts per plane, port utilization, and bundle sizes
-- **Interactive topology diagram** — D3-powered visualization with MRC multi-plane view, click-to-expand GPU/NIC detail showing per-GPU connectivity to leaf switches with plane-colored links
-- **Optics breakdown** — transceiver counts by tier and type (QSFP28, QSFP-DD, OSFP) with grand total, plus a **Conventional / LPO** toggle to switch between standard DSP-based and Linear Pluggable Optics
+- **Interactive topology diagram** — D3-powered visualization with multi-plane view, click-to-expand GPU/NIC detail showing per-GPU connectivity to leaf switches with plane-colored links
+- **Optics breakdown** — transceiver counts by tier and type (QSFP28, QSFP-DD, OSFP) with grand total, plus a **Conventional / LPO** toggle (shown only when 800G optics are in the design) to switch between standard DSP-based and Linear Pluggable Optics
 - **Estimated power consumption** — optics and switch power with a **Typical / 80% / Max** toggle. Switch power figures sourced from Arista platform datasheets (excludes optics, calculated separately). LPO mode shows total power savings vs conventional

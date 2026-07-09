@@ -978,7 +978,7 @@
           </div>
           <div class="field">
             <label>Host port breakout</label>
-            <select id="breakout" onchange="autoSelectPlatforms()">
+            <select id="breakout" onchange="syncSpineSpeed(); autoSelectPlatforms()">
               <option value="1">1:1 (None)</option>
               <option value="2" selected>1:2 (800G &rarr; 2&times; 400G)</option>
               <option value="4">1:4 (800G &rarr; 4&times; 200G)</option>
@@ -997,7 +997,7 @@
         <div class="input-section-body">
           <div class="field" id="spine-speed-row">
             <label>Spine link speed</label>
-            <select id="spine-speed" onchange="clearResults()">
+            <select id="spine-speed" onchange="clearResults(); autoSelectPlatforms()">
               <option value="400">400G</option>
               <option value="800" selected>800G</option>
             </select>
@@ -1053,7 +1053,7 @@
         <select id="topo-type" class="topo-select" onchange="onTopoTypeChange()">
           <option value="fat-tree">Fat Tree</option>
           <option value="rail">Rail-Optimized</option>
-          <option value="mrc-planes">MRC Multi-Plane</option>
+          <option value="mrc-planes">Multi-Plane</option>
         </select>
       </span>
       <button class="topo-btn" onclick="renderTopology()" title="Redraw">Redraw</button>
@@ -1196,7 +1196,7 @@ function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 const OPTIC_POWER = {
   100: { conventional: 3.5, lpo: 3.5 },
   200: { conventional: 5, lpo: 5 },
-  400: { conventional: 10, lpo: 5 },
+  400: { conventional: 10, lpo: 10 },
   800: { conventional: 16, lpo: 8 },
 };
 
@@ -1350,32 +1350,40 @@ function minPlatformForPorts(portsNeeded) {
 }
 
 function minBalanced2Tier(linksPerPlane, breakout, oversub) {
+  const spSpeed = parseInt(document.getElementById('spine-speed').value) || 800;
+  const ulBreak = spSpeed < 800 ? Math.round(800 / spSpeed) : 1;
   for (const lp of PLATFORMS) {
     const physDown = Math.floor(lp.radix * oversub / (1 + oversub));
     const effDown  = physDown * breakout;
     const up       = lp.radix - physDown;
+    const effUp    = up * ulBreak;
     if (effDown <= 0 || up <= 0) continue;
     const leafPP = Math.ceil(linksPerPlane / effDown);
     for (const sp of PLATFORMS) {
-      const spinePP = Math.ceil((leafPP * up) / sp.radix);
-      if (spinePP <= up && up % spinePP === 0) return { leaf: lp, spine: sp };
+      const effSpR  = sp.radix * ulBreak;
+      const spinePP = Math.ceil((leafPP * effUp) / effSpR);
+      if (spinePP <= effUp && effUp % spinePP === 0) return { leaf: lp, spine: sp };
     }
   }
   return null;
 }
 
 function minBalanced3Tier(linksPerPlane, breakout, oversub) {
+  const spSpeed = parseInt(document.getElementById('spine-speed').value) || 800;
+  const ulBreak = spSpeed < 800 ? Math.round(800 / spSpeed) : 1;
   for (const lp of PLATFORMS) {
     const physDown = Math.floor(lp.radix * oversub / (1 + oversub));
     const effDown  = physDown * breakout;
     const up       = lp.radix - physDown;
+    const effUp    = up * ulBreak;
     if (effDown <= 0 || up <= 0) continue;
     const l2PP = Math.ceil(linksPerPlane / effDown);
     const l1PP = Math.ceil((l2PP * up) / physDown);
-    if (l1PP > up || up % l1PP !== 0) continue;
+    if (l1PP > effUp || effUp % l1PP !== 0) continue;
     for (const sp of PLATFORMS) {
-      const spinePP = Math.ceil((l1PP * up) / sp.radix);
-      if (spinePP <= up && up % spinePP === 0) return { leaf: lp, spine: sp };
+      const effSpR  = sp.radix * ulBreak;
+      const spinePP = Math.ceil((l1PP * effUp) / effSpR);
+      if (spinePP <= effUp && effUp % spinePP === 0) return { leaf: lp, spine: sp };
     }
   }
   return null;
@@ -1523,21 +1531,25 @@ function autoSelect1Tier(linksPerPlane, breakout) {
 }
 
 function autoSelect2Tier(linksPerPlane, breakout) {
+  const spSpeed = parseInt(document.getElementById('spine-speed').value) || 800;
+  const ulBreak = spSpeed < 800 ? Math.round(800 / spSpeed) : 1;
   let best = null;
   for (let pass = 0; pass < 2; pass++) {
     for (const lp of PLATFORMS) {
       const physDown = Math.floor(lp.radix / 2);
       const effDown  = physDown * breakout;
       const uplinks  = lp.radix - physDown;
+      const effUp    = uplinks * ulBreak;
       if (effDown <= 0 || uplinks <= 0) continue;
 
       const leafPerPlane = Math.ceil(linksPerPlane / effDown);
-      if (pass === 0 && leafPerPlane > uplinks) continue;
+      if (pass === 0 && leafPerPlane > effUp) continue;
 
       for (const sp of PLATFORMS) {
         if (pass === 0 && sp.radix < lp.radix) continue;
-        const spinePerPlane = Math.ceil((leafPerPlane * uplinks) / sp.radix);
-        if (spinePerPlane <= uplinks && uplinks % spinePerPlane === 0) {
+        const effSpR = sp.radix * ulBreak;
+        const spinePerPlane = Math.ceil((leafPerPlane * effUp) / effSpR);
+        if (spinePerPlane <= effUp && effUp % spinePerPlane === 0) {
           const ports = leafPerPlane * lp.radix + spinePerPlane * sp.radix;
           const switches = leafPerPlane + spinePerPlane;
           if (!best || ports < best.ports || (ports === best.ports && switches < best.switches)) {
@@ -1557,26 +1569,30 @@ function autoSelect2Tier(linksPerPlane, breakout) {
 }
 
 function autoSelect3Tier(linksPerPlane, breakout) {
+  const spSpeed = parseInt(document.getElementById('spine-speed').value) || 800;
+  const ulBreak = spSpeed < 800 ? Math.round(800 / spSpeed) : 1;
   let best = null;
   for (let pass = 0; pass < 2; pass++) {
     for (const lp of PLATFORMS) {
       const physDown = Math.floor(lp.radix / 2);
       const effDown  = physDown * breakout;
       const uplinks  = lp.radix - physDown;
+      const effUp    = uplinks * ulBreak;
       if (effDown <= 0 || uplinks <= 0) continue;
 
       const leaf2PerPlane = Math.ceil(linksPerPlane / effDown);
-      if (pass === 0 && leaf2PerPlane > uplinks) continue;
+      if (pass === 0 && leaf2PerPlane > effUp) continue;
 
       // Pod model: edge leaves + agg switches per pod
       const podsNeeded    = Math.ceil(leaf2PerPlane / physDown);
       const leaf1PerPlane = podsNeeded * uplinks;
-      const spinePortsNeeded = leaf1PerPlane * uplinks;
+      const spinePortsNeeded = leaf1PerPlane * effUp;
 
       for (const sp of PLATFORMS) {
         if (pass === 0 && sp.radix < lp.radix) continue;
-        if (podsNeeded > sp.radix) continue;
-        const spinePerPlane = Math.ceil(spinePortsNeeded / sp.radix);
+        const effSpR = sp.radix * ulBreak;
+        if (podsNeeded > effSpR) continue;
+        const spinePerPlane = Math.ceil(spinePortsNeeded / effSpR);
         const ports = (leaf2PerPlane + leaf1PerPlane) * lp.radix + spinePerPlane * sp.radix;
         const switches = leaf2PerPlane + leaf1PerPlane + spinePerPlane;
         if (!best || ports < best.ports || (ports === best.ports && switches < best.switches)) {
@@ -1671,6 +1687,18 @@ function syncBreakout() {
       delete breakoutSelect.dataset.savedValue;
     }
   }
+  syncSpineSpeed();
+}
+
+function syncSpineSpeed() {
+  const breakout = parseInt(document.getElementById('breakout').value) || 1;
+  const spineSpeedSelect = document.getElementById('spine-speed');
+  if (breakout > 1) {
+    spineSpeedSelect.value = String(Math.round(800 / breakout));
+  } else {
+    spineSpeedSelect.value = '800';
+  }
+  clearResults();
 }
 
 function syncBreakoutOptions() {
@@ -1692,7 +1720,7 @@ function opticType(speed, tier) {
 }
 function opticTypeLPO(speed, tier) {
   if (speed === 800) return tier === 'spine' ? 'OSFP LPO-800G-DR8' : 'OSFP LPO-800G-2DR4';
-  return { 100: 'OSFP 100G DR', 200: 'OSFP 200G DR4', 400: 'OSFP LPO-400G DR4' }[speed] || speed + 'G';
+  return opticType(speed, tier);
 }
 function opticTypeNIC(speed) {
   return { 100: 'QSFP28 100G SR4', 200: 'QSFP56 200G SR4', 400: 'QSFP-DD 400G DR4', 800: 'OSFP 800G 2DR4' }[speed] || speed + 'G';
@@ -1734,12 +1762,15 @@ function mkSection(icon, title, rows, note) {
   return s;
 }
 
-function opticsSection(rows, noteText) {
+function opticsSection(rows, noteText, showLpo) {
   let s = '<div class="result-section"><h3>' + iconPlug() + 'Optics breakdown';
-  s += '<span class="optic-toggle">';
-  s += '<button class="optic-toggle-btn active" data-mode="conventional" onclick="toggleOpticMode(\'conventional\')">Conventional</button>';
-  s += '<button class="optic-toggle-btn" data-mode="lpo" onclick="toggleOpticMode(\'lpo\')">LPO</button>';
-  s += '</span></h3>';
+  if (showLpo !== false) {
+    s += '<span class="optic-toggle">';
+    s += '<button class="optic-toggle-btn active" data-mode="conventional" onclick="toggleOpticMode(\'conventional\')">Conventional</button>';
+    s += '<button class="optic-toggle-btn" data-mode="lpo" onclick="toggleOpticMode(\'lpo\')">LPO</button>';
+    s += '</span>';
+  }
+  s += '</h3>';
   s += '<p style="font-size:12px;color:var(--text3);margin-bottom:12px">Each link requires transceivers at both ends. Breakouts split a single switch optic into multiple host connections.</p>';
   s += '<table class="breakdown-table">';
   for (const [k, v, isSub, spacer] of rows) {
@@ -1803,11 +1834,14 @@ function calculate() {
   const hostSpeedPerPlane = (planes > 1 && linksPerGpu < planes)
     ? (hostSpeed * linksPerGpu / planes) : hostSpeed;
 
-  const physDownlinks = Math.floor(leafRadix * oversub / (1 + oversub));
-  const effDownlinks  = physDownlinks * breakout;
-  const uplinks       = leafRadix - physDownlinks;
+  const physDownlinks  = Math.floor(leafRadix * oversub / (1 + oversub));
+  const effDownlinks   = physDownlinks * breakout;
+  const uplinks        = leafRadix - physDownlinks;
+  const uplinkBreakout = spineSpeed < 800 ? Math.round(800 / spineSpeed) : 1;
+  const effUplinks     = uplinks * uplinkBreakout;
+  const effSpineRadix  = spineRadix * uplinkBreakout;
 
-  const tierLabels = { 1: 'Single-tier (collapsed spine)', 2: 'Two-tier (leaf-spine)', 3: 'Three-tier (spine-leaf-leaf)', 4: 'DES (Distributed Etherlink)' };
+  const tierLabels = { 1: 'Single-tier (collapsed spine)', 2: 'Two-tier (leaf-spine)', 3: 'Three-tier (super-spine / spine / leaf)', 4: 'DES (Distributed Etherlink)' };
   const tierColors = { 1: 'tier-1', 2: 'tier-2', 3: 'tier-3', 4: 'tier-des' };
 
   let warnHtml = '';
@@ -2005,31 +2039,31 @@ function calculate() {
     optRows.push(['In host NIC · ' + dualOpticHost(hostSpeedPerPlane), fmtN(hOptHostBase)]);
     optRows.push(['Total optics', fmtN(hostOptBase), true]);
 
-    optHtml = opticsSection(optRows, '<span class="optic-conv">' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Switch-side: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>');
+    optHtml = opticsSection(optRows, '<span class="optic-conv">' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Switch-side: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>', hostSpeedPerPlane === 800);
 
   } else if (tierNum === 2) {
     const leafPerPlane  = Math.ceil(linksPerPlane / effDownlinks);
     totalLeaf           = leafPerPlane * planes;
     const balance       = document.getElementById('balance-topo').value === '1';
-    const origSpinePP   = Math.ceil((leafPerPlane * uplinks) / spineRadix);
+    const origSpinePP   = Math.ceil((leafPerPlane * effUplinks) / effSpineRadix);
     let spinePerPlane   = origSpinePP;
     let balanceNote     = '';
-    if (balance && uplinks > 0 && uplinks % spinePerPlane !== 0) {
-      spinePerPlane = nextDivisorGte(spinePerPlane, uplinks);
-      balanceNote = 'Spine count adjusted from ' + origSpinePP + ' to ' + spinePerPlane + ' per plane for even link distribution (' + (uplinks / spinePerPlane) + ' links per leaf-spine pair). Adds ' + ((spinePerPlane - origSpinePP) * planes) + ' extra spine switch' + ((spinePerPlane - origSpinePP) * planes !== 1 ? 'es' : '') + '.';
+    if (balance && effUplinks > 0 && effUplinks % spinePerPlane !== 0) {
+      spinePerPlane = nextDivisorGte(spinePerPlane, effUplinks);
+      balanceNote = 'Spine count adjusted from ' + origSpinePP + ' to ' + spinePerPlane + ' per plane for even link distribution (' + (effUplinks / spinePerPlane) + ' links per leaf-spine pair). Adds ' + ((spinePerPlane - origSpinePP) * planes) + ' extra spine switch' + ((spinePerPlane - origSpinePP) * planes !== 1 ? 'es' : '') + '.';
     }
     totalSpine          = spinePerPlane * planes;
 
-    const bundleSize    = uplinks / spinePerPlane;
+    const bundleSize    = effUplinks / spinePerPlane;
     const bundleStr     = Number.isInteger(bundleSize) ? bundleSize : bundleSize.toFixed(2) + ' (unbalanced)';
 
-    const spineLinks    = leafPerPlane * uplinks * planes;
-    const spOptBase     = spineLinks * 2;
+    const spineLinks    = leafPerPlane * effUplinks * planes;
+    const spinePhysPerSide = uplinkBreakout > 1 ? Math.ceil(spineLinks / uplinkBreakout) : spineLinks;
 
     const hOptSwitchBase= Math.ceil(totalHostLinks / breakout);
     const hOptHostBase  = totalHostLinks;
     const hOptBase      = hOptSwitchBase + hOptHostBase;
-    opticCounts.spine = spOptBase;
+    opticCounts.spine = spinePhysPerSide * 2;
     opticCounts.hostSwitch = hOptSwitchBase;
     opticCounts.hostEnd = hOptHostBase;
 
@@ -2060,15 +2094,17 @@ function calculate() {
       ['Leaf per plane', leafPerPlane], ['Total leaf switches', totalLeaf],
       ['Host links per leaf', Math.ceil(linksPerPlane / leafPerPlane) + (breakout > 1 ? ` (via ${breakout}:1 breakout)` : '')],
       ['Phys downlinks used', physDownlinks],
-      ['Total uplinks used', uplinks],
+      ['Uplink ports', uplinks + (uplinkBreakout > 1 ? ' (' + effUplinks + ' effective @ ' + spineSpeed + 'G)' : '')],
       ['Links per spine (bundle)', bundleStr],
     ], leafNote);
     if (balanceNote) switchHtml += '<div class="note-box" style="margin-bottom:12px">' + balanceNote + '</div>';
 
+    const spineBreakoutLabel = uplinkBreakout > 1 ? ', ' + uplinkBreakout + ':1' : '';
+    const spOptBase = spinePhysPerSide * 2;
     let optRows = [
       ['Leaf ↔ spine links', fmtN(spineLinks)],
-      ['In spine switch · ' + dualOptic(spineSpeed, 'spine'), fmtN(spineLinks)],
-      ['In leaf switch (spine-facing) · ' + dualOptic(spineSpeed, 'spine'), fmtN(spineLinks)],
+      ['In spine switch (leaf-facing' + spineBreakoutLabel + ') · ' + dualOptic(800, 'spine'), fmtN(spinePhysPerSide)],
+      ['In leaf switch (spine-facing' + spineBreakoutLabel + ') · ' + dualOptic(800, 'spine'), fmtN(spinePhysPerSide)],
       ['Fabric subtotal', fmtN(spOptBase), true],
       ['Host ↔ leaf links', fmtN(totalHostLinks), false, true]
     ];
@@ -2081,7 +2117,7 @@ function calculate() {
     optRows.push(['Host subtotal', fmtN(hOptBase), true]);
     optRows.push(['Grand total optics', fmtN(spOptBase + hOptBase), true]);
 
-    optHtml = opticsSection(optRows, '<span class="optic-conv">Spine: ' + opticType(spineSpeed, 'spine') + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Spine: ' + opticTypeLPO(spineSpeed, 'spine') + '. Leaf switch: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>');
+    optHtml = opticsSection(optRows, '<span class="optic-conv">Spine: ' + opticType(800, 'spine') + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Spine: ' + opticTypeLPO(800, 'spine') + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + '. Leaf switch: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>');
 
     const uplinksStr = `${Number.isInteger(bundleSize) ? bundleSize : bundleSize.toFixed(1)}× ${spineSpeed}G uplinks`;
     diagramHtml = diagHeader + buildDiagram([
@@ -2110,6 +2146,9 @@ function calculate() {
     const physDownlinks = Math.floor(leafRadix * oversub / (1 + oversub));
     const effDownlinks  = physDownlinks * breakout;
     const uplinks       = leafRadix - physDownlinks;
+    const uplinkBreakout = spineSpeed < 800 ? Math.round(800 / spineSpeed) : 1;
+    const effUplinks     = uplinks * uplinkBreakout;
+    const effSpineRadix  = spineRadix * uplinkBreakout;
 
     const leaf2PerPlane = Math.ceil(linksPerPlane / effDownlinks);
     const totalLeaf2    = leaf2PerPlane * planes;
@@ -2123,24 +2162,25 @@ function calculate() {
     const totalLeaf1    = leaf1PerPlane * planes;
 
     // Spines: total agg uplinks distributed across spine switches
-    const aggUplinksTotal = leaf1PerPlane * uplinks;
-    let spinePerPlane   = Math.ceil(aggUplinksTotal / spineRadix);
+    const aggUplinksTotal = leaf1PerPlane * effUplinks;
+    let spinePerPlane   = Math.ceil(aggUplinksTotal / effSpineRadix);
     totalSpine          = spinePerPlane * planes;
 
     // In the pod model, each edge connects to each agg in its pod with 1 link
     const e2aBundle     = 1;
     const e2aBundleStr  = '1';
-    // Each agg connects to uplinks distinct spines with 1 link each
-    const a2sBundle     = 1;
-    const a2sBundleStr  = '1';
+    // Each agg connects to effUplinks distinct spines
+    const a2sBundle     = effUplinks >= spinePerPlane ? Math.floor(effUplinks / spinePerPlane) : 1;
+    const a2sBundleStr  = String(a2sBundle);
 
     totalLeaf           = totalLeaf1 + totalLeaf2;
 
     const e2aLinks      = leaf2PerPlane * uplinks * planes;
-    const a2sLinks      = leaf1PerPlane * uplinks * planes;
+    const a2sLinks      = leaf1PerPlane * effUplinks * planes;
 
-    const a2sBase       = a2sLinks*2;
-    const e2aBase       = e2aLinks*2;
+    const a2sPhysPerSide = uplinkBreakout > 1 ? Math.ceil(a2sLinks / uplinkBreakout) : a2sLinks;
+    const a2sBase       = a2sPhysPerSide * 2;
+    const e2aBase       = e2aLinks * 2;
 
     const hOptSwitchBase= Math.ceil(totalHostLinks / breakout);
     const hOptHostBase  = totalHostLinks;
@@ -2150,65 +2190,76 @@ function calculate() {
     opticCounts.hostEnd = hOptHostBase;
 
     // Validate spine capacity: each spine needs at least pods ports
-    if (pods > spineRadix) {
-      el.innerHTML = '<div class="error-msg">Too many pods (' + pods + ') for spine radix (' + spineRadix + '). Each spine must connect to at least 1 agg per pod. Use a larger spine switch or reduce cluster size.</div>';
+    if (pods > effSpineRadix) {
+      el.innerHTML = '<div class="error-msg">Too many pods (' + pods + ') for super-spine capacity (' + effSpineRadix + ' effective ports). Each super-spine must connect to at least 1 spine per pod. Use a larger super-spine switch or reduce cluster size.</div>';
       return;
     }
 
-    switchHtml  = mkSection(iconServer(), 'Spine layer', [
-      ['Spine platform', spinePlatform.desc],
-      ['Spine per plane', spinePerPlane], ['Total spine switches', totalSpine],
+    const isFullMesh3 = effUplinks >= spinePerPlane;
+    const aggsPerSpine = Math.ceil(leaf1PerPlane * effUplinks / spinePerPlane);
+    const spineConnRows = [
+      ['Super-spine platform', spinePlatform.desc],
+      ['Super-spine per plane', spinePerPlane], ['Total super-spines', totalSpine],
+      ['Uplinks per spine', effUplinks + (uplinkBreakout > 1 ? ' (via ' + uplinkBreakout + ':1 @ ' + spineSpeed + 'G)' : '')],
+      ['Spines per super-spine', aggsPerSpine],
+    ];
+    if (!isFullMesh3) {
+      spineConnRows.push(['Connectivity', effUplinks + ' of ' + spinePerPlane + ' super-spines per spine (partial mesh)']);
+    } else {
+      spineConnRows.push(['Connectivity', 'Full mesh']);
+    }
+    switchHtml  = mkSection(iconServer(), 'Super-spine layer', spineConnRows);
+    switchHtml += mkSection(iconBranch(), 'Spine layer', [
+      ['Spine platform', leafPlatform.desc],
+      ['Spine per plane', leaf1PerPlane], ['Total spines', totalLeaf1],
+      ['Links per super-spine (bundle)', a2sBundleStr],
     ]);
-    switchHtml += mkSection(iconBranch(), 'Aggregation leaf (tier 2)', [
+    switchHtml += mkSection(iconBranch(), 'Leaf layer', [
       ['Leaf platform', leafPlatform.desc],
-      ['Agg leaf per plane', leaf1PerPlane], ['Total agg leaves', totalLeaf1],
-      ['Links per spine (bundle)', a2sBundleStr],
-    ]);
-    switchHtml += mkSection(iconBranch(), 'Edge leaf (tier 1)', [
-      ['Leaf platform', leafPlatform.desc],
-      ['Edge leaf per plane', leaf2PerPlane], ['Total edge leaves', totalLeaf2],
-      ['Host links per edge', Math.ceil(linksPerPlane / leaf2PerPlane) + (breakout > 1 ? ` (via ${breakout}:1)` : '')],
-      ['Links per agg leaf (bundle)', e2aBundleStr],
-    ], 'Three-tier Clos: ' + pods + (pods === 1 ? ' pod' : ' pods') + ' per plane, ' + edgeLeavesPerPod + ' edge leaves + ' + aggPerPod + ' agg switches per pod.');
+      ['Leaf per plane', leaf2PerPlane], ['Total leaves', totalLeaf2],
+      ['Host links per leaf', Math.ceil(linksPerPlane / leaf2PerPlane) + (breakout > 1 ? ` (via ${breakout}:1)` : '')],
+      ['Links per spine (bundle)', e2aBundleStr],
+    ], 'Three-tier Clos: ' + pods + (pods === 1 ? ' pod' : ' pods') + ' per plane, ' + edgeLeavesPerPod + ' leaves + ' + aggPerPod + ' spines per pod.');
 
+    const ssBreakoutLabel = uplinkBreakout > 1 ? ', ' + uplinkBreakout + ':1' : '';
     let optRows = [
-      ['Agg leaf ↔ spine links', fmtN(a2sLinks)],
-      ['In spine switch · ' + dualOptic(spineSpeed, 'spine'), fmtN(a2sLinks)],
-      ['In agg leaf (spine-facing) · ' + dualOptic(spineSpeed, 'spine'), fmtN(a2sLinks)],
-      ['Spine-tier subtotal', fmtN(a2sBase), true],
-      ['Edge leaf ↔ agg leaf links', fmtN(e2aLinks), false, true],
-      ['In agg leaf (edge-facing) · ' + dualOptic(spineSpeed, 'spine'), fmtN(e2aLinks)],
-      ['In edge leaf (agg-facing) · ' + dualOptic(spineSpeed, 'spine'), fmtN(e2aLinks)],
-      ['Agg-tier subtotal', fmtN(e2aBase), true],
-      ['Host ↔ edge leaf links', fmtN(totalHostLinks), false, true]
+      ['Spine ↔ super-spine links', fmtN(a2sLinks)],
+      ['In super-spine (spine-facing' + ssBreakoutLabel + ') · ' + dualOptic(800, 'spine'), fmtN(a2sPhysPerSide)],
+      ['In spine (super-spine-facing' + ssBreakoutLabel + ') · ' + dualOptic(800, 'spine'), fmtN(a2sPhysPerSide)],
+      ['Super-spine-tier subtotal', fmtN(a2sBase), true],
+      ['Leaf ↔ spine links', fmtN(e2aLinks), false, true],
+      ['In spine (leaf-facing) · ' + dualOptic(800, 'spine'), fmtN(e2aLinks)],
+      ['In leaf (spine-facing) · ' + dualOptic(800, 'spine'), fmtN(e2aLinks)],
+      ['Spine-tier subtotal', fmtN(e2aBase), true],
+      ['Host ↔ leaf links', fmtN(totalHostLinks), false, true]
     ];
 
     if (breakout === 1) {
-      optRows.push(['In edge leaf (host-facing) · ' + dualOptic(hostSpeedPerPlane), fmtN(hOptSwitchBase)]);
+      optRows.push(['In leaf (host-facing) · ' + dualOptic(hostSpeedPerPlane), fmtN(hOptSwitchBase)]);
     } else {
-      optRows.push(['In edge leaf (host-facing, ' + breakout + ':1) · ' + dualOptic(hostSpeedPerPlane * breakout), fmtN(hOptSwitchBase)]);
+      optRows.push(['In leaf (host-facing, ' + breakout + ':1) · ' + dualOptic(hostSpeedPerPlane * breakout), fmtN(hOptSwitchBase)]);
     }
     optRows.push(['In host NIC · ' + dualOpticHost(hostSpeedPerPlane), fmtN(hOptHostBase)]);
     optRows.push(['Host subtotal', fmtN(hBase), true]);
     optRows.push(['Grand total optics', fmtN(a2sBase + e2aBase + hBase), true]);
 
-    optHtml = opticsSection(optRows, '<span class="optic-conv">Spine/agg: ' + opticType(spineSpeed, 'spine') + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Spine/agg: ' + opticTypeLPO(spineSpeed, 'spine') + '. Edge leaf: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>');
+    optHtml = opticsSection(optRows, '<span class="optic-conv">Super-spine/spine: ' + opticType(800, 'spine') + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Super-spine/spine: ' + opticTypeLPO(800, 'spine') + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + '. Leaf: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>');
 
     const e2aStr = `${Number.isInteger(e2aBundle) ? e2aBundle : e2aBundle.toFixed(1)}× ${spineSpeed}G links`;
     const a2sStr = `${Number.isInteger(a2sBundle) ? a2sBundle : a2sBundle.toFixed(1)}× ${spineSpeed}G links`;
 
     diagramHtml = diagHeader + buildDiagram([
-      { title: '1× Spine Switch', sub: spinePlatform.name + '\n' + spineRadix + '-port', stacked: true },
+      { title: '1× Super-Spine', sub: spinePlatform.name + '\n' + spineRadix + '-port', stacked: true },
       { link: a2sStr, optic: { conv: opticType(spineSpeed, 'spine'), lpo: opticTypeLPO(spineSpeed, 'spine') } },
-      { title: '1× Agg Leaf Switch', sub: leafPlatform.name + '\n' + leafRadix + '-port', stacked: true },
+      { title: '1× Spine Switch', sub: leafPlatform.name + '\n' + leafRadix + '-port', stacked: true },
       { link: e2aStr, optic: { conv: opticType(spineSpeed, 'spine'), lpo: opticTypeLPO(spineSpeed, 'spine') } },
-      { title: '1× Edge Leaf Switch', sub: leafPlatform.name + '\n' + leafRadix + '-port', stacked: true },
+      { title: '1× Leaf Switch', sub: leafPlatform.name + '\n' + leafRadix + '-port', stacked: true },
       { link: hostLinkStr, optic: { conv: opticType(hostSpeedPerPlane), lpo: opticTypeLPO(hostSpeedPerPlane) } },
       { title: '1× Compute Node', sub: gpusPerNode + ' GPUs · ' + linksPerNode + ' Backend Links', stacked: false },
     ], planes) + '</div>';
 
     lastTopoConfig = { tier: 3, planes, title: diagTitle,
-      pods: { count: pods, edgeLeavesPerPod, aggPerPod, aggUplinks: uplinks },
+      pods: { count: pods, edgeLeavesPerPod, aggPerPod, aggUplinks: effUplinks },
       tiers: [
         { id: 'spine', label: spinePlatform.name, perPlane: spinePerPlane, radix: spineRadix },
         { id: 'aggLeaf', label: leafPlatform.name, perPlane: leaf1PerPlane, radix: leafRadix },
@@ -2320,15 +2371,15 @@ function calculate() {
     out += metric(fmtN(totalSwitches), 'Total devices', '');
     out += metric('1:1', 'Subscription', 'non-blocking fabric', 'DES fabrics are always non-blocking — every host port has full-rate access to the fabric');
   } else {
-    out += metric(fmtN(totalSpine),    'Spine switches', 'across planes');
-    out += metric(totalLeaf > 0 ? fmtN(totalLeaf) : '—', 'Leaf switches', totalLeaf > 0 ? 'across planes' : 'not needed');
+    out += metric(fmtN(totalSpine),    tierNum === 3 ? 'Super-spines' : 'Spine switches', 'across planes');
+    out += metric(totalLeaf > 0 ? fmtN(totalLeaf) : '—', tierNum === 3 ? 'Spine + Leaf' : 'Leaf switches', totalLeaf > 0 ? 'across planes' : 'not needed');
     out += metric(fmtN(totalSwitches), 'Total switches', 'all tiers');
     if (tierNum >= 2 && tierNum <= 3) {
       const subRatio = physDownlinks / uplinks;
       out += metric(subRatio === 1 ? '1:1' : subRatio.toFixed(2) + ':1', 'Subscription', 'down:up port ratio', 'Ratio of downlink (host-facing) to uplink (fabric-facing) ports per leaf. 1:1 means non-blocking — every downlink has a matching uplink');
     }
     if (tierNum === 3) {
-      out += metric(fmtN(pods * planes), 'Pods', pods + ' per plane', 'A pod is a group of edge leaves and aggregation switches fully meshed together. Pods scale the fabric horizontally');
+      out += metric(fmtN(pods * planes), 'Pods', pods + ' per plane', 'A pod is a group of leaves and spines fully meshed together. Pods scale the fabric horizontally');
     }
   }
   out += '</div>';
@@ -2336,7 +2387,7 @@ function calculate() {
   if (planes > 1) {
     const perPlaneSpeed = hostSpeedPerPlane;
     out += '<div class="mrc-box">';
-    out += '<div class="mrc-title"><strong>MRC Multi-Plane Design</strong> — ' + planes + ' planes × ' + perPlaneSpeed + 'G per link</div>';
+    out += '<div class="mrc-title"><strong>Multi-Plane Design</strong> — ' + planes + ' planes × ' + perPlaneSpeed + 'G per link</div>';
     out += '<div class="mrc-details">';
     const tierDesc = tierNum === 3 ? 'three-tier' : tierNum === 4 ? 'DES' : 'two-tier';
     out += '<span>Each plane is an independent ' + tierDesc + ' fabric' + tip('The cluster is divided into ' + planes + ' separate ' + tierDesc + ' fabrics, each operating independently') + '</span>';
@@ -2352,7 +2403,7 @@ function calculate() {
   }
 
   if (tierNum === 2) {
-    const maxHostLinksPerPlane = spineRadix * effDownlinks;
+    const maxHostLinksPerPlane = effSpineRadix * effDownlinks;
     const maxGpusPerPlane = Math.floor(maxHostLinksPerPlane / linksPerGpu);
     const maxGpusTotal = maxGpusPerPlane * planes;
     const utilPct = Math.round((gpus / maxGpusTotal) * 100);
@@ -2364,26 +2415,26 @@ function calculate() {
     if (gpus > maxGpusTotal) {
       out += '<br><span style="color:var(--coral600);font-weight:500">⚠ Current cluster (' + fmtN(gpus) + ' GPUs) exceeds two-tier capacity. Consider three-tier or larger switches.</span>';
     }
-    out += '<br><span style="color:var(--text3);font-size:11px">Formula: spine radix (' + spineRadix + ') × leaf downlinks (' + effDownlinks + ') ÷ links/GPU (' + linksPerGpu + ')' + (planes > 1 ? ' × planes (' + planes + ')' : '') + '</span>';
+    out += '<br><span style="color:var(--text3);font-size:11px">Formula: spine ports (' + effSpineRadix + (uplinkBreakout > 1 ? ' eff' : '') + ') × leaf downlinks (' + effDownlinks + ') ÷ links/GPU (' + linksPerGpu + ')' + (planes > 1 ? ' × planes (' + planes + ')' : '') + '</span>';
     out += '</div>';
 
     if (planes > 1) {
       const spLinksAll = totalHostLinks;
       const spLeafPP = Math.ceil(spLinksAll / effDownlinks);
-      const spSpineCount = Math.ceil((spLeafPP * uplinks) / spineRadix);
+      const spSpineCount = Math.ceil((spLeafPP * effUplinks) / effSpineRadix);
       const spTotalSw = spLeafPP + spSpineCount;
-      const spMaxLinks = spineRadix * effDownlinks;
+      const spMaxLinks = effSpineRadix * effDownlinks;
       const spMaxGpus = Math.floor(spMaxLinks / linksPerGpu);
       const spExceeds = gpus > spMaxGpus;
 
       const mpLeafPP = Math.ceil(linksPerPlane / effDownlinks);
-      const mpSpinePP = Math.ceil((mpLeafPP * uplinks) / spineRadix);
+      const mpSpinePP = Math.ceil((mpLeafPP * effUplinks) / effSpineRadix);
       const mpTotalSw = (mpLeafPP + mpSpinePP) * planes;
 
       out += '<div class="mrc-comparison">';
 
       out += '<div class="mrc-compare-card">';
-      out += '<h4>Single Plane Design' + tip('What the fabric would look like with all hosts on one plane (no MRC)') + '</h4>';
+      out += '<h4>Single Plane Design' + tip('What the fabric would look like with all hosts on a single plane (no multi-plane)') + '</h4>';
       out += '<div class="stat-row"><span class="stat-label">Leaf switches' + tip('Leaf switches needed to connect all hosts on a single fabric') + '</span><span class="stat-value">' + fmtN(spLeafPP) + '</span></div>';
       out += '<div class="stat-row"><span class="stat-label">Spine switches' + tip('Spine switches needed to interconnect all leaves on one fabric') + '</span><span class="stat-value">' + fmtN(spSpineCount) + '</span></div>';
       out += '<div class="stat-row"><span class="stat-label">Total switches</span><span class="stat-value">' + fmtN(spTotalSw) + '</span></div>';
@@ -2393,7 +2444,7 @@ function calculate() {
       out += '</div>';
 
       out += '<div class="mrc-compare-card active">';
-      out += '<h4>MRC ' + planes + '-Plane Design ✓' + tip('Your selected design: traffic is sprayed across ' + planes + ' independent parallel fabrics') + '</h4>';
+      out += '<h4>' + planes + '-Plane Design ✓' + tip('Your selected design: traffic is sprayed across ' + planes + ' independent parallel fabrics') + '</h4>';
       out += '<div class="stat-row"><span class="stat-label">Leaves / plane' + tip('Leaf switches per plane — fewer than single-plane because hosts are spread across planes') + '</span><span class="stat-value">' + fmtN(mpLeafPP) + '</span></div>';
       out += '<div class="stat-row"><span class="stat-label">Spines / plane' + tip('Spine switches per plane — smaller planes need fewer spines') + '</span><span class="stat-value">' + fmtN(mpSpinePP) + '</span></div>';
       out += '<div class="stat-row"><span class="stat-label">Total switches' + tip('Total switches across all ' + planes + ' planes combined') + '</span><span class="stat-value">' + fmtN(mpTotalSw) + ' (' + planes + '×' + fmtN(mpLeafPP + mpSpinePP) + ')</span></div>';
@@ -2406,7 +2457,7 @@ function calculate() {
   }
 
   // Power consumption estimates
-  const spineOpticSpeed = tierNum === 4 ? 800 : spineSpeed;
+  const spineOpticSpeed = 800;
   const hostOpticSpeed = hostSpeedPerPlane;
   const spConvW = opticCounts.spine * (OPTIC_POWER[spineOpticSpeed]?.conventional || 0);
   const spLpoW  = opticCounts.spine * (OPTIC_POWER[spineOpticSpeed]?.lpo || 0);
@@ -2528,7 +2579,7 @@ const RAIL_COLORS = [
 
 function topoTitle() {
   const c = lastTopoConfig;
-  if (currentTopoType === 'mrc-planes' && c.planes > 1) return 'MRC Multi-Plane Topology (' + c.planes + ' Planes)';
+  if (currentTopoType === 'mrc-planes' && c.planes > 1) return 'Multi-Plane Topology (' + c.planes + ' Planes)';
   return 'Network Topology' + (c.planes > 1 ? ' (Plane 1 of ' + c.planes + ')' : '');
 }
 
@@ -3277,8 +3328,9 @@ function renderTopology() {
   // Tier row labels (left margin)
   const tierLabelGroup = g.append('g').attr('class', 'topo-tier-labels');
   const minNodeX = Math.min(...data.nodes.map(n => n.pos.x));
-  const tierNames = { spine: 'Spines', leaf: 'Leaves', edgeLeaf: 'Edge Leaves',
-    aggLeaf: 'Agg Leaves', host: 'Hosts', ellipsis: null };
+  const is3Tier = lastTopoConfig && lastTopoConfig.tier === 3;
+  const tierNames = { spine: is3Tier ? 'Super-Spines' : 'Spines', leaf: 'Leaves', edgeLeaf: 'Leaves',
+    aggLeaf: 'Spines', host: 'Hosts', ellipsis: null };
   const labeledRanks = new Set();
   for (const n of data.nodes) {
     const name = tierNames[n.tier];
@@ -3753,8 +3805,10 @@ function buildCalcResult(tierNum, ctx) {
     const leafRadix = leafPlatform.radix;
     const physDown  = Math.floor(leafRadix * (parseFloat(document.getElementById('oversub').value) || 1) / (1 + (parseFloat(document.getElementById('oversub').value) || 1)));
     const uplinks   = leafRadix - physDown;
+    const ulBreak   = spineSpeed < 800 ? Math.round(800 / spineSpeed) : 1;
+    const effUp     = uplinks * ulBreak;
     const leafPerPlane = Math.ceil((totalHostLinks / planes) / (physDown * breakout));
-    const spineLinks = leafPerPlane * uplinks * planes;
+    const spineLinks = leafPerPlane * effUp * planes;
     const spOptBase = spineLinks * 2;
     const hOptBase  = Math.ceil(totalHostLinks / breakout) + totalHostLinks;
     if (spineOpticCat) items.push({ desc: 'Spine-tier optics · ' + spineSpeed + 'G', qty: spOptBase, type: 'optic', opticCat: spineOpticCat });
@@ -3766,24 +3820,26 @@ function buildCalcResult(tierNum, ctx) {
     const oversub    = parseFloat(document.getElementById('oversub').value) || 1;
     const physDown   = Math.floor(leafRadix * oversub / (1 + oversub));
     const uplinks    = leafRadix - physDown;
+    const ulBreak    = spineSpeed < 800 ? Math.round(800 / spineSpeed) : 1;
+    const effUp      = uplinks * ulBreak;
     const leafPerPlane = Math.ceil((totalHostLinks / planes) / (physDown * breakout));
     const totalLeaf2 = leafPerPlane * planes;
     const a2sDown    = leafPerPlane * uplinks;
     const leaf1PP    = Math.ceil(a2sDown / physDown);
     const totalLeaf1 = leaf1PP * planes;
 
-    if (leafKey)  items.push({ desc: 'Edge leaf: ' + leafPlatform.desc, qty: totalLeaf2, type: 'switch', skuKey: leafKey, role: 'leaf' });
-    if (leafKey)  items.push({ desc: 'Agg leaf: ' + leafPlatform.desc,  qty: totalLeaf1, type: 'switch', skuKey: leafKey, role: 'leaf' });
-    if (spineKey) items.push({ desc: 'Spine: ' + spinePlatform.desc,    qty: totalSpine, type: 'switch', skuKey: spineKey, role: 'spine' });
+    if (leafKey)  items.push({ desc: 'Leaf: ' + leafPlatform.desc, qty: totalLeaf2, type: 'switch', skuKey: leafKey, role: 'leaf' });
+    if (leafKey)  items.push({ desc: 'Spine: ' + leafPlatform.desc,  qty: totalLeaf1, type: 'switch', skuKey: leafKey, role: 'leaf' });
+    if (spineKey) items.push({ desc: 'Super-spine: ' + spinePlatform.desc, qty: totalSpine, type: 'switch', skuKey: spineKey, role: 'spine' });
 
     const e2aLinks = leafPerPlane * uplinks * planes;
-    const a2sLinks = leaf1PP * uplinks * planes;
+    const a2sLinks = leaf1PP * effUp * planes;
     const a2sBase = a2sLinks * 2;
     const e2aBase = e2aLinks * 2;
     const hBase   = Math.ceil(totalHostLinks / breakout) + totalHostLinks;
 
-    if (spineOpticCat) items.push({ desc: 'Spine-tier optics · ' + spineSpeed + 'G', qty: a2sBase, type: 'optic', opticCat: spineOpticCat });
-    if (spineOpticCat) items.push({ desc: 'Agg-tier optics · ' + spineSpeed + 'G',   qty: e2aBase, type: 'optic', opticCat: spineOpticCat });
+    if (spineOpticCat) items.push({ desc: 'Super-spine-tier optics · ' + spineSpeed + 'G', qty: a2sBase, type: 'optic', opticCat: spineOpticCat });
+    if (spineOpticCat) items.push({ desc: 'Spine-tier optics · ' + spineSpeed + 'G',   qty: e2aBase, type: 'optic', opticCat: spineOpticCat });
     if (hostOpticCat)  items.push({ desc: 'Host-tier optics · ' + hostSpeed + 'G',   qty: hBase,   type: 'optic', opticCat: hostOpticCat });
   }
 
