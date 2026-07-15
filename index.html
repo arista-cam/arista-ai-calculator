@@ -786,6 +786,18 @@
             <input type="number" id="links-per-gpu" min="1" max="8" value="1" oninput="autoSelectPlatforms()">
             <div class="hint">1 = standard, 2 = dual-rail</div>
           </div>
+          <div class="field" style="margin-top:8px">
+            <label>Scale-out planning</label>
+            <span class="optic-toggle" style="margin-left:0">
+              <button type="button" class="optic-toggle-btn active" id="scale-off" onclick="setScaleOut(false)">Off</button>
+              <button type="button" class="optic-toggle-btn" id="scale-on" onclick="setScaleOut(true)">On</button>
+            </span>
+          </div>
+          <div class="field" id="target-gpus-row" style="display:none">
+            <label>Target GPUs (fully scaled)</label>
+            <input type="number" id="target-gpus" min="1" placeholder="e.g. 16384" oninput="clearResults()">
+            <div class="hint">Spine layer will be pre-provisioned for this scale</div>
+          </div>
           <button type="button" class="section-next-btn" onclick="nextSection('section-cluster')">Next</button>
         </div>
       </div>
@@ -1030,6 +1042,10 @@
         <li><strong>Guided sidebar flow</strong> — Cluster Size opens by default; each section has a Next button that collapses the current section and opens the next, creating a wizard-style configuration flow</li>
         <li><strong>Config summary chips</strong> — collapsed sections show a compact summary of configured values (e.g. "512 GPUs · 64 nodes", "Two-tier · Training") so you can see your selections at a glance</li>
         <li><strong>Optics &amp; Power tab</strong> — merged Optics and Power into a single combined tab so the LPO toggle immediately reflects in power figures</li>
+        <li><strong>Scale-out planning</strong> — optional target GPU count pre-provisions the spine/super-spine layer for future growth while sizing leaves for day-1 deployment; Optics &amp; Power tab shows Day-1 vs Planned toggle with full breakdowns for both scenarios</li>
+        <li><strong>LPO toggle fix</strong> — FRO/LPO toggle now correctly shows for two-tier, three-tier, and DES designs (800G spine optics always support LPO); hidden only for single-tier at sub-800G host speed</li>
+        <li><strong>Arista logo</strong> — replaced placeholder icon with Arista Networks wordmark in the top bar</li>
+        <li><strong>Host port breakout tooltip</strong> — info icon on the breakout selector explains how 800G ports split into lower-speed host links</li>
       </ul>
       <h3>v1.4.1 — July 2025</h3>
       <ul>
@@ -1130,6 +1146,8 @@ function updateSectionSummaries() {
   if (gpus) parts.push(gpus + ' GPUs');
   if (nodes) parts.push(nodes + ' nodes');
   if (gpn && gpn !== '8') parts.push(gpn + '/node');
+  const tgt = getTargetGPUs();
+  if (tgt > 0) parts.push('→ ' + tgt);
   document.getElementById('summary-cluster').textContent = parts.join(' · ') || '';
 
   const gpuSel = document.getElementById('gpu-model');
@@ -1326,6 +1344,19 @@ function getWorkload() {
   return document.getElementById('wl-training').classList.contains('active') ? 'training' : 'inference';
 }
 
+function setScaleOut(enabled) {
+  document.getElementById('scale-off').className = 'optic-toggle-btn' + (enabled ? '' : ' active');
+  document.getElementById('scale-on').className = 'optic-toggle-btn' + (enabled ? ' active' : '');
+  document.getElementById('target-gpus-row').style.display = enabled ? '' : 'none';
+  if (!enabled) document.getElementById('target-gpus').value = '';
+  clearResults();
+}
+
+function getTargetGPUs() {
+  if (!document.getElementById('scale-on').classList.contains('active')) return 0;
+  return parseInt(document.getElementById('target-gpus').value) || 0;
+}
+
 function clearResults() {
   document.getElementById('results').innerHTML =
     '<div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg></div><h2>No results yet</h2><p>Enter your cluster size and configuration, then click Calculate to see network requirements.</p></div>';
@@ -1350,6 +1381,7 @@ function resetInputs() {
   document.getElementById('gpus-per-node').disabled = false;
   document.getElementById('links-per-gpu').disabled = false;
   setNicBreakout(false);
+  setScaleOut(false);
   setWorkload('training');
   document.getElementById('nic-breakout-row').style.display = 'none';
   document.getElementById('leaf-radix-custom').style.display = 'none';
@@ -1460,12 +1492,17 @@ function autoSelectPlatforms() {
   const totalHostLinks = gpus * linksPerGpu;
   const linksPerPlane  = Math.ceil(totalHostLinks / planes);
 
+  const targetGPUs = getTargetGPUs();
+  const targetLPP = (targetGPUs > gpus)
+    ? Math.ceil(targetGPUs * linksPerGpu / planes)
+    : linksPerPlane;
+
   if (tierNum === 1) {
     autoSelect1Tier(linksPerPlane, breakout);
   } else if (tierNum === 2) {
-    autoSelect2Tier(linksPerPlane, breakout);
+    autoSelect2Tier(linksPerPlane, breakout, targetLPP);
   } else {
-    autoSelect3Tier(linksPerPlane, breakout);
+    autoSelect3Tier(linksPerPlane, breakout, targetLPP);
   }
 }
 
@@ -1569,7 +1606,7 @@ function autoSelect1Tier(linksPerPlane, breakout) {
   showPlatformSuggestion(null, PLATFORMS[PLATFORMS.length - 1].radix);
 }
 
-function autoSelect2Tier(linksPerPlane, breakout) {
+function autoSelect2Tier(linksPerPlane, breakout, targetLPP) {
   const spSpeed = parseInt(document.getElementById('spine-speed').value) || 800;
   const ulBreak = spSpeed < 800 ? Math.round(800 / spSpeed) : 1;
   let best = null;
@@ -1582,12 +1619,13 @@ function autoSelect2Tier(linksPerPlane, breakout) {
       if (effDown <= 0 || uplinks <= 0) continue;
 
       const leafPerPlane = Math.ceil(linksPerPlane / effDown);
-      if (pass === 0 && leafPerPlane > effUp) continue;
+      const spineLeafPP  = Math.ceil(targetLPP / effDown);
+      if (pass === 0 && spineLeafPP > effUp) continue;
 
       for (const sp of PLATFORMS) {
         if (pass === 0 && sp.radix < lp.radix) continue;
         const effSpR = sp.radix * ulBreak;
-        const spinePerPlane = Math.ceil((leafPerPlane * effUp) / effSpR);
+        const spinePerPlane = Math.ceil((spineLeafPP * effUp) / effSpR);
         if (spinePerPlane <= effUp && effUp % spinePerPlane === 0) {
           const ports = leafPerPlane * lp.radix + spinePerPlane * sp.radix;
           const switches = leafPerPlane + spinePerPlane;
@@ -1607,7 +1645,7 @@ function autoSelect2Tier(linksPerPlane, breakout) {
   }
 }
 
-function autoSelect3Tier(linksPerPlane, breakout) {
+function autoSelect3Tier(linksPerPlane, breakout, targetLPP) {
   const spSpeed = parseInt(document.getElementById('spine-speed').value) || 800;
   const ulBreak = spSpeed < 800 ? Math.round(800 / spSpeed) : 1;
   let best = null;
@@ -1622,8 +1660,9 @@ function autoSelect3Tier(linksPerPlane, breakout) {
       const leaf2PerPlane = Math.ceil(linksPerPlane / effDown);
       if (pass === 0 && leaf2PerPlane > effUp) continue;
 
-      // Pod model: edge leaves + agg switches per pod
-      const podsNeeded    = Math.ceil(leaf2PerPlane / physDown);
+      // Pod model: use target scale for super-spine sizing
+      const tgtLeaf2PP   = Math.ceil(targetLPP / effDown);
+      const podsNeeded    = Math.ceil(tgtLeaf2PP / physDown);
       const leaf1PerPlane = podsNeeded * uplinks;
       const spinePortsNeeded = leaf1PerPlane * effUp;
 
@@ -1796,6 +1835,25 @@ function togglePowerMode(mode) {
   document.getElementById('results').dataset.powerMode = mode;
 }
 
+function toggleScaleView(mode) {
+  const panel = document.querySelector('.results-tab-panel[data-tab="optics"]');
+  if (!panel) return;
+  const day1 = panel.querySelector('.scale-day1');
+  const planned = panel.querySelector('.scale-planned');
+  if (!day1 || !planned) return;
+  day1.style.display = mode === 'day1' ? '' : 'none';
+  planned.style.display = mode === 'planned' ? '' : 'none';
+  panel.querySelectorAll('.scale-toggle-btn').forEach(b => {
+    const isDay1 = b.textContent.startsWith('Day-1');
+    b.classList.toggle('active', mode === 'day1' ? isDay1 : !isDay1);
+  });
+  const el = document.getElementById('results');
+  const active = panel.querySelector('.scale-' + mode);
+  if (active) {
+    active.querySelectorAll('.power-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === el.dataset.powerMode));
+  }
+}
+
 let activeResultsTab = 'summary';
 function switchResultsTab(tabId) {
   activeResultsTab = tabId;
@@ -1907,9 +1965,10 @@ function calculate() {
 
   let warnHtml = '';
 
-  if (tierNum === 1 && gpus > 1152)
+  const warnScaleGpus = getTargetGPUs() > gpus ? getTargetGPUs() : gpus;
+  if (tierNum === 1 && warnScaleGpus > 1152)
     warnHtml += '<div class="warn-box">Your cluster has ' + fmtN(gpus) + ' GPUs — single-tier is typically used up to ~1,152. Results shown as requested; consider two-tier for production.</div>';
-  if (tierNum === 3 && gpus < 10000)
+  if (tierNum === 3 && warnScaleGpus < 10000)
     warnHtml += '<div class="warn-box">Three-tier is typically used for 74K+ GPU clusters. Two-tier may be simpler and more cost-effective at ' + fmtN(gpus) + ' GPUs.</div>';
 
   if (tierNum >= 2 && tierNum <= 3) {
@@ -2106,7 +2165,11 @@ function calculate() {
     const leafPerPlane  = Math.ceil(linksPerPlane / effDownlinks);
     totalLeaf           = leafPerPlane * planes;
     const balance       = document.getElementById('balance-topo').value === '1';
-    const origSpinePP   = Math.ceil((leafPerPlane * effUplinks) / effSpineRadix);
+    const targetGPUs    = getTargetGPUs();
+    const spineLeafPP   = (targetGPUs > gpus)
+      ? Math.ceil(Math.ceil(targetGPUs * linksPerGpu / planes) / effDownlinks)
+      : leafPerPlane;
+    const origSpinePP   = Math.ceil((spineLeafPP * effUplinks) / effSpineRadix);
     let spinePerPlane   = origSpinePP;
     let balanceNote     = '';
     if (balance && effUplinks > 0 && effUplinks % spinePerPlane !== 0) {
@@ -2145,11 +2208,16 @@ function calculate() {
       leafNote = '<span style="color:var(--coral600);font-weight:600">Warning:</span> Uplinks do not divide evenly across spines (' + bundleSize.toFixed(2) + ' links per spine). This topology is unbalanced.' + suggestion + ' Enable <strong>Balance topology</strong> to auto-adjust.';
     }
 
-    switchHtml  = mkSection(iconServer(), 'Spine layer', [
+    const spineRows = [
       ['Spine platform', spinePlatform.desc],
       ['Spine per plane', spinePerPlane], ['Planes', planes],
       ['Total spine switches', totalSpine], ['Downlink ports used', Math.floor(leafPerPlane * bundleSize)],
-    ]);
+    ];
+    if (targetGPUs > gpus) {
+      spineRows.push(['Pre-provisioned for', fmtN(targetGPUs) + ' GPUs (' + fmtN(spineLeafPP) + ' leaves/plane)']);
+      spineRows.push(['Day-1 spine utilization', Math.round((leafPerPlane / spineLeafPP) * 100) + '%']);
+    }
+    switchHtml  = mkSection(iconServer(), 'Spine layer', spineRows);
     switchHtml += mkSection(iconBranch(), 'Leaf layer', [
       ['Leaf platform', leafPlatform.desc],
       ['Leaf per plane', leafPerPlane], ['Total leaf switches', totalLeaf],
@@ -2159,6 +2227,7 @@ function calculate() {
       ['Links per spine (bundle)', bundleStr],
     ], leafNote);
     if (balanceNote) switchHtml += '<div class="note-box" style="margin-bottom:12px">' + balanceNote + '</div>';
+    if (targetGPUs > gpus) switchHtml += '<div class="note-box" style="margin-bottom:12px">Spine layer pre-provisioned for ' + fmtN(targetGPUs) + ' GPUs. Day-1 deployment: ' + fmtN(gpus) + ' GPUs across ' + fmtN(totalLeaf) + ' leaves with ' + fmtN(totalSpine) + ' spines. Scale out by adding leaves — no spine changes required.</div>';
 
     const spineBreakoutLabel = uplinkBreakout > 1 ? ', ' + uplinkBreakout + ':1' : '';
     const spineOpticTier = uplinkBreakout > 1 ? undefined : 'spine';
@@ -2224,7 +2293,11 @@ function calculate() {
     const totalLeaf1    = leaf1PerPlane * planes;
 
     // Spines: total agg uplinks distributed across spine switches
-    const aggUplinksTotal = leaf1PerPlane * effUplinks;
+    const targetGPUs    = getTargetGPUs();
+    const ssLeaf1PP     = (targetGPUs > gpus)
+      ? Math.ceil(Math.ceil(Math.ceil(targetGPUs * linksPerGpu / planes) / effDownlinks) / edgeLeavesPerPod) * aggPerPod
+      : leaf1PerPlane;
+    const aggUplinksTotal = ssLeaf1PP * effUplinks;
     let spinePerPlane   = Math.ceil(aggUplinksTotal / effSpineRadix);
     totalSpine          = spinePerPlane * planes;
 
@@ -2270,6 +2343,10 @@ function calculate() {
     } else {
       spineConnRows.push(['Connectivity', 'Full mesh']);
     }
+    if (targetGPUs > gpus) {
+      spineConnRows.push(['Pre-provisioned for', fmtN(targetGPUs) + ' GPUs (' + fmtN(ssLeaf1PP) + ' spines/plane)']);
+      spineConnRows.push(['Day-1 utilization', Math.round((leaf1PerPlane / ssLeaf1PP) * 100) + '%']);
+    }
     switchHtml  = mkSection(iconServer(), 'Super-spine layer', spineConnRows);
     switchHtml += mkSection(iconBranch(), 'Spine layer', [
       ['Spine platform', leafPlatform.desc],
@@ -2282,6 +2359,7 @@ function calculate() {
       ['Host links per leaf', Math.ceil(linksPerPlane / leaf2PerPlane) + (breakout > 1 ? ` (via ${breakout}:1)` : '')],
       ['Links per spine (bundle)', e2aBundleStr],
     ], 'Three-tier Clos: ' + pods + (pods === 1 ? ' pod' : ' pods') + ' per plane, ' + edgeLeavesPerPod + ' leaves + ' + aggPerPod + ' spines per pod.');
+    if (targetGPUs > gpus) switchHtml += '<div class="note-box" style="margin-bottom:12px">Super-spine layer pre-provisioned for ' + fmtN(targetGPUs) + ' GPUs. Day-1 deployment: ' + fmtN(gpus) + ' GPUs across ' + pods + ' pods with ' + fmtN(totalSpine) + ' super-spines. Scale out by adding pods — no super-spine changes required.</div>';
 
     const ssBreakoutLabel = uplinkBreakout > 1 ? ', ' + uplinkBreakout + ':1' : '';
     const ssOpticTier = uplinkBreakout > 1 ? undefined : 'spine';
@@ -2538,6 +2616,10 @@ function calculate() {
   }
 
   // Modular vs Fixed comparison
+  const scaleTargetGPUs = getTargetGPUs();
+  const modularLPP = (scaleTargetGPUs > gpus)
+    ? Math.ceil(scaleTargetGPUs * linksPerGpu / planes)
+    : linksPerPlane;
   if ((tierNum >= 1 && tierNum <= 3) && spinePlatform && leafPlatform !== undefined && spinePlatform.type !== 'custom' && (!leafPlatform || leafPlatform.type !== 'custom')) {
     const isCurrentModular = spinePlatform.type === 'chassis';
     const totalOpticsCurrent = opticCounts.spine + opticCounts.hostSwitch + opticCounts.hostEnd + opticCounts.fabric;
@@ -2553,10 +2635,10 @@ function calculate() {
       const eUp = up * ulB;
       const eSR = sRadix * ulB;
       if (eDown <= 0) return null;
-      const lPP = Math.ceil(linksPerPlane / eDown);
+      const lPP = Math.ceil(modularLPP / eDown);
 
       if (tier === 1) {
-        const portsNeeded = Math.ceil(linksPerPlane / breakout);
+        const portsNeeded = Math.ceil(modularLPP / breakout);
         if (portsNeeded > sRadix) return null;
         const tSpine = planes;
         const hOpt = Math.ceil(totalHostLinks / breakout) + totalHostLinks;
@@ -2609,11 +2691,12 @@ function calculate() {
     const cur = { tier: tierNum, total: totalSwitches, optics: totalOpticsCurrent, ru: currentRU, power: curPower };
 
     let alt = null, altLabel = '', curLabel = '';
+    const scaleGpus = scaleTargetGPUs > gpus ? scaleTargetGPUs : gpus;
 
     if (isCurrentModular) {
       const fixedSpine = LEAF_PLATFORMS[LEAF_PLATFORMS.length - 1];
       alt = calcAltDesign(fixedSpine, leafPlatform || fixedSpine, tierNum === 1 ? 2 : tierNum);
-      if (alt && alt.maxScale < gpus && (tierNum === 1 || tierNum === 2)) {
+      if (alt && alt.maxScale < scaleGpus && (tierNum === 1 || tierNum === 2)) {
         alt = calcAltDesign(fixedSpine, leafPlatform || fixedSpine, 3);
         altLabel = '3-Tier All-Fixed';
       } else {
@@ -2622,7 +2705,7 @@ function calculate() {
       curLabel = tierNum === 1 ? 'Your Design: Collapsed Modular' : 'Your Design: Modular Spine';
     } else {
       const chassis = PLATFORMS.filter(p => p.type === 'chassis');
-      const canSingleTier = chassis.some(ch => Math.ceil(linksPerPlane / breakout) <= ch.radix);
+      const canSingleTier = chassis.some(ch => Math.ceil(modularLPP / breakout) <= ch.radix);
       if (canSingleTier && tierNum >= 2) {
         for (const ch of chassis) {
           const d = calcAltDesign(ch, leafPlatform, 1);
@@ -2633,9 +2716,12 @@ function calculate() {
       if (!alt) {
         for (const ch of chassis) {
           const d = calcAltDesign(ch, leafPlatform, 2);
-          if (d && d.maxScale >= gpus) { alt = d; break; }
+          if (d && d.maxScale >= scaleGpus) { alt = d; break; }
         }
-        if (!alt && chassis.length > 0) alt = calcAltDesign(chassis[chassis.length - 1], leafPlatform, 2);
+        if (!alt && chassis.length > 0) {
+          const d = calcAltDesign(chassis[chassis.length - 1], leafPlatform, 2);
+          if (d && d.maxScale >= scaleGpus) alt = d;
+        }
         if (alt) altLabel = '2-Tier Modular (' + alt.spName + ')';
       }
       curLabel = tierNum === 3 ? 'Your Design: 3-Tier All-Fixed' : 'Your Design: All-Fixed';
@@ -2698,100 +2784,150 @@ function calculate() {
   }
 
   // Power consumption estimates
-  const spineOpticSpeed = 800;
-  const hostOpticSpeed = hostSpeedPerPlane;
-  const spConvW = opticCounts.spine * (OPTIC_POWER[spineOpticSpeed]?.conventional || 0);
-  const spLpoW  = opticCounts.spine * (OPTIC_POWER[spineOpticSpeed]?.lpo || 0);
-  const hSwConvW = opticCounts.hostSwitch * (OPTIC_POWER[hostOpticSpeed]?.conventional || 0);
-  const hSwLpoW  = opticCounts.hostSwitch * (OPTIC_POWER[hostOpticSpeed]?.lpo || 0);
-  const hEndW    = opticCounts.hostEnd * (OPTIC_POWER[hostOpticSpeed]?.conventional || 0);
-  const hConvW   = hSwConvW + hEndW;
-  const hLpoW    = hSwLpoW + hEndW;
-  const fConvW  = opticCounts.fabric * (OPTIC_POWER[800]?.conventional || 0);
-  const fLpoW   = opticCounts.fabric * (OPTIC_POWER[800]?.lpo || 0);
-  const optConvTotal = spConvW + hConvW + fConvW;
-  const optLpoTotal  = spLpoW + hLpoW + fLpoW;
-
-  let switchTypW = 0, switchMaxW = 0;
-  if (tierNum === 4) {
-    switchTypW = totalLeaf * DES_POWER.leaf.typ + totalSpine * DES_POWER.spine.typ;
-    switchMaxW = totalLeaf * DES_POWER.leaf.max + totalSpine * DES_POWER.spine.max;
-  } else {
-    switchTypW = totalSpine * (spinePlatform?.powerTyp || 0) + totalLeaf * (leafPlatform?.powerTyp || 0);
-    switchMaxW = totalSpine * (spinePlatform?.powerMax || 0) + totalLeaf * (leafPlatform?.powerMax || 0);
-  }
-  const switch80W = Math.round(switchMaxW * 0.8);
-
-  const lpoSavingsW = optConvTotal - optLpoTotal;
-  const totalConvTyp = optConvTotal + switchTypW, totalConv80 = optConvTotal + switch80W, totalConvMax = optConvTotal + switchMaxW;
-  function lpoPct(total) { return total > 0 ? Math.round((lpoSavingsW / total) * 100) : 0; }
-
   function kw(w) { return (w / 1000).toFixed(1) + ' kW'; }
-  function opticDual(convW, lpoW) {
-    return '<span class="optic-conv">' + kw(convW) + '</span><span class="optic-lpo">' + kw(lpoW) + '</span>';
+
+  function buildPowerHtml(oc, tLeaf, tSpine) {
+    const spConvW = oc.spine * (OPTIC_POWER[800]?.conventional || 0);
+    const spLpoW  = oc.spine * (OPTIC_POWER[800]?.lpo || 0);
+    const hSwConvW = oc.hostSwitch * (OPTIC_POWER[hostSpeedPerPlane]?.conventional || 0);
+    const hSwLpoW  = oc.hostSwitch * (OPTIC_POWER[hostSpeedPerPlane]?.lpo || 0);
+    const hEndW    = oc.hostEnd * (OPTIC_POWER[hostSpeedPerPlane]?.conventional || 0);
+    const hConvW   = hSwConvW + hEndW;
+    const hLpoW    = hSwLpoW + hEndW;
+    const fConvW  = oc.fabric * (OPTIC_POWER[800]?.conventional || 0);
+    const fLpoW   = oc.fabric * (OPTIC_POWER[800]?.lpo || 0);
+    const optConvT = spConvW + hConvW + fConvW;
+    const optLpoT  = spLpoW + hLpoW + fLpoW;
+
+    let swTypW = 0, swMaxW = 0;
+    if (tierNum === 4) {
+      swTypW = tLeaf * DES_POWER.leaf.typ + tSpine * DES_POWER.spine.typ;
+      swMaxW = tLeaf * DES_POWER.leaf.max + tSpine * DES_POWER.spine.max;
+    } else {
+      swTypW = tSpine * (spinePlatform?.powerTyp || 0) + tLeaf * (leafPlatform?.powerTyp || 0);
+      swMaxW = tSpine * (spinePlatform?.powerMax || 0) + tLeaf * (leafPlatform?.powerMax || 0);
+    }
+    const sw80W = Math.round(swMaxW * 0.8);
+    const lpoSav = optConvT - optLpoT;
+    const tConvTyp = optConvT + swTypW, tConv80 = optConvT + sw80W, tConvMax = optConvT + swMaxW;
+    function lpoPct(total) { return total > 0 ? Math.round((lpoSav / total) * 100) : 0; }
+    function opticDual(c, l) { return '<span class="optic-conv">' + kw(c) + '</span><span class="optic-lpo">' + kw(l) + '</span>'; }
+    function swTriple(t, p, m) { return '<span class="power-typ">' + kw(t) + '</span><span class="power-80">' + kw(p) + '</span><span class="power-max">' + kw(m) + '</span>'; }
+    function totalSix(o, t, p, m) {
+      return '<span class="optic-conv power-typ">' + kw(o+t) + '</span><span class="optic-conv power-80">' + kw(o+p) + '</span><span class="optic-conv power-max">' + kw(o+m) + '</span>'
+           + '<span class="optic-lpo power-typ">' + kw(o-lpoSav+t) + '</span><span class="optic-lpo power-80">' + kw(o-lpoSav+p) + '</span><span class="optic-lpo power-max">' + kw(o-lpoSav+m) + '</span>';
+    }
+
+    let h = '<div class="result-section"><h3>' + iconPlug() + 'Estimated power consumption';
+    h += '<span class="power-toggle">';
+    h += '<button class="power-toggle-btn" data-mode="typical" onclick="togglePowerMode(\'typical\')">Typical</button>';
+    h += '<button class="power-toggle-btn active" data-mode="eightyPct" onclick="togglePowerMode(\'eightyPct\')">80%</button>';
+    h += '<button class="power-toggle-btn" data-mode="max" onclick="togglePowerMode(\'max\')">Max</button>';
+    h += '</span></h3><table class="breakdown-table">';
+    if (oc.spine > 0) h += '<tr><td>Spine/fabric optics (' + fmtN(oc.spine) + ')</td><td>' + opticDual(spConvW, spLpoW) + '</td></tr>';
+    if (oc.fabric > 0) h += '<tr><td>DES fabric optics (' + fmtN(oc.fabric) + ')</td><td>' + opticDual(fConvW, fLpoW) + '</td></tr>';
+    const hTotal = oc.hostSwitch + oc.hostEnd;
+    if (hTotal > 0) h += '<tr><td>Host optics (' + fmtN(hTotal) + ')</td><td>' + opticDual(hConvW, hLpoW) + '</td></tr>';
+    h += '<tr class="subtotal"><td>Optics subtotal</td><td>' + opticDual(optConvT, optLpoT) + '</td></tr>';
+    if (tierNum === 4) {
+      const lTyp = tLeaf * DES_POWER.leaf.typ, lMax = tLeaf * DES_POWER.leaf.max;
+      const sTyp = tSpine * DES_POWER.spine.typ, sMax = tSpine * DES_POWER.spine.max;
+      if (tLeaf > 0) h += '<tr><td style="padding-top:14px">DES leaves (' + fmtN(tLeaf) + ')</td><td style="padding-top:14px">' + swTriple(lTyp, Math.round(lMax * 0.8), lMax) + '</td></tr>';
+      if (tSpine > 0) h += '<tr><td>DES spines (' + fmtN(tSpine) + ')</td><td>' + swTriple(sTyp, Math.round(sMax * 0.8), sMax) + '</td></tr>';
+    } else {
+      const sTyp = tSpine * (spinePlatform?.powerTyp || 0), sMax = tSpine * (spinePlatform?.powerMax || 0);
+      const lTyp = tLeaf * (leafPlatform?.powerTyp || 0), lMax = tLeaf * (leafPlatform?.powerMax || 0);
+      if (tSpine > 0 && spinePlatform?.powerMax) h += '<tr><td style="padding-top:14px">Spine switches (' + fmtN(tSpine) + ')</td><td style="padding-top:14px">' + swTriple(sTyp, Math.round(sMax * 0.8), sMax) + '</td></tr>';
+      if (tLeaf > 0 && leafPlatform?.powerMax) h += '<tr><td>Leaf switches (' + fmtN(tLeaf) + ')</td><td>' + swTriple(lTyp, Math.round(lMax * 0.8), lMax) + '</td></tr>';
+    }
+    h += '<tr class="subtotal"><td>Switch subtotal</td><td>' + swTriple(swTypW, sw80W, swMaxW) + '</td></tr>';
+    h += '<tr class="subtotal"><td>Total fabric power</td><td>' + totalSix(optConvT, swTypW, sw80W, swMaxW) + '</td></tr>';
+    if (lpoSav > 0) {
+      const annualSavings = (lpoSav / 1000) * 8760 * 0.10;
+      const optic800 = oc.spine + oc.fabric;
+      h += '<tr><td colspan="2">'
+        + '<span class="optic-lpo power-typ">LPO savings: ' + kw(lpoSav) + ' (' + lpoPct(tConvTyp) + '% reduction)</span>'
+        + '<span class="optic-lpo power-80">LPO savings: ' + kw(lpoSav) + ' (' + lpoPct(tConv80) + '% reduction)</span>'
+        + '<span class="optic-lpo power-max">LPO savings: ' + kw(lpoSav) + ' (' + lpoPct(tConvMax) + '% reduction)</span>'
+        + '</td></tr>';
+      h += '<tr><td colspan="2"><span class="optic-lpo">'
+        + '<strong>Est. OpEx savings:</strong> $' + fmtN(Math.round(annualSavings)) + '/year (at $0.10/kWh)'
+        + (optic800 > 0 ? ' · <strong>Est. CapEx:</strong> LPO ~30–40% less per 800G module (' + fmtN(optic800) + ' modules)' : '')
+        + '</span></td></tr>';
+    }
+    h += '</table><div class="note-box">Power figures are estimates based on Arista platform datasheets. Switch power: typical at 25°C/50% load, max at 40°C/100% load (excluding optics). OpEx/CapEx savings are illustrative estimates — actual costs vary by vendor and region.</div></div>';
+    return h;
   }
-  function swTriple(typW, p80W, maxW) {
-    return '<span class="power-typ">' + kw(typW) + '</span><span class="power-80">' + kw(p80W) + '</span><span class="power-max">' + kw(maxW) + '</span>';
-  }
-  function totalSix(optW, typW, p80W, maxW) {
-    return '<span class="optic-conv power-typ">' + kw(optW + typW) + '</span>'
-         + '<span class="optic-conv power-80">'  + kw(optW + p80W) + '</span>'
-         + '<span class="optic-conv power-max">' + kw(optW + maxW) + '</span>'
-         + '<span class="optic-lpo power-typ">'  + kw(optW - lpoSavingsW + typW) + '</span>'
-         + '<span class="optic-lpo power-80">'   + kw(optW - lpoSavingsW + p80W) + '</span>'
-         + '<span class="optic-lpo power-max">'  + kw(optW - lpoSavingsW + maxW) + '</span>';
-  }
 
-  let powerHtml = '<div class="result-section"><h3>' + iconPlug() + 'Estimated power consumption';
-  powerHtml += '<span class="power-toggle">';
-  powerHtml += '<button class="power-toggle-btn" data-mode="typical" onclick="togglePowerMode(\'typical\')">Typical</button>';
-  powerHtml += '<button class="power-toggle-btn active" data-mode="eightyPct" onclick="togglePowerMode(\'eightyPct\')">80%</button>';
-  powerHtml += '<button class="power-toggle-btn" data-mode="max" onclick="togglePowerMode(\'max\')">Max</button>';
-  powerHtml += '</span></h3>';
-  powerHtml += '<table class="breakdown-table">';
-
-  if (opticCounts.spine > 0) powerHtml += '<tr><td>Spine/fabric optics (' + fmtN(opticCounts.spine) + ')</td><td>' + opticDual(spConvW, spLpoW) + '</td></tr>';
-  if (opticCounts.fabric > 0) powerHtml += '<tr><td>DES fabric optics (' + fmtN(opticCounts.fabric) + ')</td><td>' + opticDual(fConvW, fLpoW) + '</td></tr>';
-  const hostOpticTotal = opticCounts.hostSwitch + opticCounts.hostEnd;
-  if (hostOpticTotal > 0) powerHtml += '<tr><td>Host optics (' + fmtN(hostOpticTotal) + ')</td><td>' + opticDual(hConvW, hLpoW) + '</td></tr>';
-  powerHtml += '<tr class="subtotal"><td>Optics subtotal</td><td>' + opticDual(optConvTotal, optLpoTotal) + '</td></tr>';
-
-  if (tierNum === 4) {
-    const leafTyp = totalLeaf * DES_POWER.leaf.typ, leafMax = totalLeaf * DES_POWER.leaf.max;
-    const spnTyp = totalSpine * DES_POWER.spine.typ, spnMax = totalSpine * DES_POWER.spine.max;
-    if (totalLeaf > 0) powerHtml += '<tr><td style="padding-top:14px">DES leaves (' + fmtN(totalLeaf) + ')</td><td style="padding-top:14px">' + swTriple(leafTyp, Math.round(leafMax * 0.8), leafMax) + '</td></tr>';
-    if (totalSpine > 0) powerHtml += '<tr><td>DES spines (' + fmtN(totalSpine) + ')</td><td>' + swTriple(spnTyp, Math.round(spnMax * 0.8), spnMax) + '</td></tr>';
-  } else {
-    const spnTyp = totalSpine * (spinePlatform?.powerTyp || 0), spnMax = totalSpine * (spinePlatform?.powerMax || 0);
-    const lfTyp = totalLeaf * (leafPlatform?.powerTyp || 0), lfMax = totalLeaf * (leafPlatform?.powerMax || 0);
-    if (totalSpine > 0 && spinePlatform?.powerMax) powerHtml += '<tr><td style="padding-top:14px">Spine switches (' + fmtN(totalSpine) + ')</td><td style="padding-top:14px">' + swTriple(spnTyp, Math.round(spnMax * 0.8), spnMax) + '</td></tr>';
-    if (totalLeaf > 0 && leafPlatform?.powerMax) powerHtml += '<tr><td>Leaf switches (' + fmtN(totalLeaf) + ')</td><td>' + swTriple(lfTyp, Math.round(lfMax * 0.8), lfMax) + '</td></tr>';
-  }
-  powerHtml += '<tr class="subtotal"><td>Switch subtotal</td><td>' + swTriple(switchTypW, switch80W, switchMaxW) + '</td></tr>';
-  powerHtml += '<tr class="subtotal"><td>Total fabric power</td><td>' + totalSix(optConvTotal, switchTypW, switch80W, switchMaxW) + '</td></tr>';
-
-  if (lpoSavingsW > 0) {
-    const annualHours = 8760;
-    const elecRate = 0.10;
-    const annualSavings = (lpoSavingsW / 1000) * annualHours * elecRate;
-    const optic800Count = opticCounts.spine + opticCounts.fabric;
-
-    powerHtml += '<tr><td colspan="2">'
-      + '<span class="optic-lpo power-typ">LPO savings: ' + kw(lpoSavingsW) + ' (' + lpoPct(totalConvTyp) + '% reduction in total power)</span>'
-      + '<span class="optic-lpo power-80">LPO savings: ' + kw(lpoSavingsW) + ' (' + lpoPct(totalConv80) + '% reduction in total power)</span>'
-      + '<span class="optic-lpo power-max">LPO savings: ' + kw(lpoSavingsW) + ' (' + lpoPct(totalConvMax) + '% reduction in total power)</span>'
-      + '</td></tr>';
-    powerHtml += '<tr><td colspan="2"><span class="optic-lpo">'
-      + '<strong>Est. OpEx savings:</strong> $' + fmtN(Math.round(annualSavings)) + '/year (at $' + elecRate.toFixed(2) + '/kWh)'
-      + (optic800Count > 0 ? ' · <strong>Est. CapEx:</strong> LPO ~30–40% less per 800G module (' + fmtN(optic800Count) + ' modules in this design)' : '')
-      + '</span></td></tr>';
-  }
-
-  powerHtml += '</table>';
-  powerHtml += '<div class="note-box">Power figures are estimates based on Arista platform datasheets. Switch power: typical at 25°C/50% load, max at 40°C/100% load (excluding optics). OpEx/CapEx savings are illustrative estimates — actual costs vary by vendor and region.</div>';
-  powerHtml += '</div>';
+  let powerHtml = buildPowerHtml(opticCounts, totalLeaf, totalSpine);
 
   fabricContent = switchHtml + fabricContent;
+
+  // Planned scale optics & power (when scale-out is enabled)
+  let plannedOptPower = '';
+  const scaleTarget = getTargetGPUs();
+  if (scaleTarget > gpus && (tierNum === 2 || tierNum === 3)) {
+    const pHostLinks = scaleTarget * linksPerGpu;
+    const pLPP = Math.ceil(pHostLinks / planes);
+    const pLeafPP = Math.ceil(pLPP / effDownlinks);
+    const pTotalLeaf = pLeafPP * planes;
+    const pHOptSwitch = Math.ceil(pHostLinks / breakout);
+    const pHOptHost = pHostLinks;
+    const pHOptBase = pHOptSwitch + pHOptHost;
+    const spBreakLabel = uplinkBreakout > 1 ? ', ' + uplinkBreakout + ':1' : '';
+    const spOpTier = uplinkBreakout > 1 ? undefined : 'spine';
+    let pOptRows, pOC, pNoteText;
+
+    if (tierNum === 2) {
+      const pSpineLinks = pLeafPP * effUplinks * planes;
+      const pSpPhys = uplinkBreakout > 1 ? Math.ceil(pSpineLinks / uplinkBreakout) : pSpineLinks;
+      const pSpOpt = pSpPhys * 2;
+      pOC = { spine: pSpOpt, hostSwitch: pHOptSwitch, hostEnd: pHOptHost, fabric: 0 };
+      pOptRows = [
+        ['Leaf ↔ spine links', fmtN(pSpineLinks)],
+        ['In spine switch (leaf-facing' + spBreakLabel + ') · ' + dualOptic(800, spOpTier), fmtN(pSpPhys)],
+        ['In leaf switch (spine-facing' + spBreakLabel + ') · ' + dualOptic(800, spOpTier), fmtN(pSpPhys)],
+        ['Fabric subtotal', fmtN(pSpOpt), true],
+        ['Host ↔ leaf links', fmtN(pHostLinks), false, true]
+      ];
+      if (breakout === 1) pOptRows.push(['In leaf switch (host-facing) · ' + dualOptic(hostSpeedPerPlane), fmtN(pHOptSwitch)]);
+      else pOptRows.push(['In leaf switch (host-facing, ' + breakout + ':1) · ' + dualOptic(hostSpeedPerPlane * breakout), fmtN(pHOptSwitch)]);
+      pOptRows.push(['In host NIC · ' + dualOpticHost(hostSpeedPerPlane), fmtN(pHOptHost)]);
+      pOptRows.push(['Host subtotal', fmtN(pHOptBase), true]);
+      pOptRows.push(['Grand total optics', fmtN(pSpOpt + pHOptBase), true]);
+      pNoteText = '<span class="optic-conv">Spine: ' + opticType(800, spOpTier) + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Spine: ' + opticTypeLPO(800, spOpTier) + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + '. Leaf switch: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>';
+    } else {
+      const uplinks = leafRadix - physDownlinks;
+      const pPods = Math.ceil(pLeafPP / physDownlinks);
+      const pLeaf1PP = pPods * uplinks;
+      const pA2sLinks = pLeaf1PP * effUplinks * planes;
+      const pA2sPhys = uplinkBreakout > 1 ? Math.ceil(pA2sLinks / uplinkBreakout) : pA2sLinks;
+      const pA2sBase = pA2sPhys * 2;
+      const pE2aLinks = pLeafPP * uplinks * planes;
+      const pE2aBase = pE2aLinks * 2;
+      pOC = { spine: pA2sBase + pE2aBase, hostSwitch: pHOptSwitch, hostEnd: pHOptHost, fabric: 0 };
+      pOptRows = [
+        ['Spine ↔ super-spine links', fmtN(pA2sLinks)],
+        ['In super-spine (spine-facing' + spBreakLabel + ') · ' + dualOptic(800, spOpTier), fmtN(pA2sPhys)],
+        ['In spine (super-spine-facing' + spBreakLabel + ') · ' + dualOptic(800, spOpTier), fmtN(pA2sPhys)],
+        ['Super-spine-tier subtotal', fmtN(pA2sBase), true],
+        ['Leaf ↔ spine links', fmtN(pE2aLinks), false, true],
+        ['In spine (leaf-facing) · ' + dualOptic(800, 'spine'), fmtN(pE2aLinks)],
+        ['In leaf (spine-facing) · ' + dualOptic(800, 'spine'), fmtN(pE2aLinks)],
+        ['Spine-tier subtotal', fmtN(pE2aBase), true],
+        ['Host ↔ leaf links', fmtN(pHostLinks), false, true]
+      ];
+      if (breakout === 1) pOptRows.push(['In leaf (host-facing) · ' + dualOptic(hostSpeedPerPlane), fmtN(pHOptSwitch)]);
+      else pOptRows.push(['In leaf (host-facing, ' + breakout + ':1) · ' + dualOptic(hostSpeedPerPlane * breakout), fmtN(pHOptSwitch)]);
+      pOptRows.push(['In host NIC · ' + dualOpticHost(hostSpeedPerPlane), fmtN(pHOptHost)]);
+      pOptRows.push(['Host subtotal', fmtN(pHOptBase), true]);
+      pOptRows.push(['Grand total optics', fmtN(pA2sBase + pE2aBase + pHOptBase), true]);
+      pNoteText = '<span class="optic-conv">Super-spine/spine: ' + opticType(800, spOpTier) + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Super-spine/spine: ' + opticTypeLPO(800, spOpTier) + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + '. Leaf: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>';
+    }
+    const pOptHtml = opticsSection(pOptRows, pNoteText);
+    const pPowerHtml = buildPowerHtml(pOC, pTotalLeaf, totalSpine);
+    plannedOptPower = pOptHtml + pPowerHtml;
+  }
 
   if (activeResultsTab === 'power') activeResultsTab = 'optics';
   out += '<div class="results-tabs">';
@@ -2801,7 +2937,15 @@ function calculate() {
   out += '</div>';
   out += '<div class="results-tab-panel' + (activeResultsTab === 'summary' ? ' active' : '') + '" data-tab="summary">' + summaryContent + '</div>';
   out += '<div class="results-tab-panel' + (activeResultsTab === 'fabric' ? ' active' : '') + '" data-tab="fabric">' + fabricContent + '</div>';
-  out += '<div class="results-tab-panel' + (activeResultsTab === 'optics' ? ' active' : '') + '" data-tab="optics">' + optHtml + powerHtml + '</div>';
+  if (plannedOptPower) {
+    out += '<div class="results-tab-panel' + (activeResultsTab === 'optics' ? ' active' : '') + '" data-tab="optics">';
+    out += '<div style="margin-bottom:12px"><span class="optic-toggle"><button class="scale-toggle-btn optic-toggle-btn active" onclick="toggleScaleView(\'day1\')">Day-1 (' + fmtN(gpus) + ' GPUs)</button><button class="scale-toggle-btn optic-toggle-btn" onclick="toggleScaleView(\'planned\')">Planned (' + fmtN(scaleTarget) + ' GPUs)</button></span></div>';
+    out += '<div class="scale-day1">' + optHtml + powerHtml + '</div>';
+    out += '<div class="scale-planned" style="display:none">' + plannedOptPower + '</div>';
+    out += '</div>';
+  } else {
+    out += '<div class="results-tab-panel' + (activeResultsTab === 'optics' ? ' active' : '') + '" data-tab="optics">' + optHtml + powerHtml + '</div>';
+  }
 
   el.dataset.opticMode = 'conventional';
   el.dataset.powerMode = 'eightyPct';
