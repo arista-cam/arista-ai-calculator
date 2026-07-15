@@ -901,7 +901,7 @@
             </select>
           </div>
           <div class="field">
-            <label>Host port breakout</label>
+            <label>Host port breakout <span class="info-tip" data-tip="Break out each 800G leaf port into multiple lower-speed host links. 1:2 splits one 800G port into 2× 400G; 1:4 splits into 4× 200G. This multiplies the leaf's host-facing port count, so fewer leaves are needed."><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.2"/><text x="8" y="12" text-anchor="middle" font-size="10" font-weight="600" font-style="italic" fill="currentColor">i</text></svg></span></label>
             <select id="breakout" onchange="syncSpineSpeed(); autoSelectPlatforms()">
               <option value="1">1:1 (None)</option>
               <option value="2" selected>1:2 (800G &rarr; 2&times; 400G)</option>
