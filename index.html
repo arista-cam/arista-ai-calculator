@@ -1003,6 +1003,10 @@
       <button style="background:none;border:none;cursor:pointer;color:var(--text3);padding:4px" onclick="document.getElementById('changelog-modal').classList.remove('open')"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="changelog-body">
+      <h3>v1.4.2 — July 2025</h3>
+      <ul>
+        <li><strong>Optics &amp; Power tab</strong> — merged Optics and Power into a single combined tab so the LPO toggle immediately reflects in power figures</li>
+      </ul>
       <h3>v1.4.1 — July 2025</h3>
       <ul>
         <li><strong>Spine balance fix</strong> — Single-Plane vs Multi-Plane comparison cards now apply the same balance adjustment as the main calculation, fixing mismatched spine counts</li>
@@ -1010,7 +1014,7 @@
       </ul>
       <h3>v1.4 — July 2025</h3>
       <ul>
-        <li><strong>Tabbed results pane</strong> — results organized into Summary, Fabric, Optics, and Power tabs to reduce clutter; selected tab persists across recalculations</li>
+        <li><strong>Tabbed results pane</strong> — results organized into Summary, Fabric, and Optics &amp; Power tabs to reduce clutter; selected tab persists across recalculations</li>
         <li><strong>NIC breakout topology fix</strong> — multi-plane rail view now correctly shows all GPUs connecting to every plane (e.g. 8×200G per plane instead of 4×200G); NIC expand animation updated to match</li>
         <li><strong>Spine optics for breakout</strong> — spine-facing optics now show OSFP 800G 2DR4 (dual MPO-12) instead of DR8 (single MPO-16) when uplink breakout is active, matching the natural connector topology for 2:1 breakout</li>
       </ul>
@@ -2707,16 +2711,15 @@ function calculate() {
 
   fabricContent = switchHtml + fabricContent;
 
+  if (activeResultsTab === 'power') activeResultsTab = 'optics';
   out += '<div class="results-tabs">';
   out += '<button class="results-tab-btn' + (activeResultsTab === 'summary' ? ' active' : '') + '" data-tab="summary" onclick="switchResultsTab(\'summary\')">Summary</button>';
   out += '<button class="results-tab-btn' + (activeResultsTab === 'fabric' ? ' active' : '') + '" data-tab="fabric" onclick="switchResultsTab(\'fabric\')">Fabric</button>';
-  out += '<button class="results-tab-btn' + (activeResultsTab === 'optics' ? ' active' : '') + '" data-tab="optics" onclick="switchResultsTab(\'optics\')">Optics</button>';
-  out += '<button class="results-tab-btn' + (activeResultsTab === 'power' ? ' active' : '') + '" data-tab="power" onclick="switchResultsTab(\'power\')">Power</button>';
+  out += '<button class="results-tab-btn' + (activeResultsTab === 'optics' ? ' active' : '') + '" data-tab="optics" onclick="switchResultsTab(\'optics\')">Optics &amp; Power</button>';
   out += '</div>';
   out += '<div class="results-tab-panel' + (activeResultsTab === 'summary' ? ' active' : '') + '" data-tab="summary">' + summaryContent + '</div>';
   out += '<div class="results-tab-panel' + (activeResultsTab === 'fabric' ? ' active' : '') + '" data-tab="fabric">' + fabricContent + '</div>';
-  out += '<div class="results-tab-panel' + (activeResultsTab === 'optics' ? ' active' : '') + '" data-tab="optics">' + optHtml + '</div>';
-  out += '<div class="results-tab-panel' + (activeResultsTab === 'power' ? ' active' : '') + '" data-tab="power">' + powerHtml + '</div>';
+  out += '<div class="results-tab-panel' + (activeResultsTab === 'optics' ? ' active' : '') + '" data-tab="optics">' + optHtml + powerHtml + '</div>';
 
   el.dataset.opticMode = 'conventional';
   el.dataset.powerMode = 'eightyPct';
