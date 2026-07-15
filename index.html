@@ -221,8 +221,22 @@
     transition: transform 0.2s ease;
   }
   .input-section.collapsed .chevron { transform: rotate(-90deg); }
+  .section-summary {
+    font-size: 11px; color: var(--text3); margin-left: auto;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 180px; flex-shrink: 1;
+  }
+  .input-section:not(.collapsed) .section-summary { display: none; }
   .input-section-body { padding: 2px 10px 10px; }
   .input-section.collapsed .input-section-body { display: none; }
+  .section-next-btn {
+    display: block; margin: 8px 0 2px auto;
+    padding: 4px 16px; font-size: 12px; font-weight: 600;
+    color: var(--primary); background: var(--primary-light);
+    border: none; border-radius: 6px; cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .section-next-btn:hover { background: var(--primary); color: #fff; }
 
   /* ── Form elements ── */
   .field { margin-bottom: 8px; }
@@ -749,6 +763,7 @@
         <div class="input-section-header" onclick="toggleSection('section-cluster')">
           <div class="section-icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg></div>
           <span class="section-title">Cluster Size</span>
+          <span class="section-summary" id="summary-cluster"></span>
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="input-section-body">
@@ -772,14 +787,16 @@
             <input type="number" id="links-per-gpu" min="1" max="8" value="1" oninput="autoSelectPlatforms()">
             <div class="hint">1 = standard, 2 = dual-rail</div>
           </div>
+          <button type="button" class="section-next-btn" onclick="nextSection('section-cluster')">Next</button>
         </div>
       </div>
 
       <!-- GPU / NIC -->
-      <div class="input-section" id="section-gpu">
+      <div class="input-section collapsed" id="section-gpu">
         <div class="input-section-header" onclick="toggleSection('section-gpu')">
           <div class="section-icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="8" y="8" width="8" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="8" y1="2" x2="8" y2="4" stroke="currentColor" stroke-width="1.5"/><line x1="12" y1="2" x2="12" y2="4" stroke="currentColor" stroke-width="1.5"/><line x1="16" y1="2" x2="16" y2="4" stroke="currentColor" stroke-width="1.5"/><line x1="8" y1="20" x2="8" y2="22" stroke="currentColor" stroke-width="1.5"/><line x1="12" y1="20" x2="12" y2="22" stroke="currentColor" stroke-width="1.5"/><line x1="16" y1="20" x2="16" y2="22" stroke="currentColor" stroke-width="1.5"/></svg></div>
           <span class="section-title">GPU / NIC</span>
+          <span class="section-summary" id="summary-gpu"></span>
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="input-section-body">
@@ -791,14 +808,16 @@
             <label>NIC</label>
             <select id="nic-model" onchange="onNicChange()"></select>
           </div>
+          <button type="button" class="section-next-btn" onclick="nextSection('section-gpu')">Next</button>
         </div>
       </div>
 
       <!-- Fabric Tier -->
-      <div class="input-section" id="section-tier">
+      <div class="input-section collapsed" id="section-tier">
         <div class="input-section-header" onclick="toggleSection('section-tier')">
           <div class="section-icon"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
           <span class="section-title">Fabric Tier</span>
+          <span class="section-summary" id="summary-tier"></span>
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="input-section-body">
@@ -845,14 +864,16 @@
             </label>
           </div>
           <div class="tier-hint" id="tier-hint">Leaf-spine Clos — the standard for most AI training clusters.</div>
+          <button type="button" class="section-next-btn" onclick="nextSection('section-tier')">Next</button>
         </div>
       </div>
 
       <!-- Switch Configuration -->
-      <div class="input-section" id="section-switch">
+      <div class="input-section collapsed" id="section-switch">
         <div class="input-section-header" onclick="toggleSection('section-switch')">
           <div class="section-icon"><svg viewBox="0 0 24 24"><rect x="1" y="5" width="22" height="14" rx="2"/><line x1="6" y1="9" x2="6" y2="9.01"/><line x1="10" y1="9" x2="10" y2="9.01"/><line x1="14" y1="9" x2="14" y2="9.01"/></svg></div>
           <span class="section-title">Switch Configuration</span>
+          <span class="section-summary" id="summary-switch"></span>
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="input-section-body">
@@ -908,14 +929,16 @@
               <option value="4">1:4 (800G &rarr; 4&times; 200G)</option>
             </select>
           </div>
+          <button type="button" class="section-next-btn" onclick="nextSection('section-switch')">Next</button>
         </div>
       </div>
 
       <!-- Optics -->
-      <div class="input-section" id="section-optics">
+      <div class="input-section collapsed" id="section-optics">
         <div class="input-section-header" onclick="toggleSection('section-optics')">
           <div class="section-icon"><svg viewBox="0 0 24 24"><path d="M12 22v-4"/><path d="M8 22v-4"/><rect x="6" y="14" width="8" height="4" rx="1"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="12" y1="2" x2="12" y2="6"/><path d="M6 6h8v4a4 4 0 0 1-8 0V6z"/></svg></div>
           <span class="section-title">Optics</span>
+          <span class="section-summary" id="summary-optics"></span>
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="input-section-body">
@@ -1005,6 +1028,8 @@
     <div class="changelog-body">
       <h3>v1.4.2 — July 2025</h3>
       <ul>
+        <li><strong>Guided sidebar flow</strong> — Cluster Size opens by default; each section has a Next button that collapses the current section and opens the next, creating a wizard-style configuration flow</li>
+        <li><strong>Config summary chips</strong> — collapsed sections show a compact summary of configured values (e.g. "512 GPUs · 64 nodes", "Two-tier · Training") so you can see your selections at a glance</li>
         <li><strong>Optics &amp; Power tab</strong> — merged Optics and Power into a single combined tab so the LPO toggle immediately reflects in power figures</li>
       </ul>
       <h3>v1.4.1 — July 2025</h3>
@@ -1081,6 +1106,59 @@
 <script>
 function toggleSection(id) {
   document.getElementById(id).classList.toggle('collapsed');
+  updateSectionSummaries();
+}
+
+const SECTION_ORDER = ['section-cluster', 'section-gpu', 'section-tier', 'section-switch', 'section-optics'];
+
+function nextSection(currentId) {
+  const idx = SECTION_ORDER.indexOf(currentId);
+  if (idx < 0) return;
+  document.getElementById(currentId).classList.add('collapsed');
+  if (idx + 1 < SECTION_ORDER.length) {
+    const next = document.getElementById(SECTION_ORDER[idx + 1]);
+    next.classList.remove('collapsed');
+    next.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  updateSectionSummaries();
+}
+
+function updateSectionSummaries() {
+  const gpus = document.getElementById('total-gpus').value;
+  const nodes = document.getElementById('num-nodes').value;
+  const gpn = document.getElementById('gpus-per-node').value;
+  const parts = [];
+  if (gpus) parts.push(gpus + ' GPUs');
+  if (nodes) parts.push(nodes + ' nodes');
+  if (gpn && gpn !== '8') parts.push(gpn + '/node');
+  document.getElementById('summary-cluster').textContent = parts.join(' · ') || '';
+
+  const gpuSel = document.getElementById('gpu-model');
+  const nicSel = document.getElementById('nic-model');
+  const gpuText = gpuSel.selectedIndex > 0 ? gpuSel.options[gpuSel.selectedIndex].text : '';
+  const nicText = nicSel.selectedIndex > 0 ? nicSel.options[nicSel.selectedIndex].text : '';
+  const gpuParts = [];
+  if (gpuText && gpuText !== 'Custom') gpuParts.push(gpuText);
+  if (nicText) gpuParts.push(nicText);
+  document.getElementById('summary-gpu').textContent = gpuParts.join(' · ') || '';
+
+  const tierEl = document.querySelector('input[name=tier]:checked');
+  const tierNames = { '1': 'Single-tier', '2': 'Two-tier', '3': 'Three-tier', '4': 'DES' };
+  const workload = document.getElementById('wl-training').classList.contains('active') ? 'Training' : 'Inference';
+  document.getElementById('summary-tier').textContent = tierEl ? tierNames[tierEl.value] + ' · ' + workload : '';
+
+  const leafSel = document.getElementById('leaf-radix');
+  const spineSel = document.getElementById('spine-radix');
+  const planes = document.getElementById('planes').value;
+  const swParts = [];
+  if (leafSel.value) swParts.push(leafSel.options[leafSel.selectedIndex].text.split(' (')[0]);
+  if (spineSel.value) swParts.push(spineSel.options[spineSel.selectedIndex].text.split(' (')[0]);
+  if (planes && planes !== '1') swParts.push(planes + ' planes');
+  document.getElementById('summary-switch').textContent = swParts.join(' / ') || '';
+
+  const hostSpeed = document.getElementById('host-speed').value;
+  const spineSpeed = document.getElementById('spine-speed').value;
+  document.getElementById('summary-optics').textContent = hostSpeed + 'G host · ' + spineSpeed + 'G spine';
 }
 
 function toggleTheme() {
@@ -1282,6 +1360,10 @@ function resetInputs() {
   hideSuggestions();
   updateTierHint();
   syncBreakoutOptions();
+  SECTION_ORDER.forEach((id, i) => {
+    document.getElementById(id).classList.toggle('collapsed', i > 0);
+  });
+  updateSectionSummaries();
 }
 
 function toggleCustomRadix(role) {
@@ -1611,6 +1693,7 @@ window.addEventListener('DOMContentLoaded', () => {
   populateDropdowns();
   syncBreakout();
   updateTierHint();
+  updateSectionSummaries();
   document.querySelector('.sidebar-scroll').addEventListener('scroll', positionSuggestions);
   window.addEventListener('resize', positionSuggestions);
 });
@@ -2731,6 +2814,7 @@ function calculate() {
     document.getElementById('diagram-panel').innerHTML +=
       '<div style="text-align:center"><button class="view-topo-btn" onclick="openTopoModal()">View Full Topology</button></div>';
   }
+  updateSectionSummaries();
 }
 
 let lastTopoConfig = null;
