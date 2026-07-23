@@ -734,7 +734,7 @@
 <div class="topbar">
   <div class="topbar-left">
     <div class="topbar-logo"><svg viewBox="0 0 1115 175" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="M391.027,103.426c36.994,0,55.491-25.688,55.491-51.378c0-25.688-18.498-50.353-57.546-50.353c-28.773-1.029-134.617-1.029-134.617-1.029v173.668h32.879V28.413c25.691,0,90.43,0,103.79,0c18.496,0,27.745,6.163,27.745,23.635c0,14.385-9.247,22.606-26.718,22.606h-86.315l102.761,98.648h40.078l-73.991-71.932C381.78,103.426,390,103.426,391.027,103.426z"/><rect x="480.429" y="0.669" width="31.856" height="173.665"/><polygon points="916.137,27.387 916.137,0.669 848.313,0.669 816.457,0.669 759.938,0.669 741.441,27.387 816.457,27.387 816.457,174.334 848.313,174.334 848.313,27.387"/><path d="M678.756,72.6c-16.441,0-57.543,0-81.182,0c-16.438,0-25.689-7.192-25.689-21.58c0-16.44,11.305-23.633,25.689-23.633c22.609,0,110.98,0,110.98,0l14.387-26.718c0,0-107.898,0-126.395,0c-28.775,0-52.407,21.577-52.407,51.382c0,26.715,22.608,48.294,53.434,48.294c17.473,0,69.877,0,81.182,0c18.5,0,28.775,8.224,28.775,23.637c0,13.357-11.305,22.608-28.775,22.608H566.748l-16.44,27.744c0,0,98.649,0,132.558,0c33.912,0,52.406-24.658,52.406-52.404C735.275,96.233,713.695,72.6,678.756,72.6z"/><path d="M104.325,11.972C97.133,23.272,1.564,174.334,1.564,174.334h33.91l31.858-51.381h67.822l17.47-27.746H84.8l36.993-59.602l86.321,137.697h33.911c0,0-94.542-149.001-102.765-162.359C130.013-2.413,113.574-1.387,104.325,11.972z"/><path d="M1079.523,174.334h33.912c0,0-94.539-149.003-102.764-162.362c-9.244-15.415-25.689-14.385-34.938-1.028c-7.195,11.301-102.762,162.359-102.762,162.359h33.91l31.855-51.378h68.852l17.467-27.746h-67.82l36.996-59.603L1079.523,174.334z"/></g></svg></div>
-    <h1>AI Backend Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.4</span></h1>
+    <h1>AI Backend Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.5</span></h1>
   </div>
   <div class="topbar-right">
     <a href="#" onclick="event.preventDefault();document.getElementById('changelog-modal').classList.add('open')" title="What's new" style="color:var(--text3);margin-right:12px;display:inline-flex;align-items:center;gap:5px;font-size:13px;text-decoration:none;opacity:0.7;transition:opacity .2s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
@@ -890,20 +890,20 @@
         <div class="input-section-body">
           <div class="field" id="leaf-radix-row">
             <label>Leaf switch</label>
-            <select id="leaf-radix" onchange="toggleCustomRadix('leaf')"></select>
+            <select id="leaf-radix" onchange="toggleCustomRadix('leaf'); syncBreakout()"></select>
             <input type="number" id="leaf-radix-custom" min="2" max="1024" step="2" placeholder="ports" style="display:none; margin-top:4px" oninput="clearResults()">
-            <div class="hint" id="leaf-radix-hint">Arista 800G platform</div>
+            <div class="hint" id="leaf-radix-hint">Arista switching platform</div>
           </div>
           <div class="field" id="spine-radix-row">
             <label>Spine switch</label>
             <select id="spine-radix" onchange="toggleCustomRadix('spine')"></select>
             <input type="number" id="spine-radix-custom" min="2" max="1024" step="2" placeholder="ports" style="display:none; margin-top:4px" oninput="clearResults()">
-            <div class="hint" id="spine-radix-hint">Arista 800G platform</div>
+            <div class="hint" id="spine-radix-hint">Arista switching platform</div>
           </div>
           <div class="field" id="single-tier-ports-row" style="display:none">
             <label>Ports per line card</label>
             <input type="number" id="linecard-ports" min="16" max="36" value="36" step="4">
-            <div class="hint">e.g. 36 for OSFP 800G</div>
+            <div class="hint">e.g. 36 for 800G, 32 for 1.6T</div>
           </div>
           <div class="field-row">
             <div class="field">
@@ -933,8 +933,8 @@
             </select>
           </div>
           <div class="field">
-            <label>Host port breakout <span class="info-tip" data-tip="Break out each 800G leaf port into multiple lower-speed host links. 1:2 splits one 800G port into 2× 400G; 1:4 splits into 4× 200G. This multiplies the leaf's host-facing port count, so fewer leaves are needed."><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.2"/><text x="8" y="12" text-anchor="middle" font-size="10" font-weight="600" font-style="italic" fill="currentColor">i</text></svg></span></label>
-            <select id="breakout" onchange="syncSpineSpeed(); autoSelectPlatforms()">
+            <label>Host port breakout <span class="info-tip" data-tip="Break out each leaf port into multiple lower-speed host links. This multiplies the leaf's host-facing port count, so fewer leaves are needed. Breakout is auto-set based on host speed and leaf platform."><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.2"/><text x="8" y="12" text-anchor="middle" font-size="10" font-weight="600" font-style="italic" fill="currentColor">i</text></svg></span></label>
+            <select id="breakout" onchange="clearResults(); autoSelectPlatforms()" disabled>
               <option value="1">1:1 (None)</option>
               <option value="2" selected>1:2 (800G &rarr; 2&times; 400G)</option>
               <option value="4">1:4 (800G &rarr; 4&times; 200G)</option>
@@ -955,19 +955,21 @@
         <div class="input-section-body">
           <div class="field" id="spine-speed-row">
             <label>Spine link speed</label>
-            <select id="spine-speed" onchange="clearResults(); autoSelectPlatforms()">
+            <select id="spine-speed" onchange="clearResults(); filterPlatformDropdowns(); autoSelectPlatforms()">
               <option value="400">400G</option>
               <option value="800" selected>800G</option>
+              <option value="1600">1.6T</option>
             </select>
             <div class="hint">leaf &harr; spine</div>
           </div>
           <div class="field">
             <label>Host NIC link speed</label>
-            <select id="host-speed" onchange="syncBreakout(); autoSelectPlatforms()">
+            <select id="host-speed" onchange="syncBreakout(); filterPlatformDropdowns(); autoSelectPlatforms()">
               <option value="100">100G</option>
               <option value="200">200G</option>
               <option value="400" selected>400G</option>
               <option value="800">800G</option>
+              <option value="1600">1.6T</option>
             </select>
             <div class="hint">host &harr; leaf</div>
           </div>
@@ -1037,6 +1039,15 @@
       <button style="background:none;border:none;cursor:pointer;color:var(--text3);padding:4px" onclick="document.getElementById('changelog-modal').classList.remove('open')"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="changelog-body">
+      <h3>v1.5 — July 2025</h3>
+      <ul>
+        <li><strong>1.6T (1600G) Ethernet support</strong> — spine and host speed dropdowns now include 1.6T; optic types, power estimates, and breakout logic all support 1.6T fabrics</li>
+        <li><strong>7060XE7 platform</strong> — Arista 7060XE7 with 64 OSFP-1.6T ports (128 effective 800G-equivalent), 4RU fixed form factor, 4.2kW typical / 5.7kW max power</li>
+        <li><strong>Per-platform port speed</strong> — each platform now carries a <code>portSpeed</code> property; platform dropdowns auto-filter to show only platforms that support the selected spine/host speed</li>
+        <li><strong>Decoupled spine speed</strong> — spine speed is now independently selectable, no longer auto-synced from host breakout; enables the common 1.6T use case of 800G hosts with 1.6T spine fabric</li>
+        <li><strong>Dynamic breakout labels</strong> — host port breakout dropdown labels update based on the selected leaf platform (e.g. "1:2 (1.6T → 2× 800G)" for 7060XE7)</li>
+        <li><strong>Mixed-speed optics</strong> — optics tables now show correct transceiver types per side when leaf and spine platforms have different port speeds</li>
+      </ul>
       <h3>v1.4.2 — July 2025</h3>
       <ul>
         <li><strong>Guided sidebar flow</strong> — Cluster Size opens by default; each section has a Next button that collapses the current section and opens the next, creating a wizard-style configuration flow</li>
@@ -1212,10 +1223,11 @@ const TIER_HINTS = {
 function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 const OPTIC_POWER = {
-  100: { conventional: 3.5, lpo: 3.5 },
-  200: { conventional: 5, lpo: 5 },
-  400: { conventional: 10, lpo: 10 },
-  800: { conventional: 16, lpo: 8 },
+  100:  { conventional: 3.5, lpo: 3.5 },
+  200:  { conventional: 5, lpo: 5 },
+  400:  { conventional: 10, lpo: 10 },
+  800:  { conventional: 16, lpo: 8 },
+  1600: { conventional: 25, lpo: 13 },
 };
 
 const DES_POWER = {
@@ -1224,12 +1236,13 @@ const DES_POWER = {
 };
 
 const PLATFORMS = [
-  { name: '7060X6',        radix: 32,  type: 'fixed',   desc: '7060X6 (32-port)',  powerTyp: 320, powerMax: 600, ru: 1 },
-  { name: '7060X6',        radix: 64,  type: 'fixed',   desc: '7060X6 (64-port)',  powerTyp: 640, powerMax: 1194, ru: 2 },
-  { name: '7800R4 4-slot', radix: 144, type: 'chassis', desc: '7800R4 4-slot (144-port)',  slots: 4,  portsPerSlot: 36, powerTyp: 4500, powerMax: 6801, ru: 10 },
-  { name: '7800R4 8-slot', radix: 288, type: 'chassis', desc: '7800R4 8-slot (288-port)',  slots: 8,  portsPerSlot: 36, powerTyp: 9000, powerMax: 14139, ru: 16 },
-  { name: '7800R4 12-slot',radix: 432, type: 'chassis', desc: '7800R4 12-slot (432-port)', slots: 12, portsPerSlot: 36, powerTyp: 13500, powerMax: 22394, ru: 23 },
-  { name: '7800R4 16-slot',radix: 576, type: 'chassis', desc: '7800R4 16-slot (576-port)', slots: 16, portsPerSlot: 36, powerTyp: 18000, powerMax: 28074, ru: 32 },
+  { name: '7060X6',        radix: 32,  type: 'fixed',   portSpeed: 800,  desc: '7060X6 (32-port)',  powerTyp: 320, powerMax: 600, ru: 1 },
+  { name: '7060X6',        radix: 64,  type: 'fixed',   portSpeed: 800,  desc: '7060X6 (64-port)',  powerTyp: 640, powerMax: 1194, ru: 2 },
+  { name: '7060XE7',       radix: 128, type: 'fixed',   portSpeed: 1600, desc: '7060XE7 (64×1.6T)', powerTyp: 4167, powerMax: 5703, ru: 4 },
+  { name: '7800R4 4-slot', radix: 144, type: 'chassis', portSpeed: 800,  desc: '7800R4 4-slot (144-port)',  slots: 4,  portsPerSlot: 36, powerTyp: 4500, powerMax: 6801, ru: 10 },
+  { name: '7800R4 8-slot', radix: 288, type: 'chassis', portSpeed: 800,  desc: '7800R4 8-slot (288-port)',  slots: 8,  portsPerSlot: 36, powerTyp: 9000, powerMax: 14139, ru: 16 },
+  { name: '7800R4 12-slot',radix: 432, type: 'chassis', portSpeed: 800,  desc: '7800R4 12-slot (432-port)', slots: 12, portsPerSlot: 36, powerTyp: 13500, powerMax: 22394, ru: 23 },
+  { name: '7800R4 16-slot',radix: 576, type: 'chassis', portSpeed: 800,  desc: '7800R4 16-slot (576-port)', slots: 16, portsPerSlot: 36, powerTyp: 18000, powerMax: 28074, ru: 32 },
 ];
 
 const GPU_MODELS = [
@@ -1262,7 +1275,43 @@ let pendingSuggestion = null;
 let suggestionDismissed = false;
 
 function getPlatformByRadix(radix) {
-  return PLATFORMS.find(p => p.radix === radix) || { name: 'Custom', radix, type: 'custom', desc: radix + '-port (custom)' };
+  return PLATFORMS.find(p => p.radix === radix) || { name: 'Custom', radix, type: 'custom', portSpeed: 800, desc: radix + '-port (custom)' };
+}
+
+function getSelectedPlatformPortSpeed(role) {
+  const sel = document.getElementById(role + '-radix');
+  if (!sel || sel.value === 'other') return 800;
+  const p = PLATFORMS.find(p => p.radix === parseInt(sel.value));
+  return p?.portSpeed || 800;
+}
+
+function speedLabel(speed) {
+  return speed >= 1600 ? (speed / 1000).toFixed(1).replace(/\.0$/, '') + 'T' : speed + 'G';
+}
+
+function filterPlatformDropdowns() {
+  const spineSpeed = parseInt(document.getElementById('spine-speed').value) || 800;
+  const hostSpeed = parseInt(document.getElementById('host-speed').value) || 400;
+  const leafSelect = document.getElementById('leaf-radix');
+  const spineSelect = document.getElementById('spine-radix');
+  for (const opt of leafSelect.options) {
+    if (opt.value === 'other') continue;
+    const p = PLATFORMS.find(p => p.radix === parseInt(opt.value));
+    opt.disabled = p ? (p.portSpeed < spineSpeed || p.portSpeed < hostSpeed) : false;
+  }
+  for (const opt of spineSelect.options) {
+    if (opt.value === 'other') continue;
+    const p = PLATFORMS.find(p => p.radix === parseInt(opt.value));
+    opt.disabled = p ? p.portSpeed < spineSpeed : false;
+  }
+  if (leafSelect.selectedOptions[0]?.disabled) {
+    const valid = [...leafSelect.options].find(o => !o.disabled);
+    if (valid) leafSelect.value = valid.value;
+  }
+  if (spineSelect.selectedOptions[0]?.disabled) {
+    const valid = [...spineSelect.options].find(o => !o.disabled);
+    if (valid) spineSelect.value = valid.value;
+  }
 }
 
 function populateDropdowns() {
@@ -1387,6 +1436,8 @@ function resetInputs() {
   document.getElementById('leaf-radix-custom').style.display = 'none';
   document.getElementById('spine-radix-custom').style.display = 'none';
   populateDropdowns();
+  filterPlatformDropdowns();
+  syncBreakout();
   clearResults();
   hideSuggestions();
   updateTierHint();
@@ -1404,7 +1455,7 @@ function toggleCustomRadix(role) {
   const hint = document.getElementById(role + '-radix-hint');
   const isCustom = select.value === 'other';
   custom.style.display = isCustom ? 'block' : 'none';
-  hint.textContent = isCustom ? 'custom port count' : 'Arista 800G platform';
+  hint.textContent = isCustom ? 'custom port count' : 'Arista switching platform';
   hideSuggestions();
 }
 
@@ -1414,8 +1465,9 @@ function minPlatformForPorts(portsNeeded) {
 
 function minBalanced2Tier(linksPerPlane, breakout, oversub) {
   const spSpeed = parseInt(document.getElementById('spine-speed').value) || 800;
-  const ulBreak = spSpeed < 800 ? Math.round(800 / spSpeed) : 1;
+  const ulBreak = 800 / spSpeed;
   for (const lp of LEAF_PLATFORMS) {
+    if (lp.portSpeed < spSpeed) continue;
     const physDown = Math.floor(lp.radix * oversub / (1 + oversub));
     const effDown  = physDown * breakout;
     const up       = lp.radix - physDown;
@@ -1423,6 +1475,7 @@ function minBalanced2Tier(linksPerPlane, breakout, oversub) {
     if (effDown <= 0 || up <= 0) continue;
     const leafPP = Math.ceil(linksPerPlane / effDown);
     for (const sp of PLATFORMS) {
+      if (sp.portSpeed < spSpeed) continue;
       const effSpR  = sp.radix * ulBreak;
       const spinePP = Math.ceil((leafPP * effUp) / effSpR);
       if (spinePP <= effUp && effUp % spinePP === 0) return { leaf: lp, spine: sp };
@@ -1433,8 +1486,9 @@ function minBalanced2Tier(linksPerPlane, breakout, oversub) {
 
 function minBalanced3Tier(linksPerPlane, breakout, oversub) {
   const spSpeed = parseInt(document.getElementById('spine-speed').value) || 800;
-  const ulBreak = spSpeed < 800 ? Math.round(800 / spSpeed) : 1;
+  const ulBreak = 800 / spSpeed;
   for (const lp of LEAF_PLATFORMS) {
+    if (lp.portSpeed < spSpeed) continue;
     const physDown = Math.floor(lp.radix * oversub / (1 + oversub));
     const effDown  = physDown * breakout;
     const up       = lp.radix - physDown;
@@ -1444,6 +1498,7 @@ function minBalanced3Tier(linksPerPlane, breakout, oversub) {
     const l1PP = Math.ceil((l2PP * up) / physDown);
     if (l1PP > effUp || effUp % l1PP !== 0) continue;
     for (const sp of PLATFORMS) {
+      if (sp.portSpeed < spSpeed) continue;
       const effSpR  = sp.radix * ulBreak;
       const spinePP = Math.ceil((l1PP * effUp) / effSpR);
       if (spinePP <= effUp && effUp % spinePP === 0) return { leaf: lp, spine: sp };
@@ -1475,7 +1530,8 @@ function autoSelectPlatforms() {
   const gpusPerNode = parseInt(document.getElementById('gpus-per-node').value) || 8;
   const linksPerGpu = parseInt(document.getElementById('links-per-gpu').value) || 1;
   const planes      = parseInt(document.getElementById('planes').value) || 1;
-  const breakout    = parseInt(document.getElementById('breakout').value) || 1;
+  const hostSpeed   = parseInt(document.getElementById('host-speed').value) || 400;
+  const breakout    = 800 / hostSpeed;
 
   const nicBreakoutRow = document.getElementById('nic-breakout-row');
   if (linksPerGpu < planes && planes > 1) {
@@ -1596,9 +1652,10 @@ function dismissSuggestionFor(role) {
 }
 
 function autoSelect1Tier(linksPerPlane, breakout) {
+  const hostSpd = parseInt(document.getElementById('host-speed').value) || 400;
   const portsNeeded = Math.ceil(linksPerPlane / breakout);
   for (const p of PLATFORMS) {
-    if (p.radix >= portsNeeded) {
+    if (p.portSpeed >= hostSpd && p.radix >= portsNeeded) {
       showPlatformSuggestion(null, p.radix);
       return;
     }
@@ -1608,10 +1665,12 @@ function autoSelect1Tier(linksPerPlane, breakout) {
 
 function autoSelect2Tier(linksPerPlane, breakout, targetLPP) {
   const spSpeed = parseInt(document.getElementById('spine-speed').value) || 800;
-  const ulBreak = spSpeed < 800 ? Math.round(800 / spSpeed) : 1;
+  const ulBreak = 800 / spSpeed;
+  const validLeaf = LEAF_PLATFORMS.filter(p => p.portSpeed >= spSpeed);
+  const validSpine = PLATFORMS.filter(p => p.portSpeed >= spSpeed);
   let best = null;
   for (let pass = 0; pass < 2; pass++) {
-    for (const lp of LEAF_PLATFORMS) {
+    for (const lp of validLeaf) {
       const physDown = Math.floor(lp.radix / 2);
       const effDown  = physDown * breakout;
       const uplinks  = lp.radix - physDown;
@@ -1622,7 +1681,7 @@ function autoSelect2Tier(linksPerPlane, breakout, targetLPP) {
       const spineLeafPP  = Math.ceil(targetLPP / effDown);
       if (pass === 0 && spineLeafPP > effUp) continue;
 
-      for (const sp of PLATFORMS) {
+      for (const sp of validSpine) {
         if (pass === 0 && sp.radix < lp.radix) continue;
         const effSpR = sp.radix * ulBreak;
         const spinePerPlane = Math.ceil((spineLeafPP * effUp) / effSpR);
@@ -1641,16 +1700,20 @@ function autoSelect2Tier(linksPerPlane, breakout, targetLPP) {
   if (best) {
     showPlatformSuggestion(best.leaf, best.spine);
   } else {
-    showPlatformSuggestion(LEAF_PLATFORMS[LEAF_PLATFORMS.length - 1].radix, PLATFORMS[PLATFORMS.length - 1].radix);
+    const fallbackLeaf = validLeaf.length ? validLeaf[validLeaf.length - 1] : LEAF_PLATFORMS[LEAF_PLATFORMS.length - 1];
+    const fallbackSpine = validSpine.length ? validSpine[validSpine.length - 1] : PLATFORMS[PLATFORMS.length - 1];
+    showPlatformSuggestion(fallbackLeaf.radix, fallbackSpine.radix);
   }
 }
 
 function autoSelect3Tier(linksPerPlane, breakout, targetLPP) {
   const spSpeed = parseInt(document.getElementById('spine-speed').value) || 800;
-  const ulBreak = spSpeed < 800 ? Math.round(800 / spSpeed) : 1;
+  const ulBreak = 800 / spSpeed;
+  const validLeaf = LEAF_PLATFORMS.filter(p => p.portSpeed >= spSpeed);
+  const validSpine = PLATFORMS.filter(p => p.portSpeed >= spSpeed);
   let best = null;
   for (let pass = 0; pass < 2; pass++) {
-    for (const lp of LEAF_PLATFORMS) {
+    for (const lp of validLeaf) {
       const physDown = Math.floor(lp.radix / 2);
       const effDown  = physDown * breakout;
       const uplinks  = lp.radix - physDown;
@@ -1660,13 +1723,12 @@ function autoSelect3Tier(linksPerPlane, breakout, targetLPP) {
       const leaf2PerPlane = Math.ceil(linksPerPlane / effDown);
       if (pass === 0 && leaf2PerPlane > effUp) continue;
 
-      // Pod model: use target scale for super-spine sizing
       const tgtLeaf2PP   = Math.ceil(targetLPP / effDown);
       const podsNeeded    = Math.ceil(tgtLeaf2PP / physDown);
       const leaf1PerPlane = podsNeeded * uplinks;
       const spinePortsNeeded = leaf1PerPlane * effUp;
 
-      for (const sp of PLATFORMS) {
+      for (const sp of validSpine) {
         if (pass === 0 && sp.radix < lp.radix) continue;
         const effSpR = sp.radix * ulBreak;
         if (podsNeeded > effSpR) continue;
@@ -1684,7 +1746,9 @@ function autoSelect3Tier(linksPerPlane, breakout, targetLPP) {
   if (best) {
     showPlatformSuggestion(best.leaf, best.spine);
   } else {
-    showPlatformSuggestion(LEAF_PLATFORMS[LEAF_PLATFORMS.length - 1].radix, PLATFORMS[PLATFORMS.length - 1].radix);
+    const fallbackLeaf = validLeaf.length ? validLeaf[validLeaf.length - 1] : LEAF_PLATFORMS[LEAF_PLATFORMS.length - 1];
+    const fallbackSpine = validSpine.length ? validSpine[validSpine.length - 1] : PLATFORMS[PLATFORMS.length - 1];
+    showPlatformSuggestion(fallbackLeaf.radix, fallbackSpine.radix);
   }
 }
 
@@ -1729,6 +1793,7 @@ function updateTierHint() {
 
 window.addEventListener('DOMContentLoaded', () => {
   populateDropdowns();
+  filterPlatformDropdowns();
   syncBreakout();
   updateTierHint();
   updateSectionSummaries();
@@ -1752,21 +1817,30 @@ function syncFromNodes() {
 
 function syncBreakout() {
   const hostSpeed = parseInt(document.getElementById('host-speed').value) || 400;
+  const leafPortSpeed = getSelectedPlatformPortSpeed('leaf');
   const breakoutSelect = document.getElementById('breakout');
-  if (hostSpeed >= 800) {
-    if (!breakoutSelect.dataset.savedValue) {
-      breakoutSelect.dataset.savedValue = breakoutSelect.value;
-    }
+  const physBreakout = Math.floor(leafPortSpeed / hostSpeed);
+  const portLabel = speedLabel(leafPortSpeed);
+
+  breakoutSelect.innerHTML = '';
+  breakoutSelect.appendChild(new Option('1:1 (None)', '1'));
+  if (leafPortSpeed > 800) {
+    breakoutSelect.appendChild(new Option('1:2 (' + portLabel + ' → 2× ' + speedLabel(leafPortSpeed / 2) + ')', '2'));
+    breakoutSelect.appendChild(new Option('1:4 (' + portLabel + ' → 4× ' + speedLabel(leafPortSpeed / 4) + ')', '4'));
+    breakoutSelect.appendChild(new Option('1:8 (' + portLabel + ' → 8× ' + speedLabel(leafPortSpeed / 8) + ')', '8'));
+  } else {
+    breakoutSelect.appendChild(new Option('1:2 (' + portLabel + ' → 2× ' + speedLabel(leafPortSpeed / 2) + ')', '2'));
+    breakoutSelect.appendChild(new Option('1:4 (' + portLabel + ' → 4× ' + speedLabel(leafPortSpeed / 4) + ')', '4'));
+  }
+
+  if (hostSpeed >= leafPortSpeed) {
     breakoutSelect.value = '1';
     breakoutSelect.disabled = true;
   } else {
-    breakoutSelect.disabled = false;
-    if (breakoutSelect.dataset.savedValue) {
-      breakoutSelect.value = breakoutSelect.dataset.savedValue;
-      delete breakoutSelect.dataset.savedValue;
-    }
+    breakoutSelect.value = String(physBreakout);
+    breakoutSelect.disabled = true;
   }
-  syncSpineSpeed();
+  clearResults();
 }
 
 function setNicBreakout(enabled) {
@@ -1780,17 +1854,6 @@ function setNicBreakout(enabled) {
 
 function isNicBreakoutEnabled() {
   return document.getElementById('nic-mode-brk')?.classList.contains('active') || false;
-}
-
-function syncSpineSpeed() {
-  const breakout = parseInt(document.getElementById('breakout').value) || 1;
-  const spineSpeedSelect = document.getElementById('spine-speed');
-  if (breakout > 1) {
-    spineSpeedSelect.value = String(Math.round(800 / breakout));
-  } else {
-    spineSpeedSelect.value = '800';
-  }
-  clearResults();
 }
 
 function syncBreakoutOptions() {
@@ -1807,15 +1870,17 @@ function syncBreakoutOptions() {
 }
 
 function opticType(speed, tier) {
+  if (speed === 1600) return 'OSFP 1.6T DR8';
   if (speed === 800) return tier === 'spine' ? 'OSFP 800G DR8' : 'OSFP 800G 2DR4';
   return { 100: 'OSFP 100G DR', 200: 'OSFP 200G DR4', 400: 'OSFP 400G DR4' }[speed] || speed + 'G';
 }
 function opticTypeLPO(speed, tier) {
+  if (speed === 1600) return 'OSFP LPO-1.6T-DR8';
   if (speed === 800) return tier === 'spine' ? 'OSFP LPO-800G-DR8' : 'OSFP LPO-800G-2DR4';
   return opticType(speed, tier);
 }
 function opticTypeNIC(speed) {
-  return { 100: 'QSFP28 100G SR4', 200: 'QSFP56 200G SR4', 400: 'QSFP-DD 400G DR4', 800: 'OSFP 800G 2DR4' }[speed] || speed + 'G';
+  return { 100: 'QSFP28 100G SR4', 200: 'QSFP56 200G SR4', 400: 'QSFP-DD 400G DR4', 800: 'OSFP 800G 2DR4', 1600: 'OSFP 1.6T DR8' }[speed] || speed + 'G';
 }
 function dualOptic(speed, tier) {
   return '<span class="optic-conv">' + opticType(speed, tier) + '</span><span class="optic-lpo">' + opticTypeLPO(speed, tier) + '</span>';
@@ -1913,7 +1978,6 @@ function calculate() {
   const linksPerGpu = parseInt(document.getElementById('links-per-gpu') ? document.getElementById('links-per-gpu').value : 1) || 1;
   const planes      = parseInt(document.getElementById('planes').value) || 8;
   const oversub     = parseFloat(document.getElementById('oversub').value) || 1;
-  const breakout    = parseInt(document.getElementById('breakout') ? document.getElementById('breakout').value : 1) || 1;
   const spineSpeed  = parseInt(document.getElementById('spine-speed').value) || 800;
   const hostSpeed   = parseInt(document.getElementById('host-speed').value) || 400;
 
@@ -1953,10 +2017,14 @@ function calculate() {
   const hostSpeedPerPlane = (nicBreakoutEnabled && planes > 1 && linksPerGpu < planes)
     ? (hostSpeed * linksPerGpu / planes) : hostSpeed;
 
+  const leafPortSpeed  = leafPlatform?.portSpeed || 800;
+  const spinePortSpeed = spinePlatform?.portSpeed || 800;
+  const breakout       = 800 / hostSpeed;
+  const uplinkBreakout = 800 / spineSpeed;
+
   const physDownlinks  = Math.floor(leafRadix * oversub / (1 + oversub));
   const effDownlinks   = physDownlinks * breakout;
   const uplinks        = leafRadix - physDownlinks;
-  const uplinkBreakout = spineSpeed < 800 ? Math.round(800 / spineSpeed) : 1;
   const effUplinks     = uplinks * uplinkBreakout;
   const effSpineRadix  = spineRadix * uplinkBreakout;
 
@@ -1998,7 +2066,7 @@ function calculate() {
   const linksPerNode = gpusPerNode * linksPerGpu;
   const nicBreakout = nicBreakoutEnabled && planes > 1 && linksPerGpu < planes;
   const linksPerNodePerPlane = nicBreakout ? linksPerNode : (planes > 1 ? Math.ceil(linksPerNode / planes) : linksPerNode);
-  const hostLinkStr = `${linksPerNodePerPlane}× ${hostSpeedPerPlane}G links` + (breakout > 1 ? ` (into ${linksPerNodePerPlane/breakout}× switch ports)` : '');
+  const hostLinkStr = `${linksPerNodePerPlane}× ${speedLabel(hostSpeedPerPlane)} links` + (breakout > 1 ? ` (into ${Math.round(linksPerNodePerPlane/breakout)}× switch ports)` : '');
   const diagTitle = 'Logical Data Path (Single Node Slice' + (planes > 1 ? ` · ${planes} Planes` : '') + ')';
 
   function buildDiagram(nodes, planes) {
@@ -2150,16 +2218,17 @@ function calculate() {
     opticCounts.hostSwitch = hOptSwitchBase;
     opticCounts.hostEnd = hOptHostBase;
 
+    const st1BrkRatio = Math.floor((spinePlatform?.portSpeed || 800) / hostSpeed);
     let optRows = [['Host ↔ spine links', fmtN(totalHostLinks)]];
-    if (breakout === 1) {
+    if (st1BrkRatio <= 1) {
       optRows.push(['In spine switch · ' + dualOptic(hostSpeedPerPlane), fmtN(hOptSwitchBase)]);
     } else {
-      optRows.push(['In spine switch (host-facing, ' + breakout + ':1) · ' + dualOptic(hostSpeedPerPlane * breakout), fmtN(hOptSwitchBase)]);
+      optRows.push(['In spine switch (host-facing, ' + st1BrkRatio + ':1) · ' + dualOptic(spinePlatform?.portSpeed || hostSpeedPerPlane), fmtN(hOptSwitchBase)]);
     }
     optRows.push(['In host NIC · ' + dualOpticHost(hostSpeedPerPlane), fmtN(hOptHostBase)]);
     optRows.push(['Total optics', fmtN(hostOptBase), true]);
 
-    optHtml = opticsSection(optRows, '<span class="optic-conv">' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Switch-side: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>', hostSpeedPerPlane === 800);
+    optHtml = opticsSection(optRows, '<span class="optic-conv">' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Switch-side: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>', hostSpeedPerPlane >= 800);
 
   } else if (tierNum === 2) {
     const leafPerPlane  = Math.ceil(linksPerPlane / effDownlinks);
@@ -2182,7 +2251,7 @@ function calculate() {
     const bundleStr     = Number.isInteger(bundleSize) ? bundleSize : bundleSize.toFixed(2) + ' (unbalanced)';
 
     const spineLinks    = leafPerPlane * effUplinks * planes;
-    const spinePhysPerSide = uplinkBreakout > 1 ? Math.ceil(spineLinks / uplinkBreakout) : spineLinks;
+    const spinePhysPerSide = Math.ceil(spineLinks / Math.max(uplinkBreakout, 1));
 
     const hOptSwitchBase= Math.ceil(totalHostLinks / breakout);
     const hOptHostBase  = totalHostLinks;
@@ -2223,32 +2292,38 @@ function calculate() {
       ['Leaf per plane', leafPerPlane], ['Total leaf switches', totalLeaf],
       ['Host links per leaf', Math.ceil(linksPerPlane / leafPerPlane) + (breakout > 1 ? ` (via ${breakout}:1 breakout)` : '')],
       ['Phys downlinks used', physDownlinks],
-      ['Uplink ports', uplinks + (uplinkBreakout > 1 ? ' (' + effUplinks + ' effective @ ' + spineSpeed + 'G)' : '')],
+      ['Uplink ports', uplinks + (uplinkBreakout !== 1 ? ' (' + Math.round(effUplinks) + ' effective @ ' + speedLabel(spineSpeed) + ')' : '')],
       ['Links per spine (bundle)', bundleStr],
     ], leafNote);
     if (balanceNote) switchHtml += '<div class="note-box" style="margin-bottom:12px">' + balanceNote + '</div>';
     if (targetGPUs > gpus) switchHtml += '<div class="note-box" style="margin-bottom:12px">Spine layer pre-provisioned for ' + fmtN(targetGPUs) + ' GPUs. Day-1 deployment: ' + fmtN(gpus) + ' GPUs across ' + fmtN(totalLeaf) + ' leaves with ' + fmtN(totalSpine) + ' spines. Scale out by adding leaves — no spine changes required.</div>';
 
-    const spineBreakoutLabel = uplinkBreakout > 1 ? ', ' + uplinkBreakout + ':1' : '';
-    const spineOpticTier = uplinkBreakout > 1 ? undefined : 'spine';
+    const leafUlBrk = Math.floor(leafPortSpeed / spineSpeed);
+    const spineUlBrk = Math.floor(spinePortSpeed / spineSpeed);
+    const leafBrkLabel = leafUlBrk > 1 ? ', ' + leafUlBrk + ':1' : '';
+    const spineBrkLabel = spineUlBrk > 1 ? ', ' + spineUlBrk + ':1' : '';
+    const leafOpticTier = leafUlBrk > 1 ? undefined : 'spine';
+    const spineOpticTier = spineUlBrk > 1 ? undefined : 'spine';
     const spOptBase = spinePhysPerSide * 2;
+    const hostBrkRatio = Math.floor(leafPortSpeed / hostSpeed);
     let optRows = [
       ['Leaf ↔ spine links', fmtN(spineLinks)],
-      ['In spine switch (leaf-facing' + spineBreakoutLabel + ') · ' + dualOptic(800, spineOpticTier), fmtN(spinePhysPerSide)],
-      ['In leaf switch (spine-facing' + spineBreakoutLabel + ') · ' + dualOptic(800, spineOpticTier), fmtN(spinePhysPerSide)],
+      ['In spine switch (leaf-facing' + spineBrkLabel + ') · ' + dualOptic(spinePortSpeed, spineOpticTier), fmtN(spinePhysPerSide)],
+      ['In leaf switch (spine-facing' + leafBrkLabel + ') · ' + dualOptic(leafPortSpeed, leafOpticTier), fmtN(spinePhysPerSide)],
       ['Fabric subtotal', fmtN(spOptBase), true],
       ['Host ↔ leaf links', fmtN(totalHostLinks), false, true]
     ];
-    if (breakout === 1) {
+    if (hostBrkRatio <= 1) {
       optRows.push(['In leaf switch (host-facing) · ' + dualOptic(hostSpeedPerPlane), fmtN(hOptSwitchBase)]);
     } else {
-      optRows.push(['In leaf switch (host-facing, ' + breakout + ':1) · ' + dualOptic(hostSpeedPerPlane * breakout), fmtN(hOptSwitchBase)]);
+      optRows.push(['In leaf switch (host-facing, ' + hostBrkRatio + ':1) · ' + dualOptic(leafPortSpeed), fmtN(hOptSwitchBase)]);
     }
     optRows.push(['In host NIC · ' + dualOpticHost(hostSpeedPerPlane), fmtN(hOptHostBase)]);
     optRows.push(['Host subtotal', fmtN(hOptBase), true]);
     optRows.push(['Grand total optics', fmtN(spOptBase + hOptBase), true]);
 
-    optHtml = opticsSection(optRows, '<span class="optic-conv">Spine: ' + opticType(800, spineOpticTier) + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Spine: ' + opticTypeLPO(800, spineOpticTier) + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + '. Leaf switch: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>');
+    const leafBrkNote = leafUlBrk > 1 ? ' (' + leafUlBrk + ':1 breakout)' : '';
+    optHtml = opticsSection(optRows, '<span class="optic-conv">Spine: ' + opticType(spinePortSpeed, spineOpticTier) + leafBrkNote + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Spine: ' + opticTypeLPO(spinePortSpeed, spineOpticTier) + leafBrkNote + '. Leaf switch: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>');
 
     const uplinksStr = `${Number.isInteger(bundleSize) ? bundleSize : bundleSize.toFixed(1)}× ${spineSpeed}G uplinks`;
     diagramHtml = diagHeader + buildDiagram([
@@ -2277,7 +2352,7 @@ function calculate() {
     const physDownlinks = Math.floor(leafRadix * oversub / (1 + oversub));
     const effDownlinks  = physDownlinks * breakout;
     const uplinks       = leafRadix - physDownlinks;
-    const uplinkBreakout = spineSpeed < 800 ? Math.round(800 / spineSpeed) : 1;
+    const uplinkBreakout = 800 / spineSpeed;
     const effUplinks     = uplinks * uplinkBreakout;
     const effSpineRadix  = spineRadix * uplinkBreakout;
 
@@ -2313,7 +2388,7 @@ function calculate() {
     const e2aLinks      = leaf2PerPlane * uplinks * planes;
     const a2sLinks      = leaf1PerPlane * effUplinks * planes;
 
-    const a2sPhysPerSide = uplinkBreakout > 1 ? Math.ceil(a2sLinks / uplinkBreakout) : a2sLinks;
+    const a2sPhysPerSide = Math.ceil(a2sLinks / Math.max(uplinkBreakout, 1));
     const a2sBase       = a2sPhysPerSide * 2;
     const e2aBase       = e2aLinks*2;
 
@@ -2335,7 +2410,7 @@ function calculate() {
     const spineConnRows = [
       ['Super-spine platform', spinePlatform.desc],
       ['Super-spine per plane', spinePerPlane], ['Total super-spines', totalSpine],
-      ['Uplinks per spine', effUplinks + (uplinkBreakout > 1 ? ' (via ' + uplinkBreakout + ':1 @ ' + spineSpeed + 'G)' : '')],
+      ['Uplinks per spine', Math.round(effUplinks) + (uplinkBreakout !== 1 ? ' (@ ' + speedLabel(spineSpeed) + ')' : '')],
       ['Spines per super-spine', aggsPerSpine],
     ];
     if (!isFullMesh3) {
@@ -2361,30 +2436,36 @@ function calculate() {
     ], 'Three-tier Clos: ' + pods + (pods === 1 ? ' pod' : ' pods') + ' per plane, ' + edgeLeavesPerPod + ' leaves + ' + aggPerPod + ' spines per pod.');
     if (targetGPUs > gpus) switchHtml += '<div class="note-box" style="margin-bottom:12px">Super-spine layer pre-provisioned for ' + fmtN(targetGPUs) + ' GPUs. Day-1 deployment: ' + fmtN(gpus) + ' GPUs across ' + pods + ' pods with ' + fmtN(totalSpine) + ' super-spines. Scale out by adding pods — no super-spine changes required.</div>';
 
-    const ssBreakoutLabel = uplinkBreakout > 1 ? ', ' + uplinkBreakout + ':1' : '';
-    const ssOpticTier = uplinkBreakout > 1 ? undefined : 'spine';
+    const ssLeafUlBrk = Math.floor(leafPortSpeed / spineSpeed);
+    const ssSpineUlBrk = Math.floor(spinePortSpeed / spineSpeed);
+    const ssBrkLabelL = ssLeafUlBrk > 1 ? ', ' + ssLeafUlBrk + ':1' : '';
+    const ssBrkLabelS = ssSpineUlBrk > 1 ? ', ' + ssSpineUlBrk + ':1' : '';
+    const ssOpticTierL = ssLeafUlBrk > 1 ? undefined : 'spine';
+    const ssOpticTierS = ssSpineUlBrk > 1 ? undefined : 'spine';
+    const t3HostBrk = Math.floor(leafPortSpeed / hostSpeed);
     let optRows = [
       ['Spine ↔ super-spine links', fmtN(a2sLinks)],
-      ['In super-spine (spine-facing' + ssBreakoutLabel + ') · ' + dualOptic(800, ssOpticTier), fmtN(a2sPhysPerSide)],
-      ['In spine (super-spine-facing' + ssBreakoutLabel + ') · ' + dualOptic(800, ssOpticTier), fmtN(a2sPhysPerSide)],
+      ['In super-spine (spine-facing' + ssBrkLabelS + ') · ' + dualOptic(spinePortSpeed, ssOpticTierS), fmtN(a2sPhysPerSide)],
+      ['In spine (super-spine-facing' + ssBrkLabelL + ') · ' + dualOptic(leafPortSpeed, ssOpticTierL), fmtN(a2sPhysPerSide)],
       ['Super-spine-tier subtotal', fmtN(a2sBase), true],
       ['Leaf ↔ spine links', fmtN(e2aLinks), false, true],
-      ['In spine (leaf-facing) · ' + dualOptic(800, 'spine'), fmtN(e2aLinks)],
-      ['In leaf (spine-facing) · ' + dualOptic(800, 'spine'), fmtN(e2aLinks)],
+      ['In spine (leaf-facing) · ' + dualOptic(leafPortSpeed, 'spine'), fmtN(e2aLinks)],
+      ['In leaf (spine-facing) · ' + dualOptic(leafPortSpeed, 'spine'), fmtN(e2aLinks)],
       ['Spine-tier subtotal', fmtN(e2aBase), true],
       ['Host ↔ leaf links', fmtN(totalHostLinks), false, true]
     ];
 
-    if (breakout === 1) {
+    if (t3HostBrk <= 1) {
       optRows.push(['In leaf (host-facing) · ' + dualOptic(hostSpeedPerPlane), fmtN(hOptSwitchBase)]);
     } else {
-      optRows.push(['In leaf (host-facing, ' + breakout + ':1) · ' + dualOptic(hostSpeedPerPlane * breakout), fmtN(hOptSwitchBase)]);
+      optRows.push(['In leaf (host-facing, ' + t3HostBrk + ':1) · ' + dualOptic(leafPortSpeed), fmtN(hOptSwitchBase)]);
     }
     optRows.push(['In host NIC · ' + dualOpticHost(hostSpeedPerPlane), fmtN(hOptHostBase)]);
     optRows.push(['Host subtotal', fmtN(hBase), true]);
     optRows.push(['Grand total optics', fmtN(a2sBase + e2aBase + hBase), true]);
 
-    optHtml = opticsSection(optRows, '<span class="optic-conv">Super-spine/spine: ' + opticType(800, ssOpticTier) + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Super-spine/spine: ' + opticTypeLPO(800, ssOpticTier) + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + '. Leaf: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>');
+    const ssBrkNote = ssLeafUlBrk > 1 ? ' (' + ssLeafUlBrk + ':1 breakout)' : '';
+    optHtml = opticsSection(optRows, '<span class="optic-conv">Super-spine/spine: ' + opticType(spinePortSpeed, ssOpticTierS) + ssBrkNote + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Super-spine/spine: ' + opticTypeLPO(spinePortSpeed, ssOpticTierS) + ssBrkNote + '. Leaf: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>');
 
     const e2aStr = `${Number.isInteger(e2aBundle) ? e2aBundle : e2aBundle.toFixed(1)}× ${spineSpeed}G links`;
     const a2sStr = `${Number.isInteger(a2sBundle) ? a2sBundle : a2sBundle.toFixed(1)}× ${spineSpeed}G links`;
@@ -2488,7 +2569,7 @@ function calculate() {
       ],
       hosts: { perLeaf: portsUsedPerLeaf * breakout, linksPerNode, linksPerNodePerPlane, gpusPerNode, linksPerGpu, nicBreakout, hostSpeedPerPlane },
       links: [
-        { from: 'spine', to: 'leaf', bundle: fabricLinksPerPair, speed: 800 },
+        { from: 'spine', to: 'leaf', bundle: fabricLinksPerPair, speed: spineSpeed },
         { from: 'leaf', to: 'host', bundle: linksPerNodePerPlane, speed: hostSpeedPerPlane }
       ] };
   }
@@ -2572,7 +2653,7 @@ function calculate() {
     if (gpus > maxGpusTotal) {
       fabricContent += '<br><span style="color:var(--coral600);font-weight:500">⚠ Current cluster (' + fmtN(gpus) + ' GPUs) exceeds two-tier capacity. Consider three-tier or larger switches.</span>';
     }
-    fabricContent += '<br><span style="color:var(--text3);font-size:11px">Formula: spine ports (' + effSpineRadix + (uplinkBreakout > 1 ? ' eff' : '') + ') × leaf downlinks (' + effDownlinks + ') ÷ links/GPU (' + linksPerGpu + ')' + (planes > 1 ? ' × planes (' + planes + ')' : '') + '</span>';
+    fabricContent += '<br><span style="color:var(--text3);font-size:11px">Formula: spine ports (' + Math.round(effSpineRadix) + (uplinkBreakout !== 1 ? ' eff' : '') + ') × leaf downlinks (' + Math.round(effDownlinks) + ') ÷ links/GPU (' + linksPerGpu + ')' + (planes > 1 ? ' × planes (' + planes + ')' : '') + '</span>';
     fabricContent += '</div>';
 
     if (planes > 1) {
@@ -2631,7 +2712,7 @@ function calculate() {
       const pDown = Math.floor(lRadix * oversub / (1 + oversub));
       const eDown = pDown * breakout;
       const up = lRadix - pDown;
-      const ulB = spineSpeed < 800 ? Math.round(800 / spineSpeed) : 1;
+      const ulB = 800 / spineSpeed;
       const eUp = up * ulB;
       const eSR = sRadix * ulB;
       if (eDown <= 0) return null;
@@ -2652,12 +2733,13 @@ function calculate() {
         const sPP = Math.ceil((lPP * eUp) / eSR);
         const tLeaf = lPP * planes;
         const tSpine = sPP * planes;
-        const spPhys = uplinkBreakout > 1 ? Math.ceil(lPP * eUp * planes / uplinkBreakout) : lPP * eUp * planes;
+        const spPhys = Math.ceil(lPP * eUp * planes / Math.max(uplinkBreakout, 1));
         const spOpt = spPhys * 2;
         const hOpt = Math.ceil(totalHostLinks / breakout) + totalHostLinks;
         const totalOpt = spOpt + hOpt;
         const swPow = tSpine * (sp.powerMax || 0) + tLeaf * (lf.powerMax || 0);
-        const optPow = spOpt * (OPTIC_POWER[800]?.lpo || 8) + hOpt * (OPTIC_POWER[hostSpeedPerPlane]?.lpo || 10);
+        const spOpW = ((OPTIC_POWER[lf.portSpeed || 800]?.lpo || 8) + (OPTIC_POWER[sp.portSpeed || 800]?.lpo || 8)) / 2;
+        const optPow = spOpt * spOpW + hOpt * (OPTIC_POWER[hostSpeedPerPlane]?.lpo || 10);
         const maxScale = Math.floor(eSR * eDown / linksPerGpu) * planes;
         return { tier: 2, leaf: tLeaf, spine: tSpine, total: tLeaf + tSpine, optics: totalOpt,
           ru: tSpine * (sp.ru || 1) + tLeaf * (lf.ru || 1), power: Math.round((swPow + optPow) / 1000 * 0.8),
@@ -2670,12 +2752,13 @@ function calculate() {
       const aggUp = l1PP * eUp;
       const sPP = Math.ceil(aggUp / eSR);
       const tEdge = lPP * planes, tAgg = l1PP * planes, tSpine = sPP * planes;
-      const a2s = (uplinkBreakout > 1 ? Math.ceil(l1PP * eUp * planes / uplinkBreakout) : l1PP * eUp * planes) * 2;
+      const a2s = Math.ceil(l1PP * eUp * planes / Math.max(uplinkBreakout, 1)) * 2;
       const e2a = lPP * up * planes * 2;
       const hOpt = Math.ceil(totalHostLinks / breakout) + totalHostLinks;
       const totalOpt = a2s + e2a + hOpt;
       const swPow = tSpine * (sp.powerMax || 0) + (tEdge + tAgg) * (lf.powerMax || 0);
-      const optPow = (a2s + e2a) * (OPTIC_POWER[800]?.lpo || 8) + hOpt * (OPTIC_POWER[hostSpeedPerPlane]?.lpo || 10);
+      const spOpW3 = ((OPTIC_POWER[lf.portSpeed || 800]?.lpo || 8) + (OPTIC_POWER[sp.portSpeed || 800]?.lpo || 8)) / 2;
+      const optPow = (a2s + e2a) * spOpW3 + hOpt * (OPTIC_POWER[hostSpeedPerPlane]?.lpo || 10);
       return { tier: 3, leaf: tEdge, agg: tAgg, spine: tSpine, total: tEdge + tAgg + tSpine,
         optics: totalOpt, ru: tSpine * (sp.ru || 1) + (tEdge + tAgg) * (lf.ru || 1),
         power: Math.round((swPow + optPow) / 1000 * 0.8), maxScale: 0, spName: sp.desc, lfName: lf.desc };
@@ -2684,7 +2767,8 @@ function calculate() {
     const curSwMaxW = tierNum === 4
       ? totalLeaf * DES_POWER.leaf.max + totalSpine * DES_POWER.spine.max
       : totalSpine * (spinePlatform?.powerMax || 0) + totalLeaf * (leafPlatform?.powerMax || 0);
-    const curPowerW = (opticCounts.spine + opticCounts.fabric) * (OPTIC_POWER[800]?.lpo || 8)
+    const curSpOpW = ((OPTIC_POWER[leafPortSpeed]?.lpo || 8) + (OPTIC_POWER[spinePortSpeed]?.lpo || 8)) / 2;
+    const curPowerW = (opticCounts.spine + opticCounts.fabric) * curSpOpW
       + (opticCounts.hostSwitch + opticCounts.hostEnd) * (OPTIC_POWER[hostSpeedPerPlane]?.lpo || 10)
       + Math.round(curSwMaxW * 0.8);
     const curPower = Math.round(curPowerW / 1000);
@@ -2787,8 +2871,10 @@ function calculate() {
   function kw(w) { return (w / 1000).toFixed(1) + ' kW'; }
 
   function buildPowerHtml(oc, tLeaf, tSpine) {
-    const spConvW = oc.spine * (OPTIC_POWER[800]?.conventional || 0);
-    const spLpoW  = oc.spine * (OPTIC_POWER[800]?.lpo || 0);
+    const spOpConv = ((OPTIC_POWER[leafPortSpeed]?.conventional || 0) + (OPTIC_POWER[spinePortSpeed]?.conventional || 0)) / 2;
+    const spOpLpo  = ((OPTIC_POWER[leafPortSpeed]?.lpo || 0) + (OPTIC_POWER[spinePortSpeed]?.lpo || 0)) / 2;
+    const spConvW = oc.spine * spOpConv;
+    const spLpoW  = oc.spine * spOpLpo;
     const hSwConvW = oc.hostSwitch * (OPTIC_POWER[hostSpeedPerPlane]?.conventional || 0);
     const hSwLpoW  = oc.hostSwitch * (OPTIC_POWER[hostSpeedPerPlane]?.lpo || 0);
     const hEndW    = oc.hostEnd * (OPTIC_POWER[hostSpeedPerPlane]?.conventional || 0);
@@ -2844,7 +2930,7 @@ function calculate() {
     h += '<tr class="subtotal"><td>Total fabric power</td><td>' + totalSix(optConvT, swTypW, sw80W, swMaxW) + '</td></tr>';
     if (lpoSav > 0) {
       const annualSavings = (lpoSav / 1000) * 8760 * 0.10;
-      const optic800 = oc.spine + oc.fabric;
+      const opticFabric = oc.spine + oc.fabric;
       h += '<tr><td colspan="2">'
         + '<span class="optic-lpo power-typ">LPO savings: ' + kw(lpoSav) + ' (' + lpoPct(tConvTyp) + '% reduction)</span>'
         + '<span class="optic-lpo power-80">LPO savings: ' + kw(lpoSav) + ' (' + lpoPct(tConv80) + '% reduction)</span>'
@@ -2852,7 +2938,7 @@ function calculate() {
         + '</td></tr>';
       h += '<tr><td colspan="2"><span class="optic-lpo">'
         + '<strong>Est. OpEx savings:</strong> $' + fmtN(Math.round(annualSavings)) + '/year (at $0.10/kWh)'
-        + (optic800 > 0 ? ' · <strong>Est. CapEx:</strong> LPO ~30–40% less per 800G module (' + fmtN(optic800) + ' modules)' : '')
+        + (opticFabric > 0 ? ' · <strong>Est. CapEx:</strong> LPO ~30–40% less per fabric module (' + fmtN(opticFabric) + ' modules)' : '')
         + '</span></td></tr>';
     }
     h += '</table><div class="note-box">Power figures are estimates based on Arista platform datasheets. Switch power: typical at 25°C/50% load, max at 40°C/100% load (excluding optics). OpEx/CapEx savings are illustrative estimates — actual costs vary by vendor and region.</div></div>';
@@ -2874,55 +2960,62 @@ function calculate() {
     const pHOptSwitch = Math.ceil(pHostLinks / breakout);
     const pHOptHost = pHostLinks;
     const pHOptBase = pHOptSwitch + pHOptHost;
-    const spBreakLabel = uplinkBreakout > 1 ? ', ' + uplinkBreakout + ':1' : '';
-    const spOpTier = uplinkBreakout > 1 ? undefined : 'spine';
+    const pLeafUlBrk = Math.floor(leafPortSpeed / spineSpeed);
+    const pSpineUlBrk = Math.floor(spinePortSpeed / spineSpeed);
+    const pBrkLabelL = pLeafUlBrk > 1 ? ', ' + pLeafUlBrk + ':1' : '';
+    const pBrkLabelS = pSpineUlBrk > 1 ? ', ' + pSpineUlBrk + ':1' : '';
+    const pOpTierL = pLeafUlBrk > 1 ? undefined : 'spine';
+    const pOpTierS = pSpineUlBrk > 1 ? undefined : 'spine';
+    const pHostBrk = Math.floor(leafPortSpeed / hostSpeed);
     let pOptRows, pOC, pNoteText;
 
     if (tierNum === 2) {
       const pSpineLinks = pLeafPP * effUplinks * planes;
-      const pSpPhys = uplinkBreakout > 1 ? Math.ceil(pSpineLinks / uplinkBreakout) : pSpineLinks;
+      const pSpPhys = Math.ceil(pSpineLinks / Math.max(uplinkBreakout, 1));
       const pSpOpt = pSpPhys * 2;
       pOC = { spine: pSpOpt, hostSwitch: pHOptSwitch, hostEnd: pHOptHost, fabric: 0 };
       pOptRows = [
         ['Leaf ↔ spine links', fmtN(pSpineLinks)],
-        ['In spine switch (leaf-facing' + spBreakLabel + ') · ' + dualOptic(800, spOpTier), fmtN(pSpPhys)],
-        ['In leaf switch (spine-facing' + spBreakLabel + ') · ' + dualOptic(800, spOpTier), fmtN(pSpPhys)],
+        ['In spine switch (leaf-facing' + pBrkLabelS + ') · ' + dualOptic(spinePortSpeed, pOpTierS), fmtN(pSpPhys)],
+        ['In leaf switch (spine-facing' + pBrkLabelL + ') · ' + dualOptic(leafPortSpeed, pOpTierL), fmtN(pSpPhys)],
         ['Fabric subtotal', fmtN(pSpOpt), true],
         ['Host ↔ leaf links', fmtN(pHostLinks), false, true]
       ];
-      if (breakout === 1) pOptRows.push(['In leaf switch (host-facing) · ' + dualOptic(hostSpeedPerPlane), fmtN(pHOptSwitch)]);
-      else pOptRows.push(['In leaf switch (host-facing, ' + breakout + ':1) · ' + dualOptic(hostSpeedPerPlane * breakout), fmtN(pHOptSwitch)]);
+      if (pHostBrk <= 1) pOptRows.push(['In leaf switch (host-facing) · ' + dualOptic(hostSpeedPerPlane), fmtN(pHOptSwitch)]);
+      else pOptRows.push(['In leaf switch (host-facing, ' + pHostBrk + ':1) · ' + dualOptic(leafPortSpeed), fmtN(pHOptSwitch)]);
       pOptRows.push(['In host NIC · ' + dualOpticHost(hostSpeedPerPlane), fmtN(pHOptHost)]);
       pOptRows.push(['Host subtotal', fmtN(pHOptBase), true]);
       pOptRows.push(['Grand total optics', fmtN(pSpOpt + pHOptBase), true]);
-      pNoteText = '<span class="optic-conv">Spine: ' + opticType(800, spOpTier) + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Spine: ' + opticTypeLPO(800, spOpTier) + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + '. Leaf switch: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>';
+      const pBrkNote2 = pLeafUlBrk > 1 ? ' (' + pLeafUlBrk + ':1 breakout)' : '';
+      pNoteText = '<span class="optic-conv">Spine: ' + opticType(spinePortSpeed, pOpTierS) + pBrkNote2 + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Spine: ' + opticTypeLPO(spinePortSpeed, pOpTierS) + pBrkNote2 + '. Leaf switch: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>';
     } else {
       const uplinks = leafRadix - physDownlinks;
       const pPods = Math.ceil(pLeafPP / physDownlinks);
       const pLeaf1PP = pPods * uplinks;
       const pA2sLinks = pLeaf1PP * effUplinks * planes;
-      const pA2sPhys = uplinkBreakout > 1 ? Math.ceil(pA2sLinks / uplinkBreakout) : pA2sLinks;
+      const pA2sPhys = Math.ceil(pA2sLinks / Math.max(uplinkBreakout, 1));
       const pA2sBase = pA2sPhys * 2;
       const pE2aLinks = pLeafPP * uplinks * planes;
       const pE2aBase = pE2aLinks * 2;
       pOC = { spine: pA2sBase + pE2aBase, hostSwitch: pHOptSwitch, hostEnd: pHOptHost, fabric: 0 };
       pOptRows = [
         ['Spine ↔ super-spine links', fmtN(pA2sLinks)],
-        ['In super-spine (spine-facing' + spBreakLabel + ') · ' + dualOptic(800, spOpTier), fmtN(pA2sPhys)],
-        ['In spine (super-spine-facing' + spBreakLabel + ') · ' + dualOptic(800, spOpTier), fmtN(pA2sPhys)],
+        ['In super-spine (spine-facing' + pBrkLabelS + ') · ' + dualOptic(spinePortSpeed, pOpTierS), fmtN(pA2sPhys)],
+        ['In spine (super-spine-facing' + pBrkLabelL + ') · ' + dualOptic(leafPortSpeed, pOpTierL), fmtN(pA2sPhys)],
         ['Super-spine-tier subtotal', fmtN(pA2sBase), true],
         ['Leaf ↔ spine links', fmtN(pE2aLinks), false, true],
-        ['In spine (leaf-facing) · ' + dualOptic(800, 'spine'), fmtN(pE2aLinks)],
-        ['In leaf (spine-facing) · ' + dualOptic(800, 'spine'), fmtN(pE2aLinks)],
+        ['In spine (leaf-facing) · ' + dualOptic(leafPortSpeed, 'spine'), fmtN(pE2aLinks)],
+        ['In leaf (spine-facing) · ' + dualOptic(leafPortSpeed, 'spine'), fmtN(pE2aLinks)],
         ['Spine-tier subtotal', fmtN(pE2aBase), true],
         ['Host ↔ leaf links', fmtN(pHostLinks), false, true]
       ];
-      if (breakout === 1) pOptRows.push(['In leaf (host-facing) · ' + dualOptic(hostSpeedPerPlane), fmtN(pHOptSwitch)]);
-      else pOptRows.push(['In leaf (host-facing, ' + breakout + ':1) · ' + dualOptic(hostSpeedPerPlane * breakout), fmtN(pHOptSwitch)]);
+      if (pHostBrk <= 1) pOptRows.push(['In leaf (host-facing) · ' + dualOptic(hostSpeedPerPlane), fmtN(pHOptSwitch)]);
+      else pOptRows.push(['In leaf (host-facing, ' + pHostBrk + ':1) · ' + dualOptic(leafPortSpeed), fmtN(pHOptSwitch)]);
       pOptRows.push(['In host NIC · ' + dualOpticHost(hostSpeedPerPlane), fmtN(pHOptHost)]);
       pOptRows.push(['Host subtotal', fmtN(pHOptBase), true]);
       pOptRows.push(['Grand total optics', fmtN(pA2sBase + pE2aBase + pHOptBase), true]);
-      pNoteText = '<span class="optic-conv">Super-spine/spine: ' + opticType(800, spOpTier) + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Super-spine/spine: ' + opticTypeLPO(800, spOpTier) + (uplinkBreakout > 1 ? ' (' + uplinkBreakout + ':1 breakout)' : '') + '. Leaf: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>';
+      const pBrkNote3 = pLeafUlBrk > 1 ? ' (' + pLeafUlBrk + ':1 breakout)' : '';
+      pNoteText = '<span class="optic-conv">Super-spine/spine: ' + opticType(spinePortSpeed, pOpTierS) + pBrkNote3 + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Super-spine/spine: ' + opticTypeLPO(spinePortSpeed, pOpTierS) + pBrkNote3 + '. Leaf: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>';
     }
     const pOptHtml = opticsSection(pOptRows, pNoteText);
     const pPowerHtml = buildPowerHtml(pOC, pTotalLeaf, totalSpine);
@@ -4140,7 +4233,8 @@ function renderTopology() {
     const lpg = h.linksPerGpu || 1;
     const pl = c.planes || 1;
     const isBreakout = h.nicBreakout || false;
-    const speedLabel = (h.hostSpeedPerPlane || 800) + 'G';
+    const nicSpeedVal = h.hostSpeedPerPlane || 800;
+    const nicSpeedLabel = nicSpeedVal >= 1600 ? (nicSpeedVal / 1000) + 'T' : nicSpeedVal + 'G';
     const hostPos = d.pos;
 
     const nicSpacing = Math.min(36, 280 / Math.max(gpus - 1, 1));
@@ -4262,7 +4356,7 @@ function renderTopology() {
     nicOverlayGroup.append('text').attr('class', 'nic-label')
       .attr('x', hostPos.x).attr('y', nicY + 22).attr('text-anchor', 'middle')
       .attr('fill', v('--text2')).attr('font-size', 9).attr('font-weight', 600).style('opacity', 0)
-      .text(gpus + ' GPUs · ' + h.linksPerNode + ' backend links · ' + speedLabel + (isRailView ? ' per rail' : ' per link'))
+      .text(gpus + ' GPUs · ' + h.linksPerNode + ' backend links · ' + nicSpeedLabel + (isRailView ? ' per rail' : ' per link'))
       .transition().duration(350).style('opacity', 1);
   }
 
