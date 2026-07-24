@@ -1047,6 +1047,8 @@
         <li><strong>Decoupled spine speed</strong> — spine speed is now independently selectable, no longer auto-synced from host breakout; enables the common 1.6T use case of 800G hosts with 1.6T spine fabric</li>
         <li><strong>Dynamic breakout labels</strong> — host port breakout dropdown labels update based on the selected leaf platform (e.g. "1:2 (1.6T → 2× 800G)" for 7060XE7)</li>
         <li><strong>Mixed-speed optics</strong> — optics tables now show correct transceiver types per side when leaf and spine platforms have different port speeds</li>
+        <li><strong>Single-tier scale-out</strong> — target GPU count now drives chassis/platform sizing in single-tier mode; auto-select picks a chassis large enough for the target scale, with day-1 utilization shown</li>
+        <li><strong>Aggregate BW fix</strong> — multi-plane summary now correctly shows per-GPU bandwidth when GPUs connect to one plane (distributed), no longer implying multiplication across all planes</li>
       </ul>
       <h3>v1.4.2 — July 2025</h3>
       <ul>
@@ -1554,7 +1556,7 @@ function autoSelectPlatforms() {
     : linksPerPlane;
 
   if (tierNum === 1) {
-    autoSelect1Tier(linksPerPlane, breakout);
+    autoSelect1Tier(targetLPP, breakout);
   } else if (tierNum === 2) {
     autoSelect2Tier(linksPerPlane, breakout, targetLPP);
   } else {
@@ -2155,28 +2157,38 @@ function calculate() {
 
   if (tierNum === 1) {
     totalSpine = planes;
+    const targetGPUs = getTargetGPUs();
+    const targetLinksPerPlane = (targetGPUs > gpus)
+      ? Math.ceil(targetGPUs * linksPerGpu / planes)
+      : linksPerPlane;
     const portsNeeded = Math.ceil(linksPerPlane / breakout);
+    const portsForTarget = Math.ceil(targetLinksPerPlane / breakout);
 
     if (spinePlatform.type === 'chassis') {
       const portsPerSlot = spinePlatform.portsPerSlot || 36;
-      const cardsNeeded  = Math.ceil(portsNeeded / portsPerSlot);
+      const cardsNeeded  = Math.ceil(portsForTarget / portsPerSlot);
 
       if (cardsNeeded > spinePlatform.slots) {
-        const minP = minPlatformForPorts(portsNeeded);
+        const minP = minPlatformForPorts(portsForTarget);
         const suggestion = minP ? ' Minimum switch required: <strong>' + minP.desc + '</strong>.' : ' No single switch can fit — move to a two-tier architecture.';
         el.innerHTML = '<div class="error-msg">Required line cards (' + cardsNeeded + ') exceed ' + spinePlatform.name +
           ' capacity (' + spinePlatform.slots + ' slots).' + suggestion + '</div>';
         return;
       }
 
-      switchHtml = mkSection(iconServer(), 'Modular Spine (Collapsed)', [
+      const scaleRows = [
         ['Platform', spinePlatform.desc],
         ['Line cards required', cardsNeeded + ' per plane'],
         ['Chassis slots', spinePlatform.slots],
         ['Planes', planes],
         ['Total chassis', totalSpine],
-        ['Physical ports used', portsNeeded + ' per plane'],
-      ], 'Single tier: GPUs connect directly to the chassis spine.');
+        ['Physical ports used', portsNeeded + ' of ' + (cardsNeeded * portsPerSlot) + ' per plane'],
+      ];
+      if (targetGPUs > gpus) {
+        scaleRows.push(['Pre-provisioned for', fmtN(targetGPUs) + ' GPUs (' + portsForTarget + ' ports/plane)']);
+        scaleRows.push(['Day-1 utilization', Math.round((portsNeeded / portsForTarget) * 100) + '%']);
+      }
+      switchHtml = mkSection(iconServer(), 'Modular Spine (Collapsed)', scaleRows, 'Single tier: GPUs connect directly to the chassis spine.' + (targetGPUs > gpus ? ' Chassis sized for ' + fmtN(targetGPUs) + ' GPU target — scale out by adding line cards.' : ''));
 
       diagramHtml = diagHeader + buildDiagram([
         { title: '1× ' + spinePlatform.name, sub: portsNeeded + ' ports used\n' + cardsNeeded + '× ' + portsPerSlot + '-port line cards', stacked: true },
@@ -2185,20 +2197,25 @@ function calculate() {
       ], planes) + '</div>';
 
     } else {
-      if (portsNeeded > spineRadix) {
-        const minP = minPlatformForPorts(portsNeeded);
+      if (portsForTarget > spineRadix) {
+        const minP = minPlatformForPorts(portsForTarget);
         const suggestion = minP ? ' Minimum switch required: <strong>' + minP.desc + '</strong>.' : ' No single switch can fit — move to a two-tier architecture.';
-        el.innerHTML = '<div class="error-msg">Required ports (' + portsNeeded + ') exceed ' + spinePlatform.desc +
+        el.innerHTML = '<div class="error-msg">Required ports (' + portsForTarget + ') exceed ' + spinePlatform.desc +
           ' capacity (' + spineRadix + ' ports).' + suggestion + '</div>';
         return;
       }
 
-      switchHtml = mkSection(iconServer(), 'Spine (Collapsed)', [
+      const fixedScaleRows = [
         ['Platform', spinePlatform.desc],
         ['Ports used', portsNeeded + ' of ' + spineRadix],
         ['Planes', planes],
         ['Total switches', totalSpine],
-      ], 'Single tier: GPUs connect directly to the spine switch.');
+      ];
+      if (targetGPUs > gpus) {
+        fixedScaleRows.push(['Pre-provisioned for', fmtN(targetGPUs) + ' GPUs (' + portsForTarget + ' ports/plane)']);
+        fixedScaleRows.push(['Day-1 utilization', Math.round((portsNeeded / portsForTarget) * 100) + '%']);
+      }
+      switchHtml = mkSection(iconServer(), 'Spine (Collapsed)', fixedScaleRows, 'Single tier: GPUs connect directly to the spine switch.' + (targetGPUs > gpus ? ' Switch sized for ' + fmtN(targetGPUs) + ' GPU target.' : ''));
 
       diagramHtml = diagHeader + buildDiagram([
         { title: '1× ' + spinePlatform.name, sub: spineRadix + '-port\n' + portsNeeded + ' ports used', stacked: true },
@@ -2598,9 +2615,17 @@ function calculate() {
   if (planes > 1) {
     const bwPerPlane = nicBreakout ? (hostSpeed * linksPerGpu / planes) : hostSpeedPerPlane;
     const bwTotal = hostSpeed * linksPerGpu;
-    const bwPlaneStr = Number.isInteger(bwPerPlane) ? bwPerPlane + 'G' : bwPerPlane.toFixed(1) + 'G';
-    summaryContent += metric(bwPlaneStr, 'BW / GPU / Plane', nicBreakout ? (linksPerGpu + ' links ÷ ' + planes + ' planes') : ('1 link @ ' + hostSpeedPerPlane + 'G'), nicBreakout ? 'Each NIC breaks out across ' + planes + ' planes at reduced speed' : 'Each GPU connects to one plane at full speed. GPUs distributed across planes');
-    summaryContent += metric(bwTotal + 'G', 'Aggregate BW / GPU', planes + ' planes × ' + bwPlaneStr, 'Total bandwidth per GPU across all planes combined');
+    const bwPlaneStr = Number.isInteger(bwPerPlane) ? speedLabel(bwPerPlane) : bwPerPlane.toFixed(1) + 'G';
+    const planesPerGpu = Math.min(linksPerGpu, planes);
+    const bwSub = nicBreakout
+      ? (linksPerGpu + ' links ÷ ' + planes + ' planes')
+      : (linksPerGpu >= planes ? '1 link @ ' + speedLabel(hostSpeedPerPlane) + ' per plane' : '1 link @ ' + speedLabel(hostSpeedPerPlane));
+    const bwTip = nicBreakout
+      ? 'Each NIC breaks out across ' + planes + ' planes at reduced speed'
+      : (linksPerGpu >= planes ? 'Each GPU connects to every plane' : 'Each GPU connects to one plane. GPUs distributed across planes');
+    summaryContent += metric(bwPlaneStr, 'BW / GPU / Plane', bwSub, bwTip);
+    const aggSub = planesPerGpu > 1 ? planesPerGpu + ' planes × ' + bwPlaneStr : linksPerGpu + (linksPerGpu === 1 ? ' link' : ' links') + ' × ' + speedLabel(hostSpeed);
+    summaryContent += metric(speedLabel(bwTotal), 'Aggregate BW / GPU', aggSub, 'Total bandwidth per GPU across all planes combined');
   }
   if (tierNum === 4) {
     summaryContent += metric(fmtN(totalLeaf),   'DES Leaves',      'across planes');
