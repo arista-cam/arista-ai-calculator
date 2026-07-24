@@ -1534,7 +1534,6 @@ function autoSelectPlatforms() {
   const linksPerGpu = parseInt(document.getElementById('links-per-gpu').value) || 1;
   const planes      = parseInt(document.getElementById('planes').value) || 1;
   const hostSpeed   = parseInt(document.getElementById('host-speed').value) || 400;
-  const breakout    = 800 / hostSpeed;
 
   const nicBreakoutRow = document.getElementById('nic-breakout-row');
   if (linksPerGpu < planes && planes > 1) {
@@ -1547,6 +1546,11 @@ function autoSelectPlatforms() {
   const hosts = numNodes || Math.ceil(totalGPUs / gpusPerNode);
   const gpus  = totalGPUs || hosts * gpusPerNode;
   if (gpus <= 0) return;
+
+  const nicBreakoutEnabled = isNicBreakoutEnabled();
+  const hostSpeedPerPlane = (nicBreakoutEnabled && planes > 1 && linksPerGpu < planes)
+    ? (hostSpeed * linksPerGpu / planes) : hostSpeed;
+  const breakout = 800 / hostSpeedPerPlane;
 
   const totalHostLinks = gpus * linksPerGpu;
   const linksPerPlane  = Math.ceil(totalHostLinks / planes);
@@ -2031,7 +2035,7 @@ function calculate() {
 
   const leafPortSpeed  = leafPlatform?.portSpeed || 800;
   const spinePortSpeed = spinePlatform?.portSpeed || 800;
-  const breakout       = 800 / hostSpeed;
+  const breakout       = 800 / hostSpeedPerPlane;
   const uplinkBreakout = 800 / spineSpeed;
 
   const physDownlinks  = Math.floor(leafRadix * oversub / (1 + oversub));
@@ -2245,7 +2249,7 @@ function calculate() {
     opticCounts.hostSwitch = hOptSwitchBase;
     opticCounts.hostEnd = hOptHostBase;
 
-    const st1BrkRatio = Math.floor((spinePlatform?.portSpeed || 800) / hostSpeed);
+    const st1BrkRatio = Math.floor((spinePlatform?.portSpeed || 800) / hostSpeedPerPlane);
     let optRows = [['Host ↔ spine links', fmtN(totalHostLinks)]];
     if (st1BrkRatio <= 1) {
       optRows.push(['In spine switch · ' + dualOptic(hostSpeedPerPlane), fmtN(hOptSwitchBase)]);
@@ -2332,7 +2336,7 @@ function calculate() {
     const leafOpticTier = leafUlBrk > 1 ? undefined : 'spine';
     const spineOpticTier = spineUlBrk > 1 ? undefined : 'spine';
     const spOptBase = spinePhysPerSide * 2;
-    const hostBrkRatio = Math.floor(leafPortSpeed / hostSpeed);
+    const hostBrkRatio = Math.floor(leafPortSpeed / hostSpeedPerPlane);
     let optRows = [
       ['Leaf ↔ spine links', fmtN(spineLinks)],
       ['In spine switch (leaf-facing' + spineBrkLabel + ') · ' + dualOptic(spinePortSpeed, spineOpticTier, leafPortSpeed), fmtN(spinePhysPerSide)],
@@ -2470,7 +2474,7 @@ function calculate() {
     const ssBrkLabelS = ssSpineUlBrk > 1 ? ', ' + ssSpineUlBrk + ':1' : '';
     const ssOpticTierL = ssLeafUlBrk > 1 ? undefined : 'spine';
     const ssOpticTierS = ssSpineUlBrk > 1 ? undefined : 'spine';
-    const t3HostBrk = Math.floor(leafPortSpeed / hostSpeed);
+    const t3HostBrk = Math.floor(leafPortSpeed / hostSpeedPerPlane);
     let optRows = [
       ['Spine ↔ super-spine links', fmtN(a2sLinks)],
       ['In super-spine (spine-facing' + ssBrkLabelS + ') · ' + dualOptic(spinePortSpeed, ssOpticTierS, leafPortSpeed), fmtN(a2sPhysPerSide)],
@@ -3003,7 +3007,7 @@ function calculate() {
     const pBrkLabelS = pSpineUlBrk > 1 ? ', ' + pSpineUlBrk + ':1' : '';
     const pOpTierL = pLeafUlBrk > 1 ? undefined : 'spine';
     const pOpTierS = pSpineUlBrk > 1 ? undefined : 'spine';
-    const pHostBrk = Math.floor(leafPortSpeed / hostSpeed);
+    const pHostBrk = Math.floor(leafPortSpeed / hostSpeedPerPlane);
     let pOptRows, pOC, pNoteText;
 
     if (tierNum === 2) {
