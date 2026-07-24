@@ -564,7 +564,7 @@
   .results-tab-btn:not(.active):hover { background: var(--bg3); }
   .results-tab-panel { display: none; }
   .results-tab-panel.active { display: block; }
-  @media print { .results-tab-panel { display: block !important; } .results-tabs { display: none; } }
+  @media print { .results-tab-panel { display: block !important; } .results-tabs { display: none !important; } }
   @media (max-width: 520px) { .results-tab-btn { font-size: 11px; padding: 7px 8px; } }
 
   [data-optic-mode="conventional"] .optic-lpo,
@@ -631,15 +631,76 @@
     .metrics-grid .metric-card { flex: 1 1 80px; }
   }
 
+  .print-header { display: none; }
+  .print-config { display: none; }
+  .results-print-btn {
+    margin-left: auto; background: none; border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 14px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--text2);
+    display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s;
+  }
+  .results-print-btn:hover { background: var(--bg3); color: var(--text1); }
+  .results-print-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .print-footer { display: none; }
   @media print {
-    body { background: white; color: black; height: auto; overflow: visible; }
-    .topbar, .sidebar { display: none; }
-    .main-content { position: static; padding: 0; overflow: visible; }
-    .results-layout { flex-direction: column; }
-    .diagram-col { width: 100%; }
-    .metric-card, .result-section, .diagram-wrapper { box-shadow: none; border-color: #ccc; }
-    .calc-btn, .reset-btn { display: none; }
-    .result-section, .diagram-wrapper { break-inside: avoid; }
+    @page { margin: 16mm 14mm 20mm 14mm; size: A4; }
+    body { background: white !important; color: #1a1a1a !important; font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 10.5px; line-height: 1.5; height: auto; overflow: visible; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    * { color-scheme: light; }
+    :root { --text1: #1a1a1a; --text2: #333; --text3: #555; --bg: #fff; --bg2: #f5f5f5; --bg3: #eee; --border: #ccc; --border2: #888; --primary: #1a1a1a; }
+
+    .topbar, .sidebar, .topo-overlay, .changelog-overlay, .diagram-col { display: none !important; }
+    .view-topo-btn, .results-print-btn, .optic-toggle, .power-toggle, .scale-toggle-btn { display: none !important; }
+    .suggestion-leaf, .suggestion-spine, .empty-state, .info-tip { display: none !important; }
+    .main-content { position: static; left: 0; padding: 0; overflow: visible; }
+    .results-layout { display: block; }
+    .results-col { max-width: 100%; }
+
+    /* ── Report header ── */
+    .print-header { display: flex; align-items: center; gap: 16px; margin-bottom: 4px; }
+    .print-header svg { width: 100px; height: auto; flex-shrink: 0; }
+    .print-header h2 { font-size: 20px; font-weight: 300; margin: 0; letter-spacing: -0.02em; color: #1a1a1a; }
+    .print-config { display: block; margin-bottom: 20px; padding: 10px 0; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; font-size: 10px; line-height: 2; color: #444; letter-spacing: 0.01em; }
+    .print-config strong { font-weight: 600; color: #1a1a1a; }
+
+    /* ── Key metrics strip ── */
+    .metrics-grid { display: flex; flex-wrap: wrap; gap: 0; margin: 0 0 18px 0; padding: 0; border: 1px solid #bbb; border-radius: 0; break-inside: avoid; page-break-inside: avoid; }
+    .metric-card { flex: 1 1 0; min-width: 0; box-shadow: none; border: none; border-right: 1px solid #bbb; border-radius: 0; background: #f8f8f8; padding: 10px 12px; text-align: center; }
+    .metric-card:last-child { border-right: none; }
+    .metric-label { font-size: 7.5px; color: #666; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; margin-bottom: 2px; }
+    .metric-val { font-size: 20px; font-weight: 700; color: #1a1a1a !important; letter-spacing: -0.03em; }
+    .metric-sub { font-size: 8.5px; color: #888; margin-top: 1px; }
+
+    /* ── Section panels ── */
+    .result-section { box-shadow: none; border: none; border-radius: 0; padding: 0; margin-bottom: 16px; background: transparent; break-inside: avoid; page-break-inside: avoid; }
+    .result-section h3 { font-size: 11px; font-weight: 700; margin: 0 0 8px 0; padding: 5px 0; border-bottom: 2px solid #1a1a1a; text-transform: uppercase; letter-spacing: 0.06em; color: #1a1a1a; display: flex; align-items: center; gap: 6px; }
+    .result-section h3 svg { display: none; }
+
+    /* ── Tables ── */
+    .breakdown-table { font-size: 10.5px; border-collapse: collapse; }
+    .breakdown-table td { padding: 5px 8px 5px 0; color: #333; border-bottom: 1px solid #e0e0e0; }
+    .breakdown-table td:last-child { text-align: right; color: #1a1a1a; font-weight: 600; padding-right: 0; }
+    .breakdown-table tr:last-child td { border-bottom: none; }
+    .breakdown-table tr + tr td { border-top: none; }
+    .breakdown-table .subtotal td { border-top: 1.5px solid #888; border-bottom: 1.5px solid #888; font-weight: 700; color: #1a1a1a; padding: 7px 8px 7px 0; background: #f5f5f5; }
+    .breakdown-table .subtotal td:last-child { color: #1a1a1a; font-size: 11.5px; padding-right: 0; }
+
+    /* ── Notes & warnings ── */
+    .note-box { background: transparent !important; border-left: 2px solid #aaa !important; border-radius: 0 !important; color: #444 !important; font-size: 9.5px; padding: 5px 10px; margin-top: 8px; }
+    .warn-box { border-left-color: #c00 !important; background: transparent !important; color: #900 !important; }
+
+    /* ── Multi-plane / modular comparison ── */
+    .mrc-box { border: 1px solid #ccc !important; background: transparent !important; border-radius: 0 !important; break-inside: avoid; page-break-inside: avoid; }
+    .mrc-comparison { break-inside: avoid; page-break-inside: avoid; }
+    .mrc-benefit { font-size: 9.5px; }
+
+    /* ── Scale-out planned view ── */
+    .scale-day1, .scale-planned { display: block !important; }
+    .scale-planned { margin-top: 18px; padding-top: 14px; border-top: 2px solid #1a1a1a; }
+    .scale-planned::before { content: 'Planned Scale'; display: block; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; color: #1a1a1a; }
+
+    /* ── Footer ── */
+    .print-footer { display: block; margin-top: 24px; padding-top: 10px; border-top: 1px solid #ccc; font-size: 9px; color: #888; text-align: right; }
+
+    a { color: inherit !important; text-decoration: none !important; }
   }
 
   /* ── Topology overlay ── */
@@ -989,6 +1050,11 @@
 
   <!-- Main: Results + Diagram -->
   <main class="main-content">
+    <div class="print-header">
+      <svg viewBox="0 0 1115 175" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="M391.027,103.426c36.994,0,55.491-25.688,55.491-51.378c0-25.688-18.498-50.353-57.546-50.353c-28.773-1.029-134.617-1.029-134.617-1.029v173.668h32.879V28.413c25.691,0,90.43,0,103.79,0c18.496,0,27.745,6.163,27.745,23.635c0,14.385-9.247,22.606-26.718,22.606h-86.315l102.761,98.648h40.078l-73.991-71.932C381.78,103.426,390,103.426,391.027,103.426z"/><rect x="480.429" y="0.669" width="31.856" height="173.665"/><polygon points="916.137,27.387 916.137,0.669 848.313,0.669 816.457,0.669 759.938,0.669 741.441,27.387 816.457,27.387 816.457,174.334 848.313,174.334 848.313,27.387"/><path d="M678.756,72.6c-16.441,0-57.543,0-81.182,0c-16.438,0-25.689-7.192-25.689-21.58c0-16.44,11.305-23.633,25.689-23.633c22.609,0,110.98,0,110.98,0l14.387-26.718c0,0-107.898,0-126.395,0c-28.775,0-52.407,21.577-52.407,51.382c0,26.715,22.608,48.294,53.434,48.294c17.473,0,69.877,0,81.182,0c18.5,0,28.775,8.224,28.775,23.637c0,13.357-11.305,22.608-28.775,22.608H566.748l-16.44,27.744c0,0,98.649,0,132.558,0c33.912,0,52.406-24.658,52.406-52.404C735.275,96.233,713.695,72.6,678.756,72.6z"/><path d="M104.325,11.972C97.133,23.272,1.564,174.334,1.564,174.334h33.91l31.858-51.381h67.822l17.47-27.746H84.8l36.993-59.602l86.321,137.697h33.911c0,0-94.542-149.001-102.765-162.359C130.013-2.413,113.574-1.387,104.325,11.972z"/><path d="M1079.523,174.334h33.912c0,0-94.539-149.003-102.764-162.362c-9.244-15.415-25.689-14.385-34.938-1.028c-7.195,11.301-102.762,162.359-102.762,162.359h33.91l31.855-51.378h68.852l17.467-27.746h-67.82l36.996-59.603L1079.523,174.334z"/></g></svg>
+      <h2>AI Backend Network Calculator</h2>
+    </div>
+    <div class="print-config" id="print-config"></div>
     <div class="results-layout">
       <div class="results-col" id="results">
         <div class="empty-state">
@@ -1001,6 +1067,7 @@
       </div>
       <div class="diagram-col" id="diagram-panel"></div>
     </div>
+    <div class="print-footer" id="print-footer"></div>
   </main>
 </div>
 
@@ -1050,6 +1117,8 @@
         <li><strong>Single-tier scale-out</strong> — target GPU count now drives chassis/platform sizing in single-tier mode; auto-select picks a chassis large enough for the target scale, with day-1 utilization shown</li>
         <li><strong>Aggregate BW fix</strong> — multi-plane summary now correctly shows per-GPU bandwidth when GPUs connect to one plane (distributed), no longer implying multiplication across all planes</li>
         <li><strong>1.6T optic names</strong> — spine optics now show announced product names: OSFP 1.6T 2XDR4 (dual MPO-12, 2km) for 200G SerDes platforms, OSFP 800G XDR4-G (gearbox) when a 100G SerDes platform connects to 200G-lane fiber. Reach dynamically shows ~2km for XDR4 fabrics, ~500m for DR</li>
+        <li><strong>Print to PDF</strong> — Print button in the results tab bar generates a clean, report-style PDF with Arista branding, config summary, all tabs shown linearly, and a dated footer. Optimised typography, ruled tables, and compact metrics strip for professional output</li>
+        <li><strong>Modular comparison labels</strong> — "Your Design" cards now include the tier (e.g. "Your Design: Two-Tier All-Fixed" instead of "Your Design: All-Fixed")</li>
       </ul>
       <h3>v1.4.2 — July 2025</h3>
       <ul>
@@ -2838,7 +2907,7 @@ function calculate() {
       } else {
         altLabel = tierNum === 1 ? 'All-Fixed 2-Tier' : 'All-Fixed Spine';
       }
-      curLabel = tierNum === 1 ? 'Your Design: Collapsed Modular' : 'Your Design: Modular Spine';
+      curLabel = tierNum === 1 ? 'Your Design: Single-Tier Modular' : tierNum === 3 ? 'Your Design: Three-Tier Modular Spine' : 'Your Design: Two-Tier Modular Spine';
     } else {
       const chassis = PLATFORMS.filter(p => p.type === 'chassis');
       const canSingleTier = chassis.some(ch => Math.ceil(modularLPP / breakout) <= ch.radix);
@@ -2860,7 +2929,7 @@ function calculate() {
         }
         if (alt) altLabel = '2-Tier Modular (' + alt.spName + ')';
       }
-      curLabel = tierNum === 3 ? 'Your Design: 3-Tier All-Fixed' : 'Your Design: All-Fixed';
+      curLabel = tierNum === 3 ? 'Your Design: Three-Tier All-Fixed' : tierNum === 2 ? 'Your Design: Two-Tier All-Fixed' : 'Your Design: Single-Tier Fixed';
     }
 
     if (alt) {
@@ -3081,6 +3150,7 @@ function calculate() {
   out += '<button class="results-tab-btn' + (activeResultsTab === 'summary' ? ' active' : '') + '" data-tab="summary" onclick="switchResultsTab(\'summary\')">Summary</button>';
   out += '<button class="results-tab-btn' + (activeResultsTab === 'fabric' ? ' active' : '') + '" data-tab="fabric" onclick="switchResultsTab(\'fabric\')">Fabric</button>';
   out += '<button class="results-tab-btn' + (activeResultsTab === 'optics' ? ' active' : '') + '" data-tab="optics" onclick="switchResultsTab(\'optics\')">Optics &amp; Power</button>';
+  out += '<button class="results-print-btn" onclick="window.print()" title="Print to PDF"><svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button>';
   out += '</div>';
   out += '<div class="results-tab-panel' + (activeResultsTab === 'summary' ? ' active' : '') + '" data-tab="summary">' + summaryContent + '</div>';
   out += '<div class="results-tab-panel' + (activeResultsTab === 'fabric' ? ' active' : '') + '" data-tab="fabric">' + fabricContent + '</div>';
@@ -3104,6 +3174,21 @@ function calculate() {
     document.getElementById('diagram-panel').innerHTML +=
       '<div style="text-align:center"><button class="view-topo-btn" onclick="openTopoModal()">View Full Topology</button></div>';
   }
+  const tierNames = { 1: 'Single-tier', 2: 'Two-tier Clos', 3: 'Three-tier Clos', 4: 'DES' };
+  const pcParts = [];
+  if (selGpu && selGpu.id !== 'custom') pcParts.push('<strong>GPU:</strong> ' + esc(selGpu.name));
+  pcParts.push('<strong>GPUs:</strong> ' + fmtN(gpus));
+  pcParts.push('<strong>Links/GPU:</strong> ' + linksPerGpu);
+  pcParts.push('<strong>Topology:</strong> ' + tierNames[tierNum]);
+  if (planes > 1) pcParts.push('<strong>Planes:</strong> ' + planes);
+  pcParts.push('<strong>Host:</strong> ' + speedLabel(hostSpeedPerPlane));
+  if (tierNum >= 2 && tierNum <= 3) pcParts.push('<strong>Spine:</strong> ' + speedLabel(spineSpeed));
+  if (leafPlatform) pcParts.push('<strong>Leaf:</strong> ' + esc(leafPlatform.desc));
+  if (spinePlatform) pcParts.push('<strong>' + (tierNum === 3 ? 'Super-spine' : tierNum === 1 ? 'Switch' : 'Spine') + ':</strong> ' + esc(spinePlatform.desc));
+  const targetGpusPrint = getTargetGPUs();
+  if (targetGpusPrint > gpus) pcParts.push('<strong>Target scale:</strong> ' + fmtN(targetGpusPrint) + ' GPUs');
+  document.getElementById('print-config').innerHTML = pcParts.join(' &nbsp;&middot;&nbsp; ');
+  document.getElementById('print-footer').textContent = 'Generated ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' — Arista Networks AI Backend Network Calculator v' + APP_VERSION;
   updateSectionSummaries();
 }
 
