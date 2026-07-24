@@ -795,7 +795,7 @@
 <div class="topbar">
   <div class="topbar-left">
     <div class="topbar-logo"><svg viewBox="0 0 1115 175" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="M391.027,103.426c36.994,0,55.491-25.688,55.491-51.378c0-25.688-18.498-50.353-57.546-50.353c-28.773-1.029-134.617-1.029-134.617-1.029v173.668h32.879V28.413c25.691,0,90.43,0,103.79,0c18.496,0,27.745,6.163,27.745,23.635c0,14.385-9.247,22.606-26.718,22.606h-86.315l102.761,98.648h40.078l-73.991-71.932C381.78,103.426,390,103.426,391.027,103.426z"/><rect x="480.429" y="0.669" width="31.856" height="173.665"/><polygon points="916.137,27.387 916.137,0.669 848.313,0.669 816.457,0.669 759.938,0.669 741.441,27.387 816.457,27.387 816.457,174.334 848.313,174.334 848.313,27.387"/><path d="M678.756,72.6c-16.441,0-57.543,0-81.182,0c-16.438,0-25.689-7.192-25.689-21.58c0-16.44,11.305-23.633,25.689-23.633c22.609,0,110.98,0,110.98,0l14.387-26.718c0,0-107.898,0-126.395,0c-28.775,0-52.407,21.577-52.407,51.382c0,26.715,22.608,48.294,53.434,48.294c17.473,0,69.877,0,81.182,0c18.5,0,28.775,8.224,28.775,23.637c0,13.357-11.305,22.608-28.775,22.608H566.748l-16.44,27.744c0,0,98.649,0,132.558,0c33.912,0,52.406-24.658,52.406-52.404C735.275,96.233,713.695,72.6,678.756,72.6z"/><path d="M104.325,11.972C97.133,23.272,1.564,174.334,1.564,174.334h33.91l31.858-51.381h67.822l17.47-27.746H84.8l36.993-59.602l86.321,137.697h33.911c0,0-94.542-149.001-102.765-162.359C130.013-2.413,113.574-1.387,104.325,11.972z"/><path d="M1079.523,174.334h33.912c0,0-94.539-149.003-102.764-162.362c-9.244-15.415-25.689-14.385-34.938-1.028c-7.195,11.301-102.762,162.359-102.762,162.359h33.91l31.855-51.378h68.852l17.467-27.746h-67.82l36.996-59.603L1079.523,174.334z"/></g></svg></div>
-    <h1>AI Backend Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.5</span></h1>
+    <h1>AI Backend Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.5.2</span></h1>
   </div>
   <div class="topbar-right">
     <a href="#" onclick="event.preventDefault();document.getElementById('changelog-modal').classList.add('open')" title="What's new" style="color:var(--text3);margin-right:12px;display:inline-flex;align-items:center;gap:5px;font-size:13px;text-decoration:none;opacity:0.7;transition:opacity .2s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
@@ -1106,19 +1106,28 @@
       <button style="background:none;border:none;cursor:pointer;color:var(--text3);padding:4px" onclick="document.getElementById('changelog-modal').classList.remove('open')"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="changelog-body">
-      <h3>v1.5 — July 2025</h3>
+      <h3>v1.5.2 — July 2025</h3>
+      <ul>
+        <li><strong>Print to PDF</strong> — Print button in the results tab bar generates a clean, report-style PDF with Arista branding, config summary, all tabs shown linearly, and a dated footer</li>
+        <li><strong>Modular comparison labels</strong> — "Your Design" cards now include the tier (e.g. "Two-Tier All-Fixed" instead of "All-Fixed")</li>
+        <li><strong>NIC breakout optics fix</strong> — switch-side optics now correctly show 800G transceivers with breakout when NIC breakout reduces link speed, halving optic count</li>
+        <li><strong>LPO hidden for 1.6T</strong> — FRO/LPO toggle hidden when fabric includes 1.6T optics (LPO not yet available at 1.6T)</li>
+        <li><strong>Topology speed labels</strong> — displays "1.6T" throughout topology views instead of "1600G"; host link labels show physical port grouping for 1.6T leaf switches</li>
+      </ul>
+      <h3>v1.5.1 — July 2025</h3>
+      <ul>
+        <li><strong>1.6T optic names</strong> — spine optics now show announced product names: OSFP 1.6T 2XDR4 (dual MPO-12, 2km) for 200G SerDes platforms, OSFP 800G XDR4-G (gearbox) when a 100G SerDes platform connects to 200G-lane fiber</li>
+        <li><strong>Single-tier scale-out</strong> — target GPU count now drives chassis/platform sizing in single-tier mode with day-1 utilization shown</li>
+        <li><strong>Aggregate BW fix</strong> — multi-plane summary correctly shows per-GPU bandwidth when GPUs connect to one plane (distributed)</li>
+      </ul>
+      <h3>v1.5.0 — July 2025</h3>
       <ul>
         <li><strong>1.6T (1600G) Ethernet support</strong> — spine and host speed dropdowns now include 1.6T; optic types, power estimates, and breakout logic all support 1.6T fabrics</li>
-        <li><strong>7060XE7 platform</strong> — Arista 7060XE7 with 64 OSFP-1.6T ports (128 effective 800G-equivalent), 4RU fixed form factor, 4.2kW typical / 5.7kW max power</li>
-        <li><strong>Per-platform port speed</strong> — each platform now carries a <code>portSpeed</code> property; platform dropdowns auto-filter to show only platforms that support the selected spine/host speed</li>
-        <li><strong>Decoupled spine speed</strong> — spine speed is now independently selectable, no longer auto-synced from host breakout; enables the common 1.6T use case of 800G hosts with 1.6T spine fabric</li>
-        <li><strong>Dynamic breakout labels</strong> — host port breakout dropdown labels update based on the selected leaf platform (e.g. "1:2 (1.6T → 2× 800G)" for 7060XE7)</li>
-        <li><strong>Mixed-speed optics</strong> — optics tables now show correct transceiver types per side when leaf and spine platforms have different port speeds</li>
-        <li><strong>Single-tier scale-out</strong> — target GPU count now drives chassis/platform sizing in single-tier mode; auto-select picks a chassis large enough for the target scale, with day-1 utilization shown</li>
-        <li><strong>Aggregate BW fix</strong> — multi-plane summary now correctly shows per-GPU bandwidth when GPUs connect to one plane (distributed), no longer implying multiplication across all planes</li>
-        <li><strong>1.6T optic names</strong> — spine optics now show announced product names: OSFP 1.6T 2XDR4 (dual MPO-12, 2km) for 200G SerDes platforms, OSFP 800G XDR4-G (gearbox) when a 100G SerDes platform connects to 200G-lane fiber. Reach dynamically shows ~2km for XDR4 fabrics, ~500m for DR</li>
-        <li><strong>Print to PDF</strong> — Print button in the results tab bar generates a clean, report-style PDF with Arista branding, config summary, all tabs shown linearly, and a dated footer. Optimised typography, ruled tables, and compact metrics strip for professional output</li>
-        <li><strong>Modular comparison labels</strong> — "Your Design" cards now include the tier (e.g. "Your Design: Two-Tier All-Fixed" instead of "Your Design: All-Fixed")</li>
+        <li><strong>7060XE7 platform</strong> — Arista 7060XE7 with 64 OSFP-1.6T ports (128 effective 800G-equivalent), 4RU fixed form factor</li>
+        <li><strong>Per-platform port speed</strong> — platform dropdowns auto-filter to show only platforms that support the selected spine/host speed</li>
+        <li><strong>Decoupled spine speed</strong> — spine speed is independently selectable; enables 800G hosts with 1.6T spine fabric</li>
+        <li><strong>Dynamic breakout labels</strong> — host port breakout labels update based on leaf platform (e.g. "1:2 (1.6T → 2× 800G)")</li>
+        <li><strong>Mixed-speed optics</strong> — optics tables show correct transceiver types per side when leaf and spine have different port speeds</li>
       </ul>
       <h3>v1.4.2 — July 2025</h3>
       <ul>
@@ -1867,7 +1876,7 @@ function updateTierHint() {
   autoSelectPlatforms();
 }
 
-const APP_VERSION = '1.5';
+const APP_VERSION = '1.5.2';
 
 window.addEventListener('DOMContentLoaded', () => {
   populateDropdowns();
