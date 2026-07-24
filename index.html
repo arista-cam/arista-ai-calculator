@@ -1049,6 +1049,7 @@
         <li><strong>Mixed-speed optics</strong> — optics tables now show correct transceiver types per side when leaf and spine platforms have different port speeds</li>
         <li><strong>Single-tier scale-out</strong> — target GPU count now drives chassis/platform sizing in single-tier mode; auto-select picks a chassis large enough for the target scale, with day-1 utilization shown</li>
         <li><strong>Aggregate BW fix</strong> — multi-plane summary now correctly shows per-GPU bandwidth when GPUs connect to one plane (distributed), no longer implying multiplication across all planes</li>
+        <li><strong>1.6T optic names</strong> — spine optics now show announced product names: OSFP 1.6T 2XDR4 (dual MPO-12, 2km) for 200G SerDes platforms, OSFP 800G XDR4-G (gearbox) when a 100G SerDes platform connects to 200G-lane fiber. Reach dynamically shows ~2km for XDR4 fabrics, ~500m for DR</li>
       </ul>
       <h3>v1.4.2 — July 2025</h3>
       <ul>
@@ -1871,25 +1872,34 @@ function syncBreakoutOptions() {
   }
 }
 
-function opticType(speed, tier) {
-  if (speed === 1600) return 'OSFP 1.6T DR8';
-  if (speed === 800) return tier === 'spine' ? 'OSFP 800G DR8' : 'OSFP 800G 2DR4';
+function opticType(speed, tier, peerSpeed) {
+  if (speed === 1600) return 'OSFP 1.6T 2XDR4';
+  if (speed === 800) {
+    if (peerSpeed === 1600) return 'OSFP 800G XDR4-G';
+    return tier === 'spine' ? 'OSFP 800G DR8' : 'OSFP 800G 2DR4';
+  }
   return { 100: 'OSFP 100G DR', 200: 'OSFP 200G DR4', 400: 'OSFP 400G DR4' }[speed] || speed + 'G';
 }
-function opticTypeLPO(speed, tier) {
-  if (speed === 1600) return 'OSFP LPO-1.6T-DR8';
-  if (speed === 800) return tier === 'spine' ? 'OSFP LPO-800G-DR8' : 'OSFP LPO-800G-2DR4';
-  return opticType(speed, tier);
+function opticTypeLPO(speed, tier, peerSpeed) {
+  if (speed === 1600) return 'OSFP LPO-1.6T-2XDR4';
+  if (speed === 800) {
+    if (peerSpeed === 1600) return 'OSFP 800G XDR4-G';
+    return tier === 'spine' ? 'OSFP LPO-800G-DR8' : 'OSFP LPO-800G-2DR4';
+  }
+  return opticType(speed, tier, peerSpeed);
 }
 function opticTypeNIC(speed) {
-  return { 100: 'QSFP28 100G SR4', 200: 'QSFP56 200G SR4', 400: 'QSFP-DD 400G DR4', 800: 'OSFP 800G 2DR4', 1600: 'OSFP 1.6T DR8' }[speed] || speed + 'G';
+  return { 100: 'QSFP28 100G SR4', 200: 'QSFP56 200G SR4', 400: 'QSFP-DD 400G DR4', 800: 'OSFP 800G 2DR4', 1600: 'OSFP 1.6T 2XDR4' }[speed] || speed + 'G';
 }
-function dualOptic(speed, tier) {
-  return '<span class="optic-conv">' + opticType(speed, tier) + '</span><span class="optic-lpo">' + opticTypeLPO(speed, tier) + '</span>';
+function dualOptic(speed, tier, peerSpeed) {
+  return '<span class="optic-conv">' + opticType(speed, tier, peerSpeed) + '</span><span class="optic-lpo">' + opticTypeLPO(speed, tier, peerSpeed) + '</span>';
 }
 function dualOpticHost(speed) {
   var t = opticTypeNIC(speed);
   return '<span class="optic-conv">' + t + '</span><span class="optic-lpo">' + t + '</span>';
+}
+function fabricReach(leafPS, spinePS) {
+  return (leafPS >= 1600 || spinePS >= 1600) ? '~2km' : '~500m';
 }
 
 function toggleOpticMode(mode) {
@@ -2325,8 +2335,8 @@ function calculate() {
     const hostBrkRatio = Math.floor(leafPortSpeed / hostSpeed);
     let optRows = [
       ['Leaf ↔ spine links', fmtN(spineLinks)],
-      ['In spine switch (leaf-facing' + spineBrkLabel + ') · ' + dualOptic(spinePortSpeed, spineOpticTier), fmtN(spinePhysPerSide)],
-      ['In leaf switch (spine-facing' + leafBrkLabel + ') · ' + dualOptic(leafPortSpeed, leafOpticTier), fmtN(spinePhysPerSide)],
+      ['In spine switch (leaf-facing' + spineBrkLabel + ') · ' + dualOptic(spinePortSpeed, spineOpticTier, leafPortSpeed), fmtN(spinePhysPerSide)],
+      ['In leaf switch (spine-facing' + leafBrkLabel + ') · ' + dualOptic(leafPortSpeed, leafOpticTier, spinePortSpeed), fmtN(spinePhysPerSide)],
       ['Fabric subtotal', fmtN(spOptBase), true],
       ['Host ↔ leaf links', fmtN(totalHostLinks), false, true]
     ];
@@ -2340,7 +2350,8 @@ function calculate() {
     optRows.push(['Grand total optics', fmtN(spOptBase + hOptBase), true]);
 
     const leafBrkNote = leafUlBrk > 1 ? ' (' + leafUlBrk + ':1 breakout)' : '';
-    optHtml = opticsSection(optRows, '<span class="optic-conv">Spine: ' + opticType(spinePortSpeed, spineOpticTier) + leafBrkNote + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Spine: ' + opticTypeLPO(spinePortSpeed, spineOpticTier) + leafBrkNote + '. Leaf switch: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>');
+    const fr2 = fabricReach(leafPortSpeed, spinePortSpeed);
+    optHtml = opticsSection(optRows, '<span class="optic-conv">Spine: ' + opticType(spinePortSpeed, spineOpticTier, leafPortSpeed) + leafBrkNote + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ' + fr2 + ' (single-mode).</span><span class="optic-lpo">Spine: ' + opticTypeLPO(spinePortSpeed, spineOpticTier, leafPortSpeed) + leafBrkNote + '. Leaf switch: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ' + fr2 + ' (single-mode).</span>');
 
     const uplinksStr = `${Number.isInteger(bundleSize) ? bundleSize : bundleSize.toFixed(1)}× ${spineSpeed}G uplinks`;
     diagramHtml = diagHeader + buildDiagram([
@@ -2462,12 +2473,12 @@ function calculate() {
     const t3HostBrk = Math.floor(leafPortSpeed / hostSpeed);
     let optRows = [
       ['Spine ↔ super-spine links', fmtN(a2sLinks)],
-      ['In super-spine (spine-facing' + ssBrkLabelS + ') · ' + dualOptic(spinePortSpeed, ssOpticTierS), fmtN(a2sPhysPerSide)],
-      ['In spine (super-spine-facing' + ssBrkLabelL + ') · ' + dualOptic(leafPortSpeed, ssOpticTierL), fmtN(a2sPhysPerSide)],
+      ['In super-spine (spine-facing' + ssBrkLabelS + ') · ' + dualOptic(spinePortSpeed, ssOpticTierS, leafPortSpeed), fmtN(a2sPhysPerSide)],
+      ['In spine (super-spine-facing' + ssBrkLabelL + ') · ' + dualOptic(leafPortSpeed, ssOpticTierL, spinePortSpeed), fmtN(a2sPhysPerSide)],
       ['Super-spine-tier subtotal', fmtN(a2sBase), true],
       ['Leaf ↔ spine links', fmtN(e2aLinks), false, true],
-      ['In spine (leaf-facing) · ' + dualOptic(leafPortSpeed, 'spine'), fmtN(e2aLinks)],
-      ['In leaf (spine-facing) · ' + dualOptic(leafPortSpeed, 'spine'), fmtN(e2aLinks)],
+      ['In spine (leaf-facing) · ' + dualOptic(leafPortSpeed, 'spine', leafPortSpeed), fmtN(e2aLinks)],
+      ['In leaf (spine-facing) · ' + dualOptic(leafPortSpeed, 'spine', leafPortSpeed), fmtN(e2aLinks)],
       ['Spine-tier subtotal', fmtN(e2aBase), true],
       ['Host ↔ leaf links', fmtN(totalHostLinks), false, true]
     ];
@@ -2482,7 +2493,8 @@ function calculate() {
     optRows.push(['Grand total optics', fmtN(a2sBase + e2aBase + hBase), true]);
 
     const ssBrkNote = ssLeafUlBrk > 1 ? ' (' + ssLeafUlBrk + ':1 breakout)' : '';
-    optHtml = opticsSection(optRows, '<span class="optic-conv">Super-spine/spine: ' + opticType(spinePortSpeed, ssOpticTierS) + ssBrkNote + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Super-spine/spine: ' + opticTypeLPO(spinePortSpeed, ssOpticTierS) + ssBrkNote + '. Leaf: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>');
+    const fr3 = fabricReach(leafPortSpeed, spinePortSpeed);
+    optHtml = opticsSection(optRows, '<span class="optic-conv">Super-spine/spine: ' + opticType(spinePortSpeed, ssOpticTierS, leafPortSpeed) + ssBrkNote + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ' + fr3 + ' (single-mode).</span><span class="optic-lpo">Super-spine/spine: ' + opticTypeLPO(spinePortSpeed, ssOpticTierS, leafPortSpeed) + ssBrkNote + '. Leaf: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ' + fr3 + ' (single-mode).</span>');
 
     const e2aStr = `${Number.isInteger(e2aBundle) ? e2aBundle : e2aBundle.toFixed(1)}× ${spineSpeed}G links`;
     const a2sStr = `${Number.isInteger(a2sBundle) ? a2sBundle : a2sBundle.toFixed(1)}× ${spineSpeed}G links`;
@@ -3001,8 +3013,8 @@ function calculate() {
       pOC = { spine: pSpOpt, hostSwitch: pHOptSwitch, hostEnd: pHOptHost, fabric: 0 };
       pOptRows = [
         ['Leaf ↔ spine links', fmtN(pSpineLinks)],
-        ['In spine switch (leaf-facing' + pBrkLabelS + ') · ' + dualOptic(spinePortSpeed, pOpTierS), fmtN(pSpPhys)],
-        ['In leaf switch (spine-facing' + pBrkLabelL + ') · ' + dualOptic(leafPortSpeed, pOpTierL), fmtN(pSpPhys)],
+        ['In spine switch (leaf-facing' + pBrkLabelS + ') · ' + dualOptic(spinePortSpeed, pOpTierS, leafPortSpeed), fmtN(pSpPhys)],
+        ['In leaf switch (spine-facing' + pBrkLabelL + ') · ' + dualOptic(leafPortSpeed, pOpTierL, spinePortSpeed), fmtN(pSpPhys)],
         ['Fabric subtotal', fmtN(pSpOpt), true],
         ['Host ↔ leaf links', fmtN(pHostLinks), false, true]
       ];
@@ -3012,7 +3024,8 @@ function calculate() {
       pOptRows.push(['Host subtotal', fmtN(pHOptBase), true]);
       pOptRows.push(['Grand total optics', fmtN(pSpOpt + pHOptBase), true]);
       const pBrkNote2 = pLeafUlBrk > 1 ? ' (' + pLeafUlBrk + ':1 breakout)' : '';
-      pNoteText = '<span class="optic-conv">Spine: ' + opticType(spinePortSpeed, pOpTierS) + pBrkNote2 + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Spine: ' + opticTypeLPO(spinePortSpeed, pOpTierS) + pBrkNote2 + '. Leaf switch: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>';
+      const pfr2 = fabricReach(leafPortSpeed, spinePortSpeed);
+      pNoteText = '<span class="optic-conv">Spine: ' + opticType(spinePortSpeed, pOpTierS, leafPortSpeed) + pBrkNote2 + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ' + pfr2 + ' (single-mode).</span><span class="optic-lpo">Spine: ' + opticTypeLPO(spinePortSpeed, pOpTierS, leafPortSpeed) + pBrkNote2 + '. Leaf switch: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ' + pfr2 + ' (single-mode).</span>';
     } else {
       const uplinks = leafRadix - physDownlinks;
       const pPods = Math.ceil(pLeafPP / physDownlinks);
@@ -3025,12 +3038,12 @@ function calculate() {
       pOC = { spine: pA2sBase + pE2aBase, hostSwitch: pHOptSwitch, hostEnd: pHOptHost, fabric: 0 };
       pOptRows = [
         ['Spine ↔ super-spine links', fmtN(pA2sLinks)],
-        ['In super-spine (spine-facing' + pBrkLabelS + ') · ' + dualOptic(spinePortSpeed, pOpTierS), fmtN(pA2sPhys)],
-        ['In spine (super-spine-facing' + pBrkLabelL + ') · ' + dualOptic(leafPortSpeed, pOpTierL), fmtN(pA2sPhys)],
+        ['In super-spine (spine-facing' + pBrkLabelS + ') · ' + dualOptic(spinePortSpeed, pOpTierS, leafPortSpeed), fmtN(pA2sPhys)],
+        ['In spine (super-spine-facing' + pBrkLabelL + ') · ' + dualOptic(leafPortSpeed, pOpTierL, spinePortSpeed), fmtN(pA2sPhys)],
         ['Super-spine-tier subtotal', fmtN(pA2sBase), true],
         ['Leaf ↔ spine links', fmtN(pE2aLinks), false, true],
-        ['In spine (leaf-facing) · ' + dualOptic(leafPortSpeed, 'spine'), fmtN(pE2aLinks)],
-        ['In leaf (spine-facing) · ' + dualOptic(leafPortSpeed, 'spine'), fmtN(pE2aLinks)],
+        ['In spine (leaf-facing) · ' + dualOptic(leafPortSpeed, 'spine', leafPortSpeed), fmtN(pE2aLinks)],
+        ['In leaf (spine-facing) · ' + dualOptic(leafPortSpeed, 'spine', leafPortSpeed), fmtN(pE2aLinks)],
         ['Spine-tier subtotal', fmtN(pE2aBase), true],
         ['Host ↔ leaf links', fmtN(pHostLinks), false, true]
       ];
@@ -3040,7 +3053,8 @@ function calculate() {
       pOptRows.push(['Host subtotal', fmtN(pHOptBase), true]);
       pOptRows.push(['Grand total optics', fmtN(pA2sBase + pE2aBase + pHOptBase), true]);
       const pBrkNote3 = pLeafUlBrk > 1 ? ' (' + pLeafUlBrk + ':1 breakout)' : '';
-      pNoteText = '<span class="optic-conv">Super-spine/spine: ' + opticType(spinePortSpeed, pOpTierS) + pBrkNote3 + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Super-spine/spine: ' + opticTypeLPO(spinePortSpeed, pOpTierS) + pBrkNote3 + '. Leaf: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>';
+      const pfr3 = fabricReach(leafPortSpeed, spinePortSpeed);
+      pNoteText = '<span class="optic-conv">Super-spine/spine: ' + opticType(spinePortSpeed, pOpTierS, leafPortSpeed) + pBrkNote3 + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ' + pfr3 + ' (single-mode).</span><span class="optic-lpo">Super-spine/spine: ' + opticTypeLPO(spinePortSpeed, pOpTierS, leafPortSpeed) + pBrkNote3 + '. Leaf: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ' + pfr3 + ' (single-mode).</span>';
     }
     const pOptHtml = opticsSection(pOptRows, pNoteText);
     const pPowerHtml = buildPowerHtml(pOC, pTotalLeaf, totalSpine);
