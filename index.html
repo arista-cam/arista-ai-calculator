@@ -2082,7 +2082,8 @@ function calculate() {
   const linksPerNode = gpusPerNode * linksPerGpu;
   const nicBreakout = nicBreakoutEnabled && planes > 1 && linksPerGpu < planes;
   const linksPerNodePerPlane = nicBreakout ? linksPerNode : (planes > 1 ? Math.ceil(linksPerNode / planes) : linksPerNode);
-  const hostLinkStr = `${linksPerNodePerPlane}× ${speedLabel(hostSpeedPerPlane)} links` + (breakout > 1 ? ` (into ${Math.round(linksPerNodePerPlane/breakout)}× switch ports)` : '');
+  const physHostBrk = tierNum === 1 ? Math.floor((spinePlatform?.portSpeed || 800) / hostSpeedPerPlane) : Math.floor(leafPortSpeed / hostSpeedPerPlane);
+  const hostLinkStr = `${linksPerNodePerPlane}× ${speedLabel(hostSpeedPerPlane)} links` + (physHostBrk > 1 ? ` (into ${Math.round(linksPerNodePerPlane / physHostBrk)}× switch ports)` : '');
   const diagTitle = 'Logical Data Path (Single Node Slice' + (planes > 1 ? ` · ${planes} Planes` : '') + ')';
 
   function buildDiagram(nodes, planes) {
@@ -2259,7 +2260,8 @@ function calculate() {
     optRows.push(['In host NIC · ' + dualOpticHost(hostSpeedPerPlane), fmtN(hOptHostBase)]);
     optRows.push(['Total optics', fmtN(hostOptBase), true]);
 
-    optHtml = opticsSection(optRows, '<span class="optic-conv">' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Switch-side: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>', hostSpeedPerPlane >= 800);
+    const st1HasLpo = hostSpeedPerPlane >= 800 && (spinePlatform?.portSpeed || 800) < 1600;
+    optHtml = opticsSection(optRows, '<span class="optic-conv">' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Switch-side: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>', st1HasLpo);
 
   } else if (tierNum === 2) {
     const leafPerPlane  = Math.ceil(linksPerPlane / effDownlinks);
@@ -2355,9 +2357,10 @@ function calculate() {
 
     const leafBrkNote = leafUlBrk > 1 ? ' (' + leafUlBrk + ':1 breakout)' : '';
     const fr2 = fabricReach(leafPortSpeed, spinePortSpeed);
-    optHtml = opticsSection(optRows, '<span class="optic-conv">Spine: ' + opticType(spinePortSpeed, spineOpticTier, leafPortSpeed) + leafBrkNote + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ' + fr2 + ' (single-mode).</span><span class="optic-lpo">Spine: ' + opticTypeLPO(spinePortSpeed, spineOpticTier, leafPortSpeed) + leafBrkNote + '. Leaf switch: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ' + fr2 + ' (single-mode).</span>');
+    const t2HasLpo = leafPortSpeed < 1600 && spinePortSpeed < 1600;
+    optHtml = opticsSection(optRows, '<span class="optic-conv">Spine: ' + opticType(spinePortSpeed, spineOpticTier, leafPortSpeed) + leafBrkNote + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ' + fr2 + ' (single-mode).</span><span class="optic-lpo">Spine: ' + opticTypeLPO(spinePortSpeed, spineOpticTier, leafPortSpeed) + leafBrkNote + '. Leaf switch: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ' + fr2 + ' (single-mode).</span>', t2HasLpo);
 
-    const uplinksStr = `${Number.isInteger(bundleSize) ? bundleSize : bundleSize.toFixed(1)}× ${spineSpeed}G uplinks`;
+    const uplinksStr = `${Number.isInteger(bundleSize) ? bundleSize : bundleSize.toFixed(1)}× ${speedLabel(spineSpeed)} uplinks`;
     diagramHtml = diagHeader + buildDiagram([
       { title: '1× Spine Switch', sub: spinePlatform.name + '\n' + spineRadix + '-port', stacked: true },
       { link: uplinksStr, optic: { conv: opticType(spineSpeed, 'spine'), lpo: opticTypeLPO(spineSpeed, 'spine') } },
@@ -2498,10 +2501,11 @@ function calculate() {
 
     const ssBrkNote = ssLeafUlBrk > 1 ? ' (' + ssLeafUlBrk + ':1 breakout)' : '';
     const fr3 = fabricReach(leafPortSpeed, spinePortSpeed);
-    optHtml = opticsSection(optRows, '<span class="optic-conv">Super-spine/spine: ' + opticType(spinePortSpeed, ssOpticTierS, leafPortSpeed) + ssBrkNote + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ' + fr3 + ' (single-mode).</span><span class="optic-lpo">Super-spine/spine: ' + opticTypeLPO(spinePortSpeed, ssOpticTierS, leafPortSpeed) + ssBrkNote + '. Leaf: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ' + fr3 + ' (single-mode).</span>');
+    const t3HasLpo = leafPortSpeed < 1600 && spinePortSpeed < 1600;
+    optHtml = opticsSection(optRows, '<span class="optic-conv">Super-spine/spine: ' + opticType(spinePortSpeed, ssOpticTierS, leafPortSpeed) + ssBrkNote + ' · Host: ' + opticType(hostSpeedPerPlane) + '. Reach: ' + fr3 + ' (single-mode).</span><span class="optic-lpo">Super-spine/spine: ' + opticTypeLPO(spinePortSpeed, ssOpticTierS, leafPortSpeed) + ssBrkNote + '. Leaf: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ' + fr3 + ' (single-mode).</span>', t3HasLpo);
 
-    const e2aStr = `${Number.isInteger(e2aBundle) ? e2aBundle : e2aBundle.toFixed(1)}× ${spineSpeed}G links`;
-    const a2sStr = `${Number.isInteger(a2sBundle) ? a2sBundle : a2sBundle.toFixed(1)}× ${spineSpeed}G links`;
+    const e2aStr = `${Number.isInteger(e2aBundle) ? e2aBundle : e2aBundle.toFixed(1)}× ${speedLabel(spineSpeed)} links`;
+    const a2sStr = `${Number.isInteger(a2sBundle) ? a2sBundle : a2sBundle.toFixed(1)}× ${speedLabel(spineSpeed)} links`;
 
     diagramHtml = diagHeader + buildDiagram([
       { title: '1× Super-Spine', sub: spinePlatform.name + '\n' + spineRadix + '-port', stacked: true },
@@ -3262,7 +3266,7 @@ function buildMRCTopoData() {
             if (aggPod === edgePod) {
               edges.push({
                 source: 'p' + p + '-aggLeaf-' + ai, target: 'p' + p + '-edgeLeaf-' + ei,
-                label: bStr + '×' + link.speed + 'G',
+                label: bStr + '×' + speedLabel(link.speed),
                 weight: Math.min(Math.max(1, link.bundle / 2), 3),
                 bundle: link.bundle, speed: link.speed, plane: p
               });
@@ -3282,7 +3286,7 @@ function buildMRCTopoData() {
             if (c.pods.aggUplinks >= totalSpines || (si >= center - halfBand && si < center + halfBand)) {
               edges.push({
                 source: 'p' + p + '-spine-' + si, target: 'p' + p + '-aggLeaf-' + ai,
-                label: bStr + '×' + link.speed + 'G',
+                label: bStr + '×' + speedLabel(link.speed),
                 weight: Math.min(Math.max(1, link.bundle / 2), 3),
                 bundle: link.bundle, speed: link.speed, plane: p
               });
@@ -3296,7 +3300,7 @@ function buildMRCTopoData() {
             }
             edges.push({
               source: 'p' + p + '-spine-' + nearest, target: 'p' + p + '-aggLeaf-' + ai,
-              label: bStr + '×' + link.speed + 'G',
+              label: bStr + '×' + speedLabel(link.speed),
               weight: Math.min(Math.max(1, link.bundle / 2), 3),
               bundle: link.bundle, speed: link.speed, plane: p
             });
@@ -3308,7 +3312,7 @@ function buildMRCTopoData() {
             edges.push({
               source: 'p' + p + '-' + link.from + '-' + f,
               target: 'p' + p + '-' + link.to + '-' + t,
-              label: bStr + '×' + link.speed + 'G',
+              label: bStr + '×' + speedLabel(link.speed),
               weight: Math.min(Math.max(1, link.bundle / 2), 3),
               bundle: link.bundle, speed: link.speed, plane: p
             });
@@ -3415,7 +3419,7 @@ function buildMRCTopoData() {
           if (leafIdxs.includes(leafNum)) {
             edges.push({
               source: 'p' + p + '-' + bottomTier.id + '-' + leafNum, target: hn.id,
-              label: '1×' + (hostLink ? hostLink.speed : 400) + 'G',
+              label: '1×' + speedLabel(hostLink ? hostLink.speed : 400),
               weight: 1, bundle: 1, speed: hostLink ? hostLink.speed : 400, plane: p,
               gpuIdx: isNicBrk ? gi : p * gpusThisPlane + gi
             });
@@ -3426,7 +3430,7 @@ function buildMRCTopoData() {
         edges.push({
           source: 'p' + p + '-' + bottomTier.id + '-' + leafIdx,
           target: hn.id,
-          label: hostLink ? linksPerNodePerPlane + '×' + hostLink.speed + 'G' : '',
+          label: hostLink ? linksPerNodePerPlane + '×' + speedLabel(hostLink ? hostLink.speed : 400) : '',
           weight: 1.5, bundle: linksPerNodePerPlane,
           speed: hostLink ? hostLink.speed : 400, plane: p
         });
@@ -3589,7 +3593,7 @@ function buildTopoData() {
             if (t >= groupStart && t < groupEnd) {
               edges.push({
                 source: link.from + '-' + t, target: hn.id,
-                label: '1×' + link.speed + 'G',
+                label: '1×' + speedLabel(link.speed),
                 weight: 1, bundle: 1, speed: link.speed
               });
             }
@@ -3603,7 +3607,7 @@ function buildTopoData() {
           const leafIdx = leafIdxs[hi % leafIdxs.length];
           edges.push({
             source: link.from + '-' + leafIdx, target: realHosts[hi].id,
-            label: link.bundle + '×' + link.speed + 'G',
+            label: link.bundle + '×' + speedLabel(link.speed),
             weight: Math.min(Math.max(1, link.bundle / 2), 4),
             bundle: link.bundle, speed: link.speed
           });
@@ -3628,7 +3632,7 @@ function buildTopoData() {
           if (aggPod === edgePod) {
             edges.push({
               source: 'aggLeaf-' + ai, target: 'edgeLeaf-' + ei,
-              label: bStr + '×' + link.speed + 'G',
+              label: bStr + '×' + speedLabel(link.speed),
               weight: Math.min(Math.max(1, link.bundle / 2), 4),
               bundle: link.bundle, speed: link.speed
             });
@@ -3648,7 +3652,7 @@ function buildTopoData() {
           if (c.pods.aggUplinks >= totalSpines || (si >= center - halfBand && si < center + halfBand)) {
             edges.push({
               source: 'spine-' + si, target: 'aggLeaf-' + ai,
-              label: bStr + '×' + link.speed + 'G',
+              label: bStr + '×' + speedLabel(link.speed),
               weight: Math.min(Math.max(1, link.bundle / 2), 4),
               bundle: link.bundle, speed: link.speed
             });
@@ -3662,7 +3666,7 @@ function buildTopoData() {
           }
           edges.push({
             source: 'spine-' + nearest, target: 'aggLeaf-' + ai,
-            label: bStr + '×' + link.speed + 'G',
+            label: bStr + '×' + speedLabel(link.speed),
             weight: Math.min(Math.max(1, link.bundle / 2), 4),
             bundle: link.bundle, speed: link.speed
           });
@@ -3673,7 +3677,7 @@ function buildTopoData() {
         for (const t of toIdxs) {
           edges.push({
             source: link.from + '-' + f, target: link.to + '-' + t,
-            label: bStr + '×' + link.speed + 'G',
+            label: bStr + '×' + speedLabel(link.speed),
             weight: Math.min(Math.max(1, link.bundle / 2), 4),
             bundle: link.bundle, speed: link.speed
           });
@@ -3683,7 +3687,7 @@ function buildTopoData() {
       for (const t of toIdxs) {
         edges.push({
           source: link.from + '-' + fromIdxs[0], target: link.to + '-' + t,
-          label: fromIdxs.length + '×' + bStr + '×' + link.speed + 'G',
+          label: fromIdxs.length + '×' + bStr + '×' + speedLabel(link.speed),
           weight: 3, bundle: link.bundle, speed: link.speed
         });
       }
@@ -3938,7 +3942,7 @@ function renderTopology() {
       fromRank = c.tiers.findIndex(t => t.id === link.from);
       toRank = c.tiers.findIndex(t => t.id === link.to);
       const bStr = Number.isInteger(link.bundle) ? String(link.bundle) : link.bundle.toFixed(1);
-      labelText = bStr + '×' + link.speed + 'G';
+      labelText = bStr + '×' + speedLabel(link.speed);
     }
     const midY = ((fromRank + toRank) / 2) * 160;
     const ax = maxNodeX + 110;
