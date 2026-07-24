@@ -1798,12 +1798,19 @@ function updateTierHint() {
   autoSelectPlatforms();
 }
 
+const APP_VERSION = '1.5';
+
 window.addEventListener('DOMContentLoaded', () => {
   populateDropdowns();
   filterPlatformDropdowns();
   syncBreakout();
   updateTierHint();
   updateSectionSummaries();
+  const seen = localStorage.getItem('lastSeenVersion');
+  if (seen !== APP_VERSION) {
+    document.getElementById('changelog-modal').classList.add('open');
+    localStorage.setItem('lastSeenVersion', APP_VERSION);
+  }
   document.querySelector('.sidebar-scroll').addEventListener('scroll', positionSuggestions);
   window.addEventListener('resize', positionSuggestions);
 });
