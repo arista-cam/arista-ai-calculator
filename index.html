@@ -1106,6 +1106,10 @@
       <button style="background:none;border:none;cursor:pointer;color:var(--text3);padding:4px" onclick="document.getElementById('changelog-modal').classList.remove('open')"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="changelog-body">
+      <h3>v1.5.3 — July 2025</h3>
+      <ul>
+        <li><strong>Single-tier LPO toggle</strong> — FRO/LPO toggle now appears for single-tier designs with 800G spine optics even when host NIC speed is below 800G (e.g. 400G via breakout); note clarifies LPO applies to switch-side optics only</li>
+      </ul>
       <h3>v1.5.2 — July 2025</h3>
       <ul>
         <li><strong>Print to PDF</strong> — Print button in the results tab bar generates a clean, report-style PDF with Arista branding, config summary, all tabs shown linearly, and a dated footer</li>
@@ -1876,7 +1880,7 @@ function updateTierHint() {
   autoSelectPlatforms();
 }
 
-const APP_VERSION = '1.5.2';
+const APP_VERSION = '1.5.3';
 
 window.addEventListener('DOMContentLoaded', () => {
   populateDropdowns();
@@ -2345,8 +2349,12 @@ function calculate() {
     optRows.push(['In host NIC · ' + dualOpticHost(hostSpeedPerPlane), fmtN(hOptHostBase)]);
     optRows.push(['Total optics', fmtN(hostOptBase), true]);
 
-    const st1HasLpo = hostSpeedPerPlane >= 800 && (spinePlatform?.portSpeed || 800) < 1600;
-    optHtml = opticsSection(optRows, '<span class="optic-conv">' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">Switch-side: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span>', st1HasLpo);
+    const st1SpinePS = spinePlatform?.portSpeed || 800;
+    const st1HasLpo = st1SpinePS === 800;
+    const st1LpoNote = hostSpeedPerPlane < 800
+      ? 'Switch-side only: ' + opticTypeLPO(st1SpinePS) + '. Host NIC optics (' + opticTypeNIC(hostSpeedPerPlane) + ') are conventional only. Reach: ~500m (single-mode).'
+      : 'Switch-side: ' + opticTypeLPO(hostSpeedPerPlane) + ', host NIC: ' + opticTypeNIC(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).';
+    optHtml = opticsSection(optRows, '<span class="optic-conv">' + opticType(hostSpeedPerPlane) + '. Reach: ~500m (single-mode).</span><span class="optic-lpo">' + st1LpoNote + '</span>', st1HasLpo);
 
   } else if (tierNum === 2) {
     const leafPerPlane  = Math.ceil(linksPerPlane / effDownlinks);
