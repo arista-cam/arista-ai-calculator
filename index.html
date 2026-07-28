@@ -1260,18 +1260,27 @@ function updateSectionSummaries() {
   const workload = document.getElementById('wl-training').classList.contains('active') ? 'Training' : 'Inference';
   document.getElementById('summary-tier').textContent = tierEl ? tierNames[tierEl.value] + ' · ' + workload : '';
 
+  const tierVal = document.querySelector('input[name=tier]:checked')?.value;
   const leafSel = document.getElementById('leaf-radix');
   const spineSel = document.getElementById('spine-radix');
   const planes = document.getElementById('planes').value;
   const swParts = [];
-  if (leafSel.value) swParts.push(leafSel.options[leafSel.selectedIndex].text.split(' (')[0]);
-  if (spineSel.value) swParts.push(spineSel.options[spineSel.selectedIndex].text.split(' (')[0]);
+  if (tierVal === '1') {
+    if (spineSel.value) swParts.push(spineSel.options[spineSel.selectedIndex].text.split(' (')[0]);
+  } else {
+    if (leafSel.value) swParts.push(leafSel.options[leafSel.selectedIndex].text.split(' (')[0]);
+    if (spineSel.value) swParts.push(spineSel.options[spineSel.selectedIndex].text.split(' (')[0]);
+  }
   if (planes && planes !== '1') swParts.push(planes + ' planes');
   document.getElementById('summary-switch').textContent = swParts.join(' / ') || '';
 
   const hostSpeed = document.getElementById('host-speed').value;
   const spineSpeed = document.getElementById('spine-speed').value;
-  document.getElementById('summary-optics').textContent = hostSpeed + 'G host · ' + spineSpeed + 'G spine';
+  if (tierVal === '1') {
+    document.getElementById('summary-optics').textContent = hostSpeed + 'G host';
+  } else {
+    document.getElementById('summary-optics').textContent = hostSpeed + 'G host · ' + spineSpeed + 'G spine';
+  }
 }
 
 function toggleTheme() {
