@@ -1639,16 +1639,17 @@ function autoSelectPlatforms() {
   if (gpus <= 0) return;
 
   const nicBreakoutEnabled = isNicBreakoutEnabled();
-  const hostSpeedPerPlane = (nicBreakoutEnabled && planes > 1 && linksPerGpu < planes)
+  const nicBreakout = nicBreakoutEnabled && planes > 1 && linksPerGpu < planes;
+  const hostSpeedPerPlane = nicBreakout
     ? (hostSpeed * linksPerGpu / planes) : hostSpeed;
   const breakout = 800 / hostSpeedPerPlane;
 
   const totalHostLinks = gpus * linksPerGpu;
-  const linksPerPlane  = Math.ceil(totalHostLinks / planes);
+  const linksPerPlane  = nicBreakout ? totalHostLinks : Math.ceil(totalHostLinks / planes);
 
   const targetGPUs = getTargetGPUs();
   const targetLPP = (targetGPUs > gpus)
-    ? Math.ceil(targetGPUs * linksPerGpu / planes)
+    ? (nicBreakout ? targetGPUs * linksPerGpu : Math.ceil(targetGPUs * linksPerGpu / planes))
     : linksPerPlane;
 
   if (tierNum === 1) {
@@ -2126,9 +2127,10 @@ function calculate() {
   const gpus   = totalGPUs || hosts * gpusPerNode;
 
   const totalHostLinks = gpus * linksPerGpu;
-  const linksPerPlane  = Math.ceil(totalHostLinks / planes);
   const nicBreakoutEnabled = isNicBreakoutEnabled();
-  const hostSpeedPerPlane = (nicBreakoutEnabled && planes > 1 && linksPerGpu < planes)
+  const nicBreakoutActive = nicBreakoutEnabled && planes > 1 && linksPerGpu < planes;
+  const linksPerPlane  = nicBreakoutActive ? totalHostLinks : Math.ceil(totalHostLinks / planes);
+  const hostSpeedPerPlane = nicBreakoutActive
     ? (hostSpeed * linksPerGpu / planes) : hostSpeed;
 
   const leafPortSpeed  = leafPlatform?.portSpeed || 800;
@@ -2178,7 +2180,7 @@ function calculate() {
   let totalSpine = 0, totalLeaf = 0, pods = 0;
 
   const linksPerNode = gpusPerNode * linksPerGpu;
-  const nicBreakout = nicBreakoutEnabled && planes > 1 && linksPerGpu < planes;
+  const nicBreakout = nicBreakoutActive;
   const linksPerNodePerPlane = nicBreakout ? linksPerNode : (planes > 1 ? Math.ceil(linksPerNode / planes) : linksPerNode);
   const physHostBrk = tierNum === 1 ? Math.floor((spinePlatform?.portSpeed || 800) / hostSpeedPerPlane) : Math.floor(leafPortSpeed / hostSpeedPerPlane);
   const hostLinkStr = `${linksPerNodePerPlane}× ${speedLabel(hostSpeedPerPlane)} links` + (physHostBrk > 1 ? ` (into ${Math.round(linksPerNodePerPlane / physHostBrk)}× switch ports)` : '');
@@ -2272,7 +2274,7 @@ function calculate() {
     totalSpine = planes;
     const targetGPUs = getTargetGPUs();
     const targetLinksPerPlane = (targetGPUs > gpus)
-      ? Math.ceil(targetGPUs * linksPerGpu / planes)
+      ? (nicBreakout ? targetGPUs * linksPerGpu : Math.ceil(targetGPUs * linksPerGpu / planes))
       : linksPerPlane;
     const portsNeeded = Math.ceil(linksPerPlane / breakout);
     const portsForTarget = Math.ceil(targetLinksPerPlane / breakout);
@@ -2342,7 +2344,7 @@ function calculate() {
       hosts: { perLeaf: linksPerPlane, linksPerNode, linksPerNodePerPlane, gpusPerNode, linksPerGpu, nicBreakout, hostSpeedPerPlane },
       links: [{ from: 'spine', to: 'host', bundle: linksPerNodePerPlane, speed: hostSpeedPerPlane }] };
 
-    const hOptSwitchBase = Math.ceil(totalHostLinks / breakout);
+    const hOptSwitchBase = Math.ceil(linksPerPlane / breakout) * planes;
     const hOptHostBase   = totalHostLinks;
     const hostOptBase    = hOptSwitchBase + hOptHostBase;
     opticCounts.hostSwitch = hOptSwitchBase;
@@ -2371,7 +2373,7 @@ function calculate() {
     const balance       = document.getElementById('balance-topo').value === '1';
     const targetGPUs    = getTargetGPUs();
     const spineLeafPP   = (targetGPUs > gpus)
-      ? Math.ceil(Math.ceil(targetGPUs * linksPerGpu / planes) / effDownlinks)
+      ? Math.ceil((nicBreakout ? targetGPUs * linksPerGpu : Math.ceil(targetGPUs * linksPerGpu / planes)) / effDownlinks)
       : leafPerPlane;
     const origSpinePP   = Math.ceil((spineLeafPP * effUplinks) / effSpineRadix);
     let spinePerPlane   = origSpinePP;
@@ -2388,7 +2390,7 @@ function calculate() {
     const spineLinks    = leafPerPlane * effUplinks * planes;
     const spinePhysPerSide = Math.ceil(spineLinks / Math.max(uplinkBreakout, 1));
 
-    const hOptSwitchBase= Math.ceil(totalHostLinks / breakout);
+    const hOptSwitchBase= Math.ceil(linksPerPlane / breakout) * planes;
     const hOptHostBase  = totalHostLinks;
     const hOptBase      = hOptSwitchBase + hOptHostBase;
     opticCounts.spine = spinePhysPerSide * 2;
@@ -2507,7 +2509,7 @@ function calculate() {
     // Spines: total agg uplinks distributed across spine switches
     const targetGPUs    = getTargetGPUs();
     const ssLeaf1PP     = (targetGPUs > gpus)
-      ? Math.ceil(Math.ceil(Math.ceil(targetGPUs * linksPerGpu / planes) / effDownlinks) / edgeLeavesPerPod) * aggPerPod
+      ? Math.ceil(Math.ceil((nicBreakout ? targetGPUs * linksPerGpu : Math.ceil(targetGPUs * linksPerGpu / planes)) / effDownlinks) / edgeLeavesPerPod) * aggPerPod
       : leaf1PerPlane;
     const aggUplinksTotal = ssLeaf1PP * effUplinks;
     let spinePerPlane   = Math.ceil(aggUplinksTotal / effSpineRadix);
@@ -2529,7 +2531,7 @@ function calculate() {
     const a2sBase       = a2sPhysPerSide * 2;
     const e2aBase       = e2aLinks*2;
 
-    const hOptSwitchBase= Math.ceil(totalHostLinks / breakout);
+    const hOptSwitchBase= Math.ceil(linksPerPlane / breakout) * planes;
     const hOptHostBase  = totalHostLinks;
     const hBase         = hOptSwitchBase + hOptHostBase;
     opticCounts.spine = a2sBase + e2aBase;
@@ -2846,7 +2848,7 @@ function calculate() {
   // Modular vs Fixed comparison
   const scaleTargetGPUs = getTargetGPUs();
   const modularLPP = (scaleTargetGPUs > gpus)
-    ? Math.ceil(scaleTargetGPUs * linksPerGpu / planes)
+    ? (nicBreakout ? scaleTargetGPUs * linksPerGpu : Math.ceil(scaleTargetGPUs * linksPerGpu / planes))
     : linksPerPlane;
   if ((tierNum >= 1 && tierNum <= 3) && spinePlatform && leafPlatform !== undefined && spinePlatform.type !== 'custom' && (!leafPlatform || leafPlatform.type !== 'custom')) {
     const isCurrentModular = spinePlatform.type === 'chassis';
