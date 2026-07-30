@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Backend Network Calculator</title>
+<title>AI Network Calculator</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230065A3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='18' cy='5' r='3'/%3E%3Ccircle cx='6' cy='12' r='3'/%3E%3Ccircle cx='18' cy='19' r='3'/%3E%3Cline x1='8.59' y1='13.51' x2='15.42' y2='17.49'/%3E%3Cline x1='15.41' y1='6.51' x2='8.59' y2='10.49'/%3E%3C/svg%3E">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap');
@@ -297,48 +297,6 @@
   .tier-opt input:checked + .tier-opt-inner .tier-opt-range { color: var(--primary); }
   .tier-hint { font-size: 11px; color: var(--text3); min-height: 14px; font-style: italic; line-height: 1.4; }
 
-  /* ── Platform suggestion popover ── */
-  /* ── Platform suggestion popover ── */
-  .platform-suggestion {
-    position: fixed;
-    z-index: 150;
-    width: max-content;
-    max-width: 260px;
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    background: var(--info-bg); border: 1px solid var(--info-border);
-    border-radius: var(--radius);
-    padding: 10px 12px; font-size: 11px; color: var(--info-text);
-    line-height: 1.4;
-    box-shadow: var(--shadow-lg);
-    animation: popIn 0.15s ease-out;
-  }
-  .platform-suggestion::before {
-    content: '';
-    position: absolute;
-    left: -6px;
-    top: 50%;
-    transform: translateY(-50%) rotate(45deg);
-    width: 10px; height: 10px;
-    background: var(--info-bg);
-    border-left: 1px solid var(--info-border);
-    border-bottom: 1px solid var(--info-border);
-  }
-  @keyframes popIn {
-    from { opacity: 0; transform: translateX(-4px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-  .platform-suggestion span { flex: 1; }
-  .suggestion-apply {
-    background: var(--primary); color: #fff; border: none;
-    border-radius: 4px; padding: 3px 10px; font-size: 11px;
-    font-weight: 600; cursor: pointer; white-space: nowrap;
-  }
-  .suggestion-apply:hover { background: var(--primary-hover); }
-  .suggestion-dismiss {
-    background: none; border: none; color: var(--info-text);
-    cursor: pointer; font-size: 16px; padding: 0 2px; line-height: 1; opacity: 0.6;
-  }
-  .suggestion-dismiss:hover { opacity: 1; }
 
   /* ── Calculate / Reset buttons ── */
   .calc-btn {
@@ -649,7 +607,7 @@
 
     .topbar, .sidebar, .topo-overlay, .changelog-overlay, .diagram-col { display: none !important; }
     .view-topo-btn, .results-print-btn, .optic-toggle, .power-toggle, .scale-toggle-btn { display: none !important; }
-    .suggestion-leaf, .suggestion-spine, .empty-state, .info-tip { display: none !important; }
+    .empty-state, .info-tip { display: none !important; }
     .main-content { position: static; left: 0; padding: 0; overflow: visible; }
     .results-layout { display: block; }
     .results-col { max-width: 100%; }
@@ -786,6 +744,21 @@
   .view-topo-btn:hover {
     background: var(--primary); color: white;
   }
+
+  .network-divider { border-top: 2px dashed var(--border); margin: 24px 0 16px; }
+  .network-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px; margin-bottom: 14px;
+    border-radius: var(--radius); font-size: 13px; font-weight: 700;
+  }
+  .network-header.backend { background: var(--primary-light); color: var(--primary-text); border-left: 3px solid var(--primary); }
+  .network-header.frontend { background: #edf7ed; color: #3d7a28; border-left: 3px solid var(--accent); }
+  :root:not([data-theme="light"]) .network-header.frontend { background: rgba(108,194,74,0.1); color: #7ed95c; }
+  .sidebar-group-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text3);
+    padding: 12px 12px 4px; margin-top: 4px;
+  }
 </style>
 <script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js"></script>
 </head>
@@ -795,7 +768,7 @@
 <div class="topbar">
   <div class="topbar-left">
     <div class="topbar-logo"><svg viewBox="0 0 1115 175" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="M391.027,103.426c36.994,0,55.491-25.688,55.491-51.378c0-25.688-18.498-50.353-57.546-50.353c-28.773-1.029-134.617-1.029-134.617-1.029v173.668h32.879V28.413c25.691,0,90.43,0,103.79,0c18.496,0,27.745,6.163,27.745,23.635c0,14.385-9.247,22.606-26.718,22.606h-86.315l102.761,98.648h40.078l-73.991-71.932C381.78,103.426,390,103.426,391.027,103.426z"/><rect x="480.429" y="0.669" width="31.856" height="173.665"/><polygon points="916.137,27.387 916.137,0.669 848.313,0.669 816.457,0.669 759.938,0.669 741.441,27.387 816.457,27.387 816.457,174.334 848.313,174.334 848.313,27.387"/><path d="M678.756,72.6c-16.441,0-57.543,0-81.182,0c-16.438,0-25.689-7.192-25.689-21.58c0-16.44,11.305-23.633,25.689-23.633c22.609,0,110.98,0,110.98,0l14.387-26.718c0,0-107.898,0-126.395,0c-28.775,0-52.407,21.577-52.407,51.382c0,26.715,22.608,48.294,53.434,48.294c17.473,0,69.877,0,81.182,0c18.5,0,28.775,8.224,28.775,23.637c0,13.357-11.305,22.608-28.775,22.608H566.748l-16.44,27.744c0,0,98.649,0,132.558,0c33.912,0,52.406-24.658,52.406-52.404C735.275,96.233,713.695,72.6,678.756,72.6z"/><path d="M104.325,11.972C97.133,23.272,1.564,174.334,1.564,174.334h33.91l31.858-51.381h67.822l17.47-27.746H84.8l36.993-59.602l86.321,137.697h33.911c0,0-94.542-149.001-102.765-162.359C130.013-2.413,113.574-1.387,104.325,11.972z"/><path d="M1079.523,174.334h33.912c0,0-94.539-149.003-102.764-162.362c-9.244-15.415-25.689-14.385-34.938-1.028c-7.195,11.301-102.762,162.359-102.762,162.359h33.91l31.855-51.378h68.852l17.467-27.746h-67.82l36.996-59.603L1079.523,174.334z"/></g></svg></div>
-    <h1>AI Backend Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.5.2</span></h1>
+    <h1>AI Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.6.0</span></h1>
   </div>
   <div class="topbar-right">
     <a href="#" onclick="event.preventDefault();document.getElementById('changelog-modal').classList.add('open')" title="What's new" style="color:var(--text3);margin-right:12px;display:inline-flex;align-items:center;gap:5px;font-size:13px;text-decoration:none;opacity:0.7;transition:opacity .2s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
@@ -841,11 +814,6 @@
               <label>GPUs / node</label>
               <input type="number" id="gpus-per-node" min="1" value="8" oninput="syncFromNodes()">
             </div>
-          </div>
-          <div class="field">
-            <label>Links per GPU</label>
-            <input type="number" id="links-per-gpu" min="1" max="8" value="1" oninput="autoSelectPlatforms()">
-            <div class="hint">1 = standard, 2 = dual-rail</div>
           </div>
           <div class="field" style="margin-top:8px">
             <label>Scale-out planning</label>
@@ -974,23 +942,14 @@
             </div>
             <div class="field" id="oversub-field">
               <label>Down:Up ratio</label>
-              <input type="number" id="oversub" min="0.25" max="4" step="0.25" value="1" oninput="clearResults()">
+              <input type="number" id="oversub" min="0.25" max="4" step="0.25" value="1" oninput="clearResults(); updateUplinksPerSpineOptions()">
               <div class="hint">1 = non-blocking</div>
             </div>
           </div>
-          <div class="field" id="nic-breakout-row" style="display:none">
-            <label>Multi-plane mode</label>
-            <span class="optic-toggle" style="margin-left:0">
-              <button type="button" class="optic-toggle-btn active" id="nic-mode-dist" onclick="setNicBreakout(false)">Distribute</button>
-              <button type="button" class="optic-toggle-btn" id="nic-mode-brk" onclick="setNicBreakout(true)">NIC Breakout</button>
-            </span>
-            <div class="hint" id="nic-breakout-hint">GPUs split across planes at full speed</div>
-          </div>
           <div class="field" id="balance-row">
-            <label>Balance topology</label>
-            <select id="balance-topo" onchange="clearResults()">
-              <option value="1" selected>Yes (adjust spine count)</option>
-              <option value="0">No (minimum spines)</option>
+            <label>Uplinks per spine <span class="info-tip" data-tip="Number of uplink connections from each leaf to each spine switch. Higher values reduce spine count but lower path diversity. The topology is always balanced — every option produces even link distribution."><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.2"/><text x="8" y="12" text-anchor="middle" font-size="10" font-weight="600" font-style="italic" fill="currentColor">i</text></svg></span></label>
+            <select id="uplinks-per-spine" onchange="clearResults()">
+              <option value="1" selected>1</option>
             </select>
           </div>
           <div class="field">
@@ -1024,7 +983,7 @@
             <div class="hint">leaf &harr; spine</div>
           </div>
           <div class="field">
-            <label>Host NIC link speed</label>
+            <label>GPU NIC link speed <span class="info-tip" data-tip="The physical link speed of each GPU NIC connection to the network. This is set by the NIC hardware — not the same as breakout, which splits switch ports into multiple lower-speed lanes."><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.2"/><text x="8" y="12" text-anchor="middle" font-size="10" font-weight="600" font-style="italic" fill="currentColor">i</text></svg></span></label>
             <select id="host-speed" onchange="syncBreakout(); filterPlatformDropdowns(); autoSelectPlatforms()">
               <option value="100">100G</option>
               <option value="200">200G</option>
@@ -1032,7 +991,68 @@
               <option value="800">800G</option>
               <option value="1600">1.6T</option>
             </select>
-            <div class="hint">host &harr; leaf</div>
+            <div class="hint">GPU NIC &harr; leaf switch</div>
+          </div>
+          <div class="field">
+            <label>Physical NICs per GPU <span class="info-tip" data-tip="Number of physical NIC connections from each GPU to the backend fabric. 1 = standard single-attached, 2+ = multi-rail for higher bandwidth or redundancy."><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.2"/><text x="8" y="12" text-anchor="middle" font-size="10" font-weight="600" font-style="italic" fill="currentColor">i</text></svg></span></label>
+            <input type="number" id="links-per-gpu" min="1" max="8" value="1" oninput="autoSelectPlatforms()">
+            <div class="hint">1 = standard, 2 = dual-rail</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-group-label">Frontend Fabric</div>
+      <div class="input-section collapsed" id="section-fe">
+        <div class="input-section-header" onclick="toggleSection('section-fe')">
+          <div class="section-icon"><svg viewBox="0 0 24 24"><path d="M21 12H3" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M21 6H3" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M21 18H3" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="7" cy="6" r="2" fill="currentColor"/><circle cx="17" cy="12" r="2" fill="currentColor"/><circle cx="11" cy="18" r="2" fill="currentColor"/></svg></div>
+          <span class="section-title">Frontend Network</span>
+          <span class="section-summary" id="summary-fe"></span>
+          <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="input-section-body">
+          <div class="field" style="margin-bottom:12px">
+            <label>Frontend fabric</label>
+            <span class="optic-toggle" style="margin-left:0">
+              <button type="button" class="optic-toggle-btn active" id="fe-toggle-off" onclick="setFEEnabled(false)">Off</button>
+              <button type="button" class="optic-toggle-btn" id="fe-toggle-on" onclick="setFEEnabled(true)">On</button>
+            </span>
+          </div>
+          <div id="fe-fields" style="display:none">
+            <div class="field">
+              <label for="fe-links-per-server">Frontend links per server</label>
+              <input type="number" id="fe-links-per-server" value="1" min="1" max="4" onchange="clearResults()">
+              <div class="hint">frontend NICs per node</div>
+            </div>
+            <div class="field">
+              <label for="fe-nic-speed">Frontend NIC speed</label>
+              <select id="fe-nic-speed" onchange="syncFELeafOptions(); clearResults()">
+                <option value="10">10G</option>
+                <option value="25" selected>25G</option>
+                <option value="100">100G</option>
+              </select>
+              <div class="hint">server ↔ frontend leaf</div>
+            </div>
+            <div class="field">
+              <label for="fe-oversub">Oversubscription</label>
+              <select id="fe-oversub" onchange="clearResults()">
+                <option value="1">1:1 (non-blocking)</option>
+                <option value="2">2:1</option>
+                <option value="3" selected>3:1</option>
+                <option value="4">4:1</option>
+                <option value="6">6:1</option>
+              </select>
+              <div class="hint">downlink:uplink ratio target</div>
+            </div>
+            <div class="field">
+              <label for="fe-leaf">Frontend leaf switch</label>
+              <select id="fe-leaf"></select>
+            </div>
+            <div class="field">
+              <label for="fe-spine">Frontend spine switch</label>
+              <select id="fe-spine">
+                <option value="none">None (single-tier)</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -1052,7 +1072,7 @@
   <main class="main-content">
     <div class="print-header">
       <svg viewBox="0 0 1115 175" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="M391.027,103.426c36.994,0,55.491-25.688,55.491-51.378c0-25.688-18.498-50.353-57.546-50.353c-28.773-1.029-134.617-1.029-134.617-1.029v173.668h32.879V28.413c25.691,0,90.43,0,103.79,0c18.496,0,27.745,6.163,27.745,23.635c0,14.385-9.247,22.606-26.718,22.606h-86.315l102.761,98.648h40.078l-73.991-71.932C381.78,103.426,390,103.426,391.027,103.426z"/><rect x="480.429" y="0.669" width="31.856" height="173.665"/><polygon points="916.137,27.387 916.137,0.669 848.313,0.669 816.457,0.669 759.938,0.669 741.441,27.387 816.457,27.387 816.457,174.334 848.313,174.334 848.313,27.387"/><path d="M678.756,72.6c-16.441,0-57.543,0-81.182,0c-16.438,0-25.689-7.192-25.689-21.58c0-16.44,11.305-23.633,25.689-23.633c22.609,0,110.98,0,110.98,0l14.387-26.718c0,0-107.898,0-126.395,0c-28.775,0-52.407,21.577-52.407,51.382c0,26.715,22.608,48.294,53.434,48.294c17.473,0,69.877,0,81.182,0c18.5,0,28.775,8.224,28.775,23.637c0,13.357-11.305,22.608-28.775,22.608H566.748l-16.44,27.744c0,0,98.649,0,132.558,0c33.912,0,52.406-24.658,52.406-52.404C735.275,96.233,713.695,72.6,678.756,72.6z"/><path d="M104.325,11.972C97.133,23.272,1.564,174.334,1.564,174.334h33.91l31.858-51.381h67.822l17.47-27.746H84.8l36.993-59.602l86.321,137.697h33.911c0,0-94.542-149.001-102.765-162.359C130.013-2.413,113.574-1.387,104.325,11.972z"/><path d="M1079.523,174.334h33.912c0,0-94.539-149.003-102.764-162.362c-9.244-15.415-25.689-14.385-34.938-1.028c-7.195,11.301-102.762,162.359-102.762,162.359h33.91l31.855-51.378h68.852l17.467-27.746h-67.82l36.996-59.603L1079.523,174.334z"/></g></svg>
-      <h2>AI Backend Network Calculator</h2>
+      <h2>AI Network Calculator</h2>
     </div>
     <div class="print-config" id="print-config"></div>
     <div class="results-layout">
@@ -1106,6 +1126,14 @@
       <button style="background:none;border:none;cursor:pointer;color:var(--text3);padding:4px" onclick="document.getElementById('changelog-modal').classList.remove('open')"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="changelog-body">
+      <h3>v1.6.0 — July 2025</h3>
+      <ul>
+        <li><strong>Frontend network module</strong> — optional frontend fabric design alongside the backend AI training network, with its own leaf/spine topology, oversubscription control, and platform selection (7050SX3, 7050CX3, 7280CR3)</li>
+        <li><strong>Frontend optics &amp; power</strong> — separate optics breakdown and power estimates for frontend switches (SFP+ 10G, SFP28 25G, QSFP28 100G), merged into a combined Optics &amp; Power tab with Backend/Frontend sections</li>
+        <li><strong>Frontend topology integration</strong> — D3 topology viewer shows frontend leaf/spine tiers below hosts with green edges, backend/frontend divider, and NIC expansion renders dashed FE links downward</li>
+        <li><strong>Combined summary metrics</strong> — when frontend is enabled, Summary tab shows combined BE + FE totals for switches and optics, with colored section headers</li>
+        <li><strong>Frontend inline diagram</strong> — Front-End Logical Data Path diagram appended below the backend diagram in results</li>
+      </ul>
       <h3>v1.5.3 — July 2025</h3>
       <ul>
         <li><strong>Single-tier LPO toggle</strong> — FRO/LPO toggle now appears for single-tier designs with 800G spine optics even when host NIC speed is below 800G (e.g. 400G via breakout); note clarifies LPO applies to switch-side optics only</li>
@@ -1168,7 +1196,7 @@
         <li><strong>3-tier naming</strong> — renamed to Super-spine / Spine / Leaf with connectivity metrics (full/partial mesh)</li>
         <li><strong>400G LPO removed</strong> — LPO only shown for 800G optics (the only speed where it exists)</li>
         <li><strong>Multi-plane naming</strong> — renamed from "MRC Multi-Plane" to "Multi-Plane"</li>
-        <li><strong>NIC breakout toggle</strong> — Distribute / NIC Breakout pill for multi-plane with fewer NICs than planes</li>
+        <li><strong>NIC breakout</strong> — automatic NIC breakout for multi-plane when GPUs have fewer NICs than planes</li>
         <li><strong>Leaf platform fix</strong> — 7800R4 chassis no longer suggested as leaf switches</li>
         <li><strong>Changelog</strong> — version history accessible from the top bar</li>
       </ul>
@@ -1183,7 +1211,7 @@
       <h3>v1.1 — May 2025</h3>
       <ul>
         <li>DES (Distributed Etherlink Switch) tier 4</li>
-        <li>Platform auto-suggestion with Apply/Dismiss</li>
+        <li>Alternative platform options shown in results after calculation</li>
         <li>Power consumption estimates (Typical / 80% / Max)</li>
         <li>Inline SVG topology diagrams</li>
         <li>D3 interactive topology modal</li>
@@ -1199,20 +1227,6 @@
   </div>
 </div>
 
-<div id="suggestion-leaf" class="platform-suggestion" style="display:none">
-  <span id="suggestion-leaf-text"></span>
-  <div style="display:flex;gap:6px;align-items:center">
-    <button type="button" class="suggestion-apply" onclick="applySuggestionFor('leaf')">Apply</button>
-    <button type="button" class="suggestion-dismiss" onclick="dismissSuggestionFor('leaf')">&times;</button>
-  </div>
-</div>
-<div id="suggestion-spine" class="platform-suggestion" style="display:none">
-  <span id="suggestion-spine-text"></span>
-  <div style="display:flex;gap:6px;align-items:center">
-    <button type="button" class="suggestion-apply" onclick="applySuggestionFor('spine')">Apply</button>
-    <button type="button" class="suggestion-dismiss" onclick="dismissSuggestionFor('spine')">&times;</button>
-  </div>
-</div>
 
 <script>
 function toggleSection(id) {
@@ -1220,7 +1234,7 @@ function toggleSection(id) {
   updateSectionSummaries();
 }
 
-const SECTION_ORDER = ['section-cluster', 'section-gpu', 'section-tier', 'section-switch', 'section-optics'];
+const SECTION_ORDER = ['section-cluster', 'section-gpu', 'section-tier', 'section-switch', 'section-optics', 'section-fe'];
 
 function nextSection(currentId) {
   const idx = SECTION_ORDER.indexOf(currentId);
@@ -1276,10 +1290,23 @@ function updateSectionSummaries() {
 
   const hostSpeed = document.getElementById('host-speed').value;
   const spineSpeed = document.getElementById('spine-speed').value;
+  const nicsPerGpu = document.getElementById('links-per-gpu').value;
+  const nicLabel = nicsPerGpu > 1 ? ' · ' + nicsPerGpu + ' NICs/GPU' : '';
   if (tierVal === '1') {
-    document.getElementById('summary-optics').textContent = hostSpeed + 'G host';
+    document.getElementById('summary-optics').textContent = hostSpeed + 'G GPU' + nicLabel;
   } else {
-    document.getElementById('summary-optics').textContent = hostSpeed + 'G host · ' + spineSpeed + 'G spine';
+    document.getElementById('summary-optics').textContent = hostSpeed + 'G GPU · ' + spineSpeed + 'G spine' + nicLabel;
+  }
+
+  const feOn = document.getElementById('fe-toggle-on')?.classList.contains('active');
+  if (document.getElementById('summary-fe')) {
+    if (feOn) {
+      const feSpeed = document.getElementById('fe-nic-speed')?.value || '';
+      const feOversub = document.getElementById('fe-oversub')?.value || '';
+      document.getElementById('summary-fe').textContent = 'On · ' + feSpeed + 'G · ' + feOversub + ':1';
+    } else {
+      document.getElementById('summary-fe').textContent = 'Off';
+    }
   }
 }
 
@@ -1317,6 +1344,8 @@ const TIER_HINTS = {
 function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 const OPTIC_POWER = {
+  10:   { conventional: 1, lpo: 1 },
+  25:   { conventional: 1.5, lpo: 1.5 },
   100:  { conventional: 3.5, lpo: 3.5 },
   200:  { conventional: 5, lpo: 5 },
   400:  { conventional: 10, lpo: 10 },
@@ -1337,6 +1366,19 @@ const PLATFORMS = [
   { name: '7800R4 8-slot', radix: 288, type: 'chassis', portSpeed: 800,  desc: '7800R4 8-slot (288-port)',  slots: 8,  portsPerSlot: 36, powerTyp: 9000, powerMax: 14139, ru: 16 },
   { name: '7800R4 12-slot',radix: 432, type: 'chassis', portSpeed: 800,  desc: '7800R4 12-slot (432-port)', slots: 12, portsPerSlot: 36, powerTyp: 13500, powerMax: 22394, ru: 23 },
   { name: '7800R4 16-slot',radix: 576, type: 'chassis', portSpeed: 800,  desc: '7800R4 16-slot (576-port)', slots: 16, portsPerSlot: 36, powerTyp: 18000, powerMax: 28074, ru: 32 },
+];
+
+const FE_PLATFORMS = [
+  { name: '7050SX3-48C8',    downlinkPorts: 48, uplinkPorts: 8,  downlinkSpeed: 10,  uplinkSpeed: 100, desc: '7050SX3-48C8 (48×10G + 8×100G)',    powerTyp: 106, powerMax: 285, ru: 1 },
+  { name: '7050SX3-48YC8C',  downlinkPorts: 48, uplinkPorts: 8,  downlinkSpeed: 25,  uplinkSpeed: 100, desc: '7050SX3-48YC8C (48×25G + 8×100G)',  powerTyp: 105, powerMax: 259, ru: 1 },
+  { name: '7050SX3-48YC12',  downlinkPorts: 48, uplinkPorts: 12, downlinkSpeed: 25,  uplinkSpeed: 100, desc: '7050SX3-48YC12 (48×25G + 12×100G)', powerTyp: 170, powerMax: 325, ru: 1 },
+  { name: '7050SX3-96YC8',   downlinkPorts: 96, uplinkPorts: 8,  downlinkSpeed: 25,  uplinkSpeed: 100, desc: '7050SX3-96YC8 (96×25G + 8×100G)',  powerTyp: 218, powerMax: 453, ru: 2 },
+  { name: '7050CX3-32C',     downlinkPorts: 32, uplinkPorts: 0,  downlinkSpeed: 100, uplinkSpeed: 100, desc: '7050CX3-32C (32×100G)',              powerTyp: 165, powerMax: 334, ru: 1 },
+];
+const FE_SPINE_PLATFORMS = [
+  { name: '7050CX3-32C',  ports: 32, desc: '7050CX3-32C (32×100G)',  powerTyp: 165, powerMax: 334, ru: 1 },
+  { name: '7280CR3-36S',  ports: 36, desc: '7280CR3-36S (36×100G)',  powerTyp: 254, powerMax: 690, ru: 1 },
+  { name: '7280CR3-32P4', ports: 32, desc: '7280CR3-32P4 (32×100G)', powerTyp: 535, powerMax: 849, ru: 1 },
 ];
 
 const GPU_MODELS = [
@@ -1365,8 +1407,7 @@ const NIC_MODELS = [
 
 const LEAF_PLATFORMS = PLATFORMS.filter(p => p.type !== 'chassis');
 
-let pendingSuggestion = null;
-let suggestionDismissed = false;
+let lastAutoSelectResult = null;
 
 function getPlatformByRadix(radix) {
   return PLATFORMS.find(p => p.radix === radix) || { name: 'Custom', radix, type: 'custom', portSpeed: 800, desc: radix + '-port (custom)' };
@@ -1500,6 +1541,35 @@ function getTargetGPUs() {
   return parseInt(document.getElementById('target-gpus').value) || 0;
 }
 
+function setFEEnabled(on) {
+  document.getElementById('fe-toggle-off').className = 'optic-toggle-btn' + (on ? '' : ' active');
+  document.getElementById('fe-toggle-on').className = 'optic-toggle-btn' + (on ? ' active' : '');
+  document.getElementById('fe-fields').style.display = on ? '' : 'none';
+  clearResults();
+}
+function isFEEnabled() {
+  return document.getElementById('fe-toggle-on')?.classList.contains('active') || false;
+}
+function populateFEDropdowns() {
+  syncFELeafOptions();
+  const spSel = document.getElementById('fe-spine');
+  spSel.innerHTML = '<option value="none">None (single-tier)</option>';
+  FE_SPINE_PLATFORMS.forEach((p, i) => {
+    spSel.innerHTML += '<option value="' + i + '">' + esc(p.desc) + '</option>';
+  });
+  spSel.value = '0';
+}
+function syncFELeafOptions() {
+  const speed = parseInt(document.getElementById('fe-nic-speed').value) || 25;
+  const sel = document.getElementById('fe-leaf');
+  const prev = sel.value;
+  sel.innerHTML = '';
+  FE_PLATFORMS.filter(p => p.downlinkSpeed === speed).forEach((p, i) => {
+    sel.innerHTML += '<option value="' + p.name + '">' + esc(p.desc) + '</option>';
+  });
+  if (sel.querySelector('option[value="' + prev + '"]')) sel.value = prev;
+}
+
 function clearResults() {
   document.getElementById('results').innerHTML =
     '<div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg></div><h2>No results yet</h2><p>Enter your cluster size and configuration, then click Calculate to see network requirements.</p></div>';
@@ -1516,24 +1586,26 @@ function resetInputs() {
   document.querySelector('input[name=tier][value="2"]').checked = true;
   document.getElementById('planes').value = 1;
   document.getElementById('oversub').value = 1;
-  document.getElementById('balance-topo').value = '1';
+  document.getElementById('uplinks-per-spine').value = '1';
   document.getElementById('breakout').value = 2;
   document.getElementById('spine-speed').value = 800;
   document.getElementById('host-speed').value = 400;
   document.getElementById('gpu-model').value = 'custom';
   document.getElementById('gpus-per-node').disabled = false;
   document.getElementById('links-per-gpu').disabled = false;
-  setNicBreakout(false);
   setScaleOut(false);
   setWorkload('training');
-  document.getElementById('nic-breakout-row').style.display = 'none';
   document.getElementById('leaf-radix-custom').style.display = 'none';
   document.getElementById('spine-radix-custom').style.display = 'none';
+  setFEEnabled(false);
+  document.getElementById('fe-links-per-server').value = 1;
+  document.getElementById('fe-nic-speed').value = '25';
+  document.getElementById('fe-oversub').value = '3';
   populateDropdowns();
+  populateFEDropdowns();
   filterPlatformDropdowns();
   syncBreakout();
   clearResults();
-  hideSuggestions();
   updateTierHint();
   syncBreakoutOptions();
   SECTION_ORDER.forEach((id, i) => {
@@ -1550,55 +1622,11 @@ function toggleCustomRadix(role) {
   const isCustom = select.value === 'other';
   custom.style.display = isCustom ? 'block' : 'none';
   hint.textContent = isCustom ? 'custom port count' : 'Arista switching platform';
-  hideSuggestions();
+  updateUplinksPerSpineOptions();
 }
 
 function minPlatformForPorts(portsNeeded) {
   return PLATFORMS.find(p => p.radix >= portsNeeded) || null;
-}
-
-function minBalanced2Tier(linksPerPlane, breakout, oversub) {
-  const spSpeed = parseInt(document.getElementById('spine-speed').value) || 800;
-  const ulBreak = 800 / spSpeed;
-  for (const lp of LEAF_PLATFORMS) {
-    if (lp.portSpeed < spSpeed) continue;
-    const physDown = Math.floor(lp.radix * oversub / (1 + oversub));
-    const effDown  = physDown * breakout;
-    const up       = lp.radix - physDown;
-    const effUp    = up * ulBreak;
-    if (effDown <= 0 || up <= 0) continue;
-    const leafPP = Math.ceil(linksPerPlane / effDown);
-    for (const sp of PLATFORMS) {
-      if (sp.portSpeed < spSpeed) continue;
-      const effSpR  = sp.radix * ulBreak;
-      const spinePP = Math.ceil((leafPP * effUp) / effSpR);
-      if (spinePP <= effUp && effUp % spinePP === 0) return { leaf: lp, spine: sp };
-    }
-  }
-  return null;
-}
-
-function minBalanced3Tier(linksPerPlane, breakout, oversub) {
-  const spSpeed = parseInt(document.getElementById('spine-speed').value) || 800;
-  const ulBreak = 800 / spSpeed;
-  for (const lp of LEAF_PLATFORMS) {
-    if (lp.portSpeed < spSpeed) continue;
-    const physDown = Math.floor(lp.radix * oversub / (1 + oversub));
-    const effDown  = physDown * breakout;
-    const up       = lp.radix - physDown;
-    const effUp    = up * ulBreak;
-    if (effDown <= 0 || up <= 0) continue;
-    const l2PP = Math.ceil(linksPerPlane / effDown);
-    const l1PP = Math.ceil((l2PP * up) / physDown);
-    if (l1PP > effUp || effUp % l1PP !== 0) continue;
-    for (const sp of PLATFORMS) {
-      if (sp.portSpeed < spSpeed) continue;
-      const effSpR  = sp.radix * ulBreak;
-      const spinePP = Math.ceil((l1PP * effUp) / effSpR);
-      if (spinePP <= effUp && effUp % spinePP === 0) return { leaf: lp, spine: sp };
-    }
-  }
-  return null;
 }
 
 function isCustomPlatform(role) {
@@ -1615,9 +1643,8 @@ function getRadix(role) {
 
 function autoSelectPlatforms() {
   clearResults();
-  suggestionDismissed = false;
   const tierNum = parseInt(document.querySelector('input[name=tier]:checked').value);
-  if (tierNum === 4) return;
+  if (tierNum === 4) { lastAutoSelectResult = null; return; }
 
   const totalGPUs   = parseInt(document.getElementById('total-gpus').value) || 0;
   const numNodes    = parseInt(document.getElementById('num-nodes').value) || 0;
@@ -1626,17 +1653,9 @@ function autoSelectPlatforms() {
   const planes      = parseInt(document.getElementById('planes').value) || 1;
   const hostSpeed   = parseInt(document.getElementById('host-speed').value) || 400;
 
-  const nicBreakoutRow = document.getElementById('nic-breakout-row');
-  if (linksPerGpu < planes && planes > 1) {
-    nicBreakoutRow.style.display = 'block';
-  } else {
-    nicBreakoutRow.style.display = 'none';
-    setNicBreakout(false);
-  }
-
   const hosts = numNodes || Math.ceil(totalGPUs / gpusPerNode);
   const gpus  = totalGPUs || hosts * gpusPerNode;
-  if (gpus <= 0) return;
+  if (gpus <= 0) { lastAutoSelectResult = null; return; }
 
   const nicBreakoutEnabled = isNicBreakoutEnabled();
   const nicBreakout = nicBreakoutEnabled && planes > 1 && linksPerGpu < planes;
@@ -1659,6 +1678,7 @@ function autoSelectPlatforms() {
   } else {
     autoSelect3Tier(linksPerPlane, breakout, targetLPP);
   }
+  updateUplinksPerSpineOptions();
 }
 
 function setPlatformSelection(leafRadix, spineRadix) {
@@ -1670,84 +1690,8 @@ function setPlatformSelection(leafRadix, spineRadix) {
   document.getElementById('spine-radix-custom').style.display = 'none';
 }
 
-function hideSuggestions() {
-  document.getElementById('suggestion-leaf').style.display = 'none';
-  document.getElementById('suggestion-spine').style.display = 'none';
-  pendingSuggestion = null;
-}
-
-function showPlatformSuggestion(leafRadix, spineRadix) {
-  const tierNum = parseInt(document.querySelector('input[name=tier]:checked').value);
-  const currentSpine = document.getElementById('spine-radix').value;
-  const currentLeaf = document.getElementById('leaf-radix').value;
-  const spineMatch = String(currentSpine) === String(spineRadix);
-  const leafMatch = tierNum === 1 || String(currentLeaf) === String(leafRadix);
-
-  if (spineMatch && leafMatch) { hideSuggestions(); return; }
-  if (suggestionDismissed) { hideSuggestions(); return; }
-
-  pendingSuggestion = { leafRadix, spineRadix };
-
-  const spinePop = document.getElementById('suggestion-spine');
-  const spineText = document.getElementById('suggestion-spine-text');
-  if (!spineMatch) {
-    const sp = getPlatformByRadix(spineRadix);
-    spineText.innerHTML = 'Suggested: <strong>' + sp.desc + '</strong>';
-    spinePop.style.display = 'flex';
-  } else {
-    spinePop.style.display = 'none';
-  }
-
-  const leafPop = document.getElementById('suggestion-leaf');
-  const leafText = document.getElementById('suggestion-leaf-text');
-  if (tierNum !== 1 && !leafMatch) {
-    const lp = getPlatformByRadix(leafRadix);
-    leafText.innerHTML = 'Suggested: <strong>' + lp.desc + '</strong>';
-    leafPop.style.display = 'flex';
-  } else {
-    leafPop.style.display = 'none';
-  }
-
-  positionSuggestions();
-}
-
-function positionSuggestions() {
-  const leafPop = document.getElementById('suggestion-leaf');
-  const spinePop = document.getElementById('suggestion-spine');
-  if (leafPop.style.display !== 'none') {
-    const anchor = document.getElementById('leaf-radix');
-    const rect = anchor.getBoundingClientRect();
-    leafPop.style.left = (rect.right + 14) + 'px';
-    leafPop.style.top = (rect.top + rect.height / 2 - leafPop.offsetHeight / 2) + 'px';
-  }
-  if (spinePop.style.display !== 'none') {
-    const anchor = document.getElementById('spine-radix');
-    const rect = anchor.getBoundingClientRect();
-    spinePop.style.left = (rect.right + 14) + 'px';
-    spinePop.style.top = (rect.top + rect.height / 2 - spinePop.offsetHeight / 2) + 'px';
-  }
-}
-
-function applySuggestionFor(role) {
-  if (!pendingSuggestion) return;
-  const select = document.getElementById(role + '-radix');
-  const custom = document.getElementById(role + '-radix-custom');
-  select.value = role === 'leaf' ? pendingSuggestion.leafRadix : pendingSuggestion.spineRadix;
-  custom.style.display = 'none';
-  document.getElementById('suggestion-' + role).style.display = 'none';
-  const otherRole = role === 'leaf' ? 'spine' : 'leaf';
-  if (document.getElementById('suggestion-' + otherRole).style.display === 'none') {
-    pendingSuggestion = null;
-  }
-  clearResults();
-}
-
-function dismissSuggestionFor(role) {
-  document.getElementById('suggestion-' + role).style.display = 'none';
-  const otherRole = role === 'leaf' ? 'spine' : 'leaf';
-  if (document.getElementById('suggestion-' + otherRole).style.display === 'none') {
-    suggestionDismissed = true;
-  }
+function storeAutoSelectResult(leafRadix, spineRadix) {
+  lastAutoSelectResult = { leafRadix, spineRadix };
 }
 
 function autoSelect1Tier(linksPerPlane, breakout) {
@@ -1755,11 +1699,11 @@ function autoSelect1Tier(linksPerPlane, breakout) {
   const portsNeeded = Math.ceil(linksPerPlane / breakout);
   for (const p of PLATFORMS) {
     if (p.portSpeed >= hostSpd && p.radix >= portsNeeded) {
-      showPlatformSuggestion(null, p.radix);
+      storeAutoSelectResult(null, p.radix);
       return;
     }
   }
-  showPlatformSuggestion(null, PLATFORMS[PLATFORMS.length - 1].radix);
+  storeAutoSelectResult(null, PLATFORMS[PLATFORMS.length - 1].radix);
 }
 
 function autoSelect2Tier(linksPerPlane, breakout, targetLPP) {
@@ -1797,11 +1741,11 @@ function autoSelect2Tier(linksPerPlane, breakout, targetLPP) {
   }
 
   if (best) {
-    showPlatformSuggestion(best.leaf, best.spine);
+    storeAutoSelectResult(best.leaf, best.spine);
   } else {
     const fallbackLeaf = validLeaf.length ? validLeaf[validLeaf.length - 1] : LEAF_PLATFORMS[LEAF_PLATFORMS.length - 1];
     const fallbackSpine = validSpine.length ? validSpine[validSpine.length - 1] : PLATFORMS[PLATFORMS.length - 1];
-    showPlatformSuggestion(fallbackLeaf.radix, fallbackSpine.radix);
+    storeAutoSelectResult(fallbackLeaf.radix, fallbackSpine.radix);
   }
 }
 
@@ -1843,12 +1787,24 @@ function autoSelect3Tier(linksPerPlane, breakout, targetLPP) {
   }
 
   if (best) {
-    showPlatformSuggestion(best.leaf, best.spine);
+    storeAutoSelectResult(best.leaf, best.spine);
   } else {
     const fallbackLeaf = validLeaf.length ? validLeaf[validLeaf.length - 1] : LEAF_PLATFORMS[LEAF_PLATFORMS.length - 1];
     const fallbackSpine = validSpine.length ? validSpine[validSpine.length - 1] : PLATFORMS[PLATFORMS.length - 1];
-    showPlatformSuggestion(fallbackLeaf.radix, fallbackSpine.radix);
+    storeAutoSelectResult(fallbackLeaf.radix, fallbackSpine.radix);
   }
+}
+
+function applyAlternative(spineRadix, leafRadix) {
+  const spineSelect = document.getElementById('spine-radix');
+  const leafSelect = document.getElementById('leaf-radix');
+  spineSelect.value = spineRadix;
+  document.getElementById('spine-radix-custom').style.display = 'none';
+  if (leafRadix) {
+    leafSelect.value = leafRadix;
+    document.getElementById('leaf-radix-custom').style.display = 'none';
+  }
+  calculate();
 }
 
 function updateTierHint() {
@@ -1870,7 +1826,6 @@ function updateTierHint() {
     spineSpeedRow.style.display = 'none';
     balanceRow.style.display = 'none';
     oversubField.style.display = 'none';
-    hideSuggestions();
   } else if (t === '1') {
     leafRow.style.display = 'none';
     spineRow.style.display = 'block';
@@ -1890,10 +1845,11 @@ function updateTierHint() {
   autoSelectPlatforms();
 }
 
-const APP_VERSION = '1.5.3';
+const APP_VERSION = '1.6.0';
 
 window.addEventListener('DOMContentLoaded', () => {
   populateDropdowns();
+  populateFEDropdowns();
   filterPlatformDropdowns();
   syncBreakout();
   updateTierHint();
@@ -1903,8 +1859,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('changelog-modal').classList.add('open');
     localStorage.setItem('lastSeenVersion', APP_VERSION);
   }
-  document.querySelector('.sidebar-scroll').addEventListener('scroll', positionSuggestions);
-  window.addEventListener('resize', positionSuggestions);
 });
 
 function syncFromTotal() {
@@ -1949,17 +1903,8 @@ function syncBreakout() {
   clearResults();
 }
 
-function setNicBreakout(enabled) {
-  document.getElementById('nic-mode-dist').className = 'optic-toggle-btn' + (enabled ? '' : ' active');
-  document.getElementById('nic-mode-brk').className = 'optic-toggle-btn' + (enabled ? ' active' : '');
-  document.getElementById('nic-breakout-hint').textContent = enabled
-    ? 'Each NIC breaks out across all planes at reduced speed'
-    : 'GPUs split across planes at full speed';
-  clearResults();
-}
-
 function isNicBreakoutEnabled() {
-  return document.getElementById('nic-mode-brk')?.classList.contains('active') || false;
+  return true;
 }
 
 function syncBreakoutOptions() {
@@ -1973,6 +1918,93 @@ function syncBreakoutOptions() {
   } else {
     opt4.disabled = false;
   }
+}
+
+function updateUplinksPerSpineOptions() {
+  const select = document.getElementById('uplinks-per-spine');
+  if (!select) return;
+  const tierNum = parseInt(document.querySelector('input[name=tier]:checked').value);
+  if (tierNum < 2 || tierNum > 3) return;
+
+  const totalGPUs   = parseInt(document.getElementById('total-gpus').value) || 0;
+  const numNodes    = parseInt(document.getElementById('num-nodes').value) || 0;
+  const gpusPerNode = parseInt(document.getElementById('gpus-per-node').value) || 8;
+  const linksPerGpu = parseInt(document.getElementById('links-per-gpu').value) || 1;
+  const planesVal   = parseInt(document.getElementById('planes').value) || 1;
+  const hostSpeed   = parseInt(document.getElementById('host-speed').value) || 400;
+  const spineSpeed  = parseInt(document.getElementById('spine-speed').value) || 800;
+  const oversub     = parseFloat(document.getElementById('oversub').value) || 1;
+
+  const hosts = numNodes || Math.ceil(totalGPUs / gpusPerNode);
+  const gpus  = totalGPUs || hosts * gpusPerNode;
+
+  const nicBreakoutEnabled = isNicBreakoutEnabled();
+  const nicBreakout = nicBreakoutEnabled && planesVal > 1 && linksPerGpu < planesVal;
+  const hostSpeedPerPlane = nicBreakout ? (hostSpeed * linksPerGpu / planesVal) : hostSpeed;
+  const breakout = 800 / hostSpeedPerPlane;
+  const uplinkBreakout = 800 / spineSpeed;
+
+  const leafRadix = isCustomPlatform('leaf')
+    ? (parseInt(document.getElementById('leaf-radix-custom').value) || 64)
+    : (parseInt(document.getElementById('leaf-radix').value) || 64);
+
+  const spineRadix = isCustomPlatform('spine')
+    ? (parseInt(document.getElementById('spine-radix-custom').value) || 64)
+    : (parseInt(document.getElementById('spine-radix').value) || 64);
+
+  const physDownlinks = Math.floor(leafRadix * oversub / (1 + oversub));
+  const effDownlinks  = physDownlinks * breakout;
+  const uplinks       = leafRadix - physDownlinks;
+  const effUplinks    = uplinks * uplinkBreakout;
+  const effSpineRadix = spineRadix * uplinkBreakout;
+
+  const totalHostLinks = gpus * linksPerGpu;
+  const linksPerPlane  = nicBreakout ? totalHostLinks : Math.ceil(totalHostLinks / planesVal);
+
+  const targetGPUs = getTargetGPUs();
+  const targetLPP  = (targetGPUs > gpus)
+    ? (nicBreakout ? targetGPUs * linksPerGpu : Math.ceil(targetGPUs * linksPerGpu / planesVal))
+    : linksPerPlane;
+
+  let leafPerPlane;
+  if (tierNum === 2) {
+    leafPerPlane = effDownlinks > 0 ? Math.ceil(linksPerPlane / effDownlinks) : 1;
+    const spineLeafPP = effDownlinks > 0
+      ? Math.ceil(targetLPP / effDownlinks) : leafPerPlane;
+    var origSpinePP = effSpineRadix > 0
+      ? Math.ceil((spineLeafPP * effUplinks) / effSpineRadix) : 1;
+  } else {
+    leafPerPlane = effDownlinks > 0 ? Math.ceil(linksPerPlane / effDownlinks) : 1;
+    const podsNeeded = physDownlinks > 0 ? Math.ceil(leafPerPlane / physDownlinks) : 1;
+    const leaf1PerPlane = podsNeeded * uplinks;
+    const spinePortsNeeded = leaf1PerPlane * effUplinks;
+    var origSpinePP = effSpineRadix > 0
+      ? Math.ceil(spinePortsNeeded / effSpineRadix) : 1;
+  }
+
+  const prev = select.value;
+  select.innerHTML = '';
+
+  if (effUplinks <= 0) {
+    select.appendChild(new Option('1', '1'));
+    return;
+  }
+
+  const intEff = Math.round(effUplinks);
+  for (let d = 1; d <= intEff; d++) {
+    if (intEff % d !== 0) continue;
+    const spines = intEff / d;
+    if (spines < origSpinePP) continue;
+    const label = d + ' (' + spines + ' spine' + (spines !== 1 ? 's' : '') + '/plane)';
+    select.appendChild(new Option(label, d));
+  }
+
+  if (select.options.length === 0) {
+    select.appendChild(new Option('1', '1'));
+  }
+
+  const prevOption = [...select.options].find(o => o.value === prev);
+  select.value = prevOption ? prev : '1';
 }
 
 function opticType(speed, tier, peerSpeed) {
@@ -2003,6 +2035,10 @@ function dualOpticHost(speed) {
 }
 function fabricReach(leafPS, spinePS) {
   return (leafPS >= 1600 || spinePS >= 1600) ? '~2km' : '~500m';
+}
+
+function feOpticType(speed) {
+  return { 10: 'SFP+ 10G-SR', 25: 'SFP28 25G-SR', 100: 'QSFP28 100G-SR4' }[speed] || speed + 'G';
 }
 
 function toggleOpticMode(mode) {
@@ -2086,6 +2122,142 @@ function nextDivisorGte(min, n) {
   return min;
 }
 
+function calculateFE(hosts, gpusPerNode) {
+  if (!isFEEnabled()) return null;
+  const feLinksPerServer = parseInt(document.getElementById('fe-links-per-server').value) || 1;
+  const feNicSpeed = parseInt(document.getElementById('fe-nic-speed').value) || 25;
+  const feLeafName = document.getElementById('fe-leaf').value;
+  const feSpineVal = document.getElementById('fe-spine').value;
+  const feOversub = parseInt(document.getElementById('fe-oversub').value) || 3;
+
+  const feLeaf = FE_PLATFORMS.find(p => p.name === feLeafName);
+  if (!feLeaf) return null;
+
+  const feLinksPerNode = gpusPerNode * feLinksPerServer;
+  const feLinksTotal = hosts * feLinksPerNode;
+  const feLeafCount = Math.ceil(feLinksTotal / feLeaf.downlinkPorts);
+  const hostsPerLeaf = Math.ceil(feLinksTotal / feLeafCount);
+
+  let feSpine = null, feSpineCount = 0, bundleSize = 0, actualOversub = '—';
+  if (feSpineVal !== 'none') {
+    const spIdx = parseInt(feSpineVal);
+    feSpine = FE_SPINE_PLATFORMS[spIdx] || null;
+  }
+  if (feSpine && feLeaf.uplinkPorts > 0) {
+    const downlinkBW = hostsPerLeaf * feLeaf.downlinkSpeed;
+    const uplinksNeeded = Math.max(1, Math.ceil(downlinkBW / (feLeaf.uplinkSpeed * feOversub)));
+    feSpineCount = Math.min(uplinksNeeded, feLeaf.uplinkPorts);
+    bundleSize = 1;
+    if (feLeafCount > feSpine.ports) {
+      feSpineCount = Math.min(feLeaf.uplinkPorts, feSpine.ports);
+    }
+    actualOversub = ((hostsPerLeaf * feLeaf.downlinkSpeed) / (feSpineCount * feLeaf.uplinkSpeed)).toFixed(1);
+  } else if (feLeaf.uplinkPorts > 0) {
+    actualOversub = ((feLeaf.downlinkPorts * feLeaf.downlinkSpeed) / (feLeaf.uplinkPorts * feLeaf.uplinkSpeed)).toFixed(1);
+  }
+
+  const feTotalSwitches = feLeafCount + feSpineCount;
+
+  const dlOptics = feLinksTotal * 2;
+  const ulOptics = feSpineCount > 0 ? feLeafCount * feSpineCount * 2 : 0;
+  const feTotalOptics = dlOptics + ulOptics;
+  const dlOpticW = dlOptics * (OPTIC_POWER[feNicSpeed]?.conventional || 1.5);
+  const ulOpticW = ulOptics * (OPTIC_POWER[feLeaf.uplinkSpeed]?.conventional || 3.5);
+
+  const feLeafPowerTyp = feLeafCount * feLeaf.powerTyp;
+  const feLeafPowerMax = feLeafCount * feLeaf.powerMax;
+  const feSpinePowerTyp = feSpine ? feSpineCount * feSpine.powerTyp : 0;
+  const feSpinePowerMax = feSpine ? feSpineCount * feSpine.powerMax : 0;
+  const feSwitchTypW = feLeafPowerTyp + feSpinePowerTyp;
+  const feSwitchMaxW = feLeafPowerMax + feSpinePowerMax;
+  const feSwitch80W = Math.round(feSwitchMaxW * 0.8);
+  const feOpticW = dlOpticW + ulOpticW;
+
+  const feSpineLinks = feSpineCount > 0 ? feLeafCount * feSpineCount : 0;
+  const feUplinksPerLeaf = feSpineCount;
+  let switchHtml = '';
+  if (feSpineCount > 0) {
+    switchHtml += mkSection(iconServer(), 'Frontend Spine layer', [
+      ['Spine platform', feSpine.desc],
+      ['Total frontend spines', feSpineCount],
+      ['Downlink ports used', feLeafCount + ' of ' + feSpine.ports],
+      ['Leaf ↔ spine links', fmtN(feSpineLinks) + ' (' + feLeafCount + ' leaves × ' + feSpineCount + ' spines)'],
+    ]);
+  }
+  switchHtml += mkSection(iconBranch(), 'Frontend Leaf layer', [
+    ['Leaf platform', feLeaf.desc],
+    ['Total frontend leaves', feLeafCount],
+    ['Host links per leaf', hostsPerLeaf + ' × ' + feNicSpeed + 'G'],
+    ['Downlink ports used', hostsPerLeaf + ' of ' + feLeaf.downlinkPorts],
+  ].concat(feSpineCount > 0 ? [
+    ['Uplinks per leaf', feUplinksPerLeaf + ' × ' + feLeaf.uplinkSpeed + 'G (of ' + feLeaf.uplinkPorts + ' available)'],
+    ['Links per spine', bundleSize],
+    ['Oversubscription', actualOversub + ':1'],
+  ] : []),
+  feSpineCount > 0 ? 'Full mesh: each frontend leaf connects to every frontend spine.' : 'Single-tier: all servers connect directly to frontend leaves.');
+
+  let optRows = [];
+  if (feSpineCount > 0) {
+    const feUplinkTotal = feLeafCount * feSpineCount;
+    optRows.push(['Frontend leaf ↔ spine links', fmtN(feUplinkTotal)]);
+    optRows.push(['In frontend spine · ' + feOpticType(feLeaf.uplinkSpeed), fmtN(feUplinkTotal)]);
+    optRows.push(['In frontend leaf (spine-facing) · ' + feOpticType(feLeaf.uplinkSpeed), fmtN(feUplinkTotal)]);
+    optRows.push(['Frontend fabric subtotal', fmtN(ulOptics), true]);
+  }
+  optRows.push(['Host ↔ frontend leaf links', fmtN(feLinksTotal), false, feSpineCount > 0]);
+  optRows.push(['In frontend leaf (host-facing) · ' + feOpticType(feNicSpeed), fmtN(feLinksTotal)]);
+  optRows.push(['In host NIC · ' + feOpticType(feNicSpeed), fmtN(feLinksTotal)]);
+  optRows.push(['Frontend host subtotal', fmtN(dlOptics), true]);
+  optRows.push(['Frontend grand total optics', fmtN(feTotalOptics), true]);
+  const optHtml = opticsSection(optRows,
+    'Frontend fabric: ' + feOpticType(feLeaf.uplinkSpeed) + ' (spine) · ' + feOpticType(feNicSpeed) + ' (host). Typical reach: ~100m (multi-mode).',
+    false);
+
+  function kw(w) { return (w / 1000).toFixed(1) + ' kW'; }
+  function swTriple(t, e, m) {
+    return '<span class="power-typ">' + kw(t) + '</span>'
+      + '<span class="power-80">' + kw(e) + '</span>'
+      + '<span class="power-max">' + kw(m) + '</span>';
+  }
+  let powerHtml = '<div class="result-section"><h3>' + iconPlug() + 'Frontend power consumption</h3>';
+  powerHtml += '<table class="breakdown-table">';
+  powerHtml += '<tr><td>FE optics (' + fmtN(feTotalOptics) + ')</td><td>' + kw(feOpticW) + '</td></tr>';
+  if (feSpineCount > 0) powerHtml += '<tr><td>FE spine switches (' + fmtN(feSpineCount) + ')</td><td>' + swTriple(feSpinePowerTyp, Math.round(feSpinePowerMax * 0.8), feSpinePowerMax) + '</td></tr>';
+  powerHtml += '<tr><td>FE leaf switches (' + fmtN(feLeafCount) + ')</td><td>' + swTriple(feLeafPowerTyp, Math.round(feLeafPowerMax * 0.8), feLeafPowerMax) + '</td></tr>';
+  powerHtml += '<tr class="subtotal"><td>FE total power</td><td>' + swTriple(feSwitchTypW + Math.round(feOpticW), feSwitch80W + Math.round(feOpticW), feSwitchMaxW + Math.round(feOpticW)) + '</td></tr>';
+  powerHtml += '</table></div>';
+
+  let summaryContent = '<div class="metrics-grid">';
+  summaryContent += metric(fmtN(feLinksTotal), 'Frontend Links', feLinksPerNode + ' per node (' + feLinksPerServer + '/GPU × ' + gpusPerNode + ' GPUs) @ ' + feNicSpeed + 'G');
+  if (feSpineCount > 0) {
+    summaryContent += metric(fmtN(feSpineCount), 'Frontend Spines', feSpine.name);
+  }
+  summaryContent += metric(fmtN(feLeafCount), 'Frontend Leaves', feLeaf.name);
+  summaryContent += metric(fmtN(feTotalSwitches), 'Total FE Switches', 'all tiers');
+  summaryContent += metric(actualOversub + ':1', 'Frontend Oversub', hostsPerLeaf + ' hosts/leaf × ' + feNicSpeed + 'G / ' + feSpineCount + '×' + feLeaf.uplinkSpeed + 'G');
+  summaryContent += '</div>';
+
+  const diagTitle = 'Front-End Logical Data Path';
+  let feNodes = [];
+  if (feSpineCount > 0) {
+    feNodes.push({ title: '1× Spine Switch', sub: feSpine.name + '\n' + feSpine.ports + '×' + feLeaf.uplinkSpeed + 'G', stacked: feSpineCount > 1 });
+    feNodes.push({ link: (Number.isInteger(bundleSize) ? bundleSize : bundleSize.toFixed(1)) + '× ' + feLeaf.uplinkSpeed + 'G uplinks', optic: { conv: feOpticType(feLeaf.uplinkSpeed), lpo: feOpticType(feLeaf.uplinkSpeed) } });
+  }
+  feNodes.push({ title: '1× Leaf Switch', sub: feLeaf.name + '\n' + feLeaf.downlinkPorts + '×' + feNicSpeed + 'G + ' + feLeaf.uplinkPorts + '×' + feLeaf.uplinkSpeed + 'G', stacked: feLeafCount > 1 });
+  feNodes.push({ link: feLinksPerNode + '× ' + feNicSpeed + 'G links', optic: { conv: feOpticType(feNicSpeed), lpo: feOpticType(feNicSpeed) } });
+  feNodes.push({ title: '1× Compute Node', sub: 'Frontend NIC', stacked: false });
+
+  const topoTiers = [{ id: 'feLeaf', label: feLeaf.name, perPlane: feLeafCount, radix: feLeaf.downlinkPorts }];
+  const topoLinks = [{ from: 'host', to: 'feLeaf', bundle: feLinksPerNode, speed: feNicSpeed }];
+  if (feSpineCount > 0) {
+    topoTiers.push({ id: 'feSpine', label: feSpine.name, perPlane: feSpineCount, radix: feSpine.ports });
+    topoLinks.push({ from: 'feLeaf', to: 'feSpine', bundle: bundleSize, speed: feLeaf.uplinkSpeed });
+  }
+
+  return { summaryContent, switchHtml, optHtml, powerHtml, diagTitle, diagNodes: feNodes, totalSwitches: feTotalSwitches, totalOptics: feTotalOptics, powerW: { typ: feSwitchTypW + Math.round(feOpticW), eightyPct: feSwitch80W + Math.round(feOpticW), max: feSwitchMaxW + Math.round(feOpticW) },
+    topoTiers, topoLinks, topoHosts: { feLinksPerServer, feNicSpeed } };
+}
+
 function calculate() {
   const totalGPUs   = parseInt(document.getElementById('total-gpus').value) || 0;
   const numNodes    = parseInt(document.getElementById('num-nodes').value) || 0;
@@ -2099,9 +2271,6 @@ function calculate() {
   const tierNum     = parseInt(document.querySelector('input[name=tier]:checked').value);
   const el          = document.getElementById('results');
   document.getElementById('diagram-panel').innerHTML = '';
-  document.getElementById('suggestion-leaf').style.display = 'none';
-  document.getElementById('suggestion-spine').style.display = 'none';
-  pendingSuggestion = null;
 
   if (!totalGPUs && !numNodes) {
     el.innerHTML = '<div class="error-msg">Enter the number of GPUs or nodes to get started.</div>';
@@ -2370,22 +2539,21 @@ function calculate() {
   } else if (tierNum === 2) {
     const leafPerPlane  = Math.ceil(linksPerPlane / effDownlinks);
     totalLeaf           = leafPerPlane * planes;
-    const balance       = document.getElementById('balance-topo').value === '1';
+    const uplinksPerSpine = parseInt(document.getElementById('uplinks-per-spine').value) || 1;
     const targetGPUs    = getTargetGPUs();
     const spineLeafPP   = (targetGPUs > gpus)
       ? Math.ceil((nicBreakout ? targetGPUs * linksPerGpu : Math.ceil(targetGPUs * linksPerGpu / planes)) / effDownlinks)
       : leafPerPlane;
     const origSpinePP   = Math.ceil((spineLeafPP * effUplinks) / effSpineRadix);
-    let spinePerPlane   = origSpinePP;
-    let balanceNote     = '';
-    if (balance && effUplinks > 0 && effUplinks % spinePerPlane !== 0) {
+    let spinePerPlane   = effUplinks > 0 ? Math.round(effUplinks / uplinksPerSpine) : origSpinePP;
+    if (spinePerPlane < origSpinePP) spinePerPlane = origSpinePP;
+    if (effUplinks > 0 && effUplinks % spinePerPlane !== 0) {
       spinePerPlane = nextDivisorGte(spinePerPlane, effUplinks);
-      balanceNote = 'Spine count adjusted from ' + origSpinePP + ' to ' + spinePerPlane + ' per plane for even link distribution (' + (effUplinks / spinePerPlane) + ' links per leaf-spine pair). Adds ' + ((spinePerPlane - origSpinePP) * planes) + ' extra spine switch' + ((spinePerPlane - origSpinePP) * planes !== 1 ? 'es' : '') + '.';
     }
     totalSpine          = spinePerPlane * planes;
 
     const bundleSize    = effUplinks / spinePerPlane;
-    const bundleStr     = Number.isInteger(bundleSize) ? bundleSize : bundleSize.toFixed(2) + ' (unbalanced)';
+    const bundleStr     = Number.isInteger(bundleSize) ? bundleSize : bundleSize.toFixed(2);
 
     const spineLinks    = leafPerPlane * effUplinks * planes;
     const spinePhysPerSide = Math.ceil(spineLinks / Math.max(uplinkBreakout, 1));
@@ -2398,21 +2566,14 @@ function calculate() {
     opticCounts.hostEnd = hOptHostBase;
 
     if (bundleSize < 1) {
-      const minCombo = minBalanced2Tier(linksPerPlane, breakout, oversub);
-      let suggestion = '';
-      if (minCombo) suggestion = ' Minimum balanced topology: leaf <strong>' + minCombo.leaf.desc + '</strong>, spine <strong>' + minCombo.spine.desc + '</strong>.';
       el.innerHTML = '<div class="error-msg">Invalid topology: uplink bundle size is ' + bundleSize.toFixed(2) +
-        ' (must be ≥ 1). The selected leaf (' + leafPlatform.desc + ') cannot support this cluster size.' + suggestion + '</div>';
+        ' (must be ≥ 1). The selected leaf (' + leafPlatform.desc + ') cannot support this cluster size. Choose a larger leaf or spine switch.</div>';
       return;
     }
 
-    let leafNote = 'Each leaf uplinks to all spines in its plane.';
-    if (!Number.isInteger(bundleSize)) {
-      const minCombo = minBalanced2Tier(linksPerPlane, breakout, oversub);
-      let suggestion = '';
-      if (minCombo) suggestion = ' Minimum balanced topology: leaf <strong>' + minCombo.leaf.desc + '</strong>, spine <strong>' + minCombo.spine.desc + '</strong>.';
-      leafNote = '<span style="color:var(--coral600);font-weight:600">Warning:</span> Uplinks do not divide evenly across spines (' + bundleSize.toFixed(2) + ' links per spine). This topology is unbalanced.' + suggestion + ' Enable <strong>Balance topology</strong> to auto-adjust.';
-    }
+    let leafNote = uplinksPerSpine > 1
+      ? 'Each leaf connects to each spine with ' + Math.round(bundleSize) + ' uplinks, reducing spine count to ' + spinePerPlane + ' per plane.'
+      : 'Each leaf uplinks to all spines in its plane.';
 
     const spineRows = [
       ['Spine platform', spinePlatform.desc],
@@ -2432,7 +2593,6 @@ function calculate() {
       ['Uplink ports', uplinks + (uplinkBreakout !== 1 ? ' (' + Math.round(effUplinks) + ' effective @ ' + speedLabel(spineSpeed) + ')' : '')],
       ['Links per spine (bundle)', bundleStr],
     ], leafNote);
-    if (balanceNote) switchHtml += '<div class="note-box" style="margin-bottom:12px">' + balanceNote + '</div>';
     if (targetGPUs > gpus) switchHtml += '<div class="note-box" style="margin-bottom:12px">Spine layer pre-provisioned for ' + fmtN(targetGPUs) + ' GPUs. Day-1 deployment: ' + fmtN(gpus) + ' GPUs across ' + fmtN(totalLeaf) + ' leaves with ' + fmtN(totalSpine) + ' spines. Scale out by adding leaves — no spine changes required.</div>';
 
     const leafUlBrk = Math.floor(leafPortSpeed / spineSpeed);
@@ -2511,14 +2671,18 @@ function calculate() {
     const ssLeaf1PP     = (targetGPUs > gpus)
       ? Math.ceil(Math.ceil((nicBreakout ? targetGPUs * linksPerGpu : Math.ceil(targetGPUs * linksPerGpu / planes)) / effDownlinks) / edgeLeavesPerPod) * aggPerPod
       : leaf1PerPlane;
+    const uplinksPerSpine3 = parseInt(document.getElementById('uplinks-per-spine').value) || 1;
     const aggUplinksTotal = ssLeaf1PP * effUplinks;
-    let spinePerPlane   = Math.ceil(aggUplinksTotal / effSpineRadix);
+    const origSpinePP3  = Math.ceil(aggUplinksTotal / effSpineRadix);
+    let spinePerPlane   = effUplinks > 0 ? Math.round(effUplinks / uplinksPerSpine3) : origSpinePP3;
+    if (spinePerPlane < origSpinePP3) spinePerPlane = origSpinePP3;
+    if (effUplinks > 0 && effUplinks % spinePerPlane !== 0) {
+      spinePerPlane = nextDivisorGte(spinePerPlane, effUplinks);
+    }
     totalSpine          = spinePerPlane * planes;
 
-    // In the pod model, each edge connects to each agg in its pod with 1 link
     const e2aBundle     = 1;
     const e2aBundleStr  = '1';
-    // Each agg connects to uplinks distinct spines with 1 link each
     const a2sBundle     = effUplinks >= spinePerPlane ? Math.floor(effUplinks / spinePerPlane) : 1;
     const a2sBundleStr  = String(a2sBundle);
 
@@ -2789,7 +2953,6 @@ function calculate() {
   }
 
   if (tierNum === 2) {
-    const balance = document.getElementById('balance-topo').value === '1';
     const maxHostLinksPerPlane = effSpineRadix * effDownlinks;
     const maxGpusPerPlane = Math.floor(maxHostLinksPerPlane / linksPerGpu);
     const maxGpusTotal = maxGpusPerPlane * planes;
@@ -2809,7 +2972,7 @@ function calculate() {
       const spLinksAll = totalHostLinks;
       const spLeafPP = Math.ceil(spLinksAll / effDownlinks);
       let spSpineCount = Math.ceil((spLeafPP * effUplinks) / effSpineRadix);
-      if (balance && effUplinks > 0 && effUplinks % spSpineCount !== 0) spSpineCount = nextDivisorGte(spSpineCount, effUplinks);
+      if (effUplinks > 0 && effUplinks % spSpineCount !== 0) spSpineCount = nextDivisorGte(spSpineCount, effUplinks);
       const spTotalSw = spLeafPP + spSpineCount;
       const spMaxLinks = effSpineRadix * effDownlinks;
       const spMaxGpus = Math.floor(spMaxLinks / linksPerGpu);
@@ -2817,7 +2980,7 @@ function calculate() {
 
       const mpLeafPP = Math.ceil(linksPerPlane / effDownlinks);
       let mpSpinePP = Math.ceil((mpLeafPP * effUplinks) / effSpineRadix);
-      if (balance && effUplinks > 0 && effUplinks % mpSpinePP !== 0) mpSpinePP = nextDivisorGte(mpSpinePP, effUplinks);
+      if (effUplinks > 0 && effUplinks % mpSpinePP !== 0) mpSpinePP = nextDivisorGte(mpSpinePP, effUplinks);
       const mpTotalSw = (mpLeafPP + mpSpinePP) * planes;
 
       fabricContent += '<div class="mrc-comparison">';
@@ -3016,6 +3179,130 @@ function calculate() {
     }
   }
 
+  // Alternative platform options
+  if (tierNum >= 1 && tierNum <= 3 && !isCustomPlatform('spine') && (tierNum === 1 || !isCustomPlatform('leaf'))) {
+    const altLPP = (scaleTargetGPUs > gpus)
+      ? (nicBreakout ? scaleTargetGPUs * linksPerGpu : Math.ceil(scaleTargetGPUs * linksPerGpu / planes))
+      : linksPerPlane;
+    const ulB = 800 / spineSpeed;
+    const alternatives = [];
+
+    function calcAltMetrics(sp, lf, tier) {
+      const sRadix = sp.radix, lRadix = lf ? lf.radix : 0;
+      if (tier === 1) {
+        const portsNeeded = Math.ceil(altLPP / breakout);
+        if (portsNeeded > sRadix) return null;
+        const tSpine = planes;
+        const hOpt = Math.ceil(totalHostLinks / breakout) + totalHostLinks;
+        const swPow = tSpine * (sp.powerMax || 0);
+        const optPow = hOpt * (OPTIC_POWER[hostSpeedPerPlane]?.lpo || 10);
+        return { tier: 1, leaf: 0, spine: tSpine, total: tSpine, optics: hOpt,
+          ru: tSpine * (sp.ru || 1), power: Math.round((swPow + optPow) / 1000 * 0.8),
+          spName: sp.desc, lfName: '', spRadix: sRadix, lfRadix: 0 };
+      }
+      const pDown = Math.floor(lRadix * oversub / (1 + oversub));
+      const eDown = pDown * breakout;
+      const up = lRadix - pDown;
+      const eUp = up * ulB;
+      const eSR = sRadix * ulB;
+      if (eDown <= 0 || up <= 0) return null;
+      const lPP = Math.ceil(altLPP / eDown);
+      if (tier === 2) {
+        if (lPP > eUp) return null;
+        const sPP = Math.ceil((lPP * eUp) / eSR);
+        if (sPP > eUp || eUp % sPP !== 0) return null;
+        const tLeaf = lPP * planes, tSpine = sPP * planes;
+        const spPhys = Math.ceil(lPP * eUp * planes / Math.max(uplinkBreakout, 1));
+        const spOpt = spPhys * 2;
+        const hOpt = Math.ceil(totalHostLinks / breakout) + totalHostLinks;
+        const swPow = tSpine * (sp.powerMax || 0) + tLeaf * (lf.powerMax || 0);
+        const spOpW = ((OPTIC_POWER[lf.portSpeed || 800]?.lpo || 8) + (OPTIC_POWER[sp.portSpeed || 800]?.lpo || 8)) / 2;
+        const optPow = spOpt * spOpW + hOpt * (OPTIC_POWER[hostSpeedPerPlane]?.lpo || 10);
+        return { tier: 2, leaf: tLeaf, spine: tSpine, total: tLeaf + tSpine, optics: spOpt + hOpt,
+          ru: tSpine * (sp.ru || 1) + tLeaf * (lf.ru || 1), power: Math.round((swPow + optPow) / 1000 * 0.8),
+          spName: sp.desc, lfName: lf.desc, spRadix: sRadix, lfRadix: lRadix };
+      }
+      if (tier === 3) {
+        const leaf2PP = Math.ceil(altLPP / eDown);
+        const podCount = Math.ceil(leaf2PP / pDown);
+        const l1PP = podCount * up;
+        const aggUp = l1PP * eUp;
+        const sPP = Math.ceil(aggUp / eSR);
+        if (podCount > eSR) return null;
+        const tEdge = leaf2PP * planes, tAgg = l1PP * planes, tSpine = sPP * planes;
+        const a2s = Math.ceil(l1PP * eUp * planes / Math.max(uplinkBreakout, 1)) * 2;
+        const e2a = leaf2PP * up * planes * 2;
+        const hOpt = Math.ceil(totalHostLinks / breakout) + totalHostLinks;
+        const swPow = tSpine * (sp.powerMax || 0) + (tEdge + tAgg) * (lf.powerMax || 0);
+        const spOpW = ((OPTIC_POWER[lf.portSpeed || 800]?.lpo || 8) + (OPTIC_POWER[sp.portSpeed || 800]?.lpo || 8)) / 2;
+        const optPow = (a2s + e2a) * spOpW + hOpt * (OPTIC_POWER[hostSpeedPerPlane]?.lpo || 10);
+        return { tier: 3, leaf: tEdge, agg: tAgg, spine: tSpine, total: tEdge + tAgg + tSpine,
+          optics: a2s + e2a + hOpt,
+          ru: tSpine * (sp.ru || 1) + (tEdge + tAgg) * (lf.ru || 1), power: Math.round((swPow + optPow) / 1000 * 0.8),
+          spName: sp.desc, lfName: lf.desc, spRadix: sRadix, lfRadix: lRadix };
+      }
+      return null;
+    }
+
+    const validSpines = PLATFORMS.filter(p => p.portSpeed >= spineSpeed);
+    const validLeaves = LEAF_PLATFORMS.filter(p => p.portSpeed >= spineSpeed);
+
+    for (const sp of validSpines) {
+      if (tierNum === 1) {
+        if (sp.radix === spineRadix) continue;
+        const d = calcAltMetrics(sp, null, 1);
+        if (d) alternatives.push(d);
+      } else {
+        for (const lf of validLeaves) {
+          if (sp.radix === spineRadix && lf.radix === leafRadix) continue;
+          const d = calcAltMetrics(sp, lf, tierNum);
+          if (d) alternatives.push(d);
+        }
+      }
+    }
+
+    alternatives.sort((a, b) => a.total - b.total || a.power - b.power);
+    const shown = alternatives.slice(0, 3);
+
+    if (shown.length > 0) {
+      const tierNames = { 1: 'Single-tier', 2: 'Two-tier', 3: 'Three-tier' };
+      summaryContent += '<div class="result-section"><h3><svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M21 3l-7 7"/><path d="M21 14v5a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h5"/></svg>Alternative Platform Options</h3>';
+      summaryContent += '<div style="font-size:12px;color:var(--text3);margin-bottom:12px">Other valid platform combinations for this cluster. Click Apply to recalculate with that configuration.</div>';
+      summaryContent += '<div class="mrc-comparison" style="grid-template-columns:repeat(' + Math.min(shown.length, 3) + ', 1fr)">';
+
+      for (const d of shown) {
+        const diffSw = totalSwitches > 0 ? Math.round((d.total - totalSwitches) / totalSwitches * 100) : 0;
+        const curTotalOptics = opticCounts.spine + opticCounts.hostSwitch + opticCounts.hostEnd + opticCounts.fabric;
+        const diffOpt = curTotalOptics > 0 ? Math.round((d.optics - curTotalOptics) / curTotalOptics * 100) : 0;
+
+        const title = tierNum === 1 ? d.spName : (d.lfName === d.spName ? d.spName : d.lfName + ' + ' + d.spName);
+        summaryContent += '<div class="mrc-compare-card">';
+        summaryContent += '<h4 style="font-size:13px">' + esc(title) + '</h4>';
+        summaryContent += '<div class="stat-row"><span class="stat-label">Switches</span><span class="stat-value">' + fmtN(d.total);
+        if (diffSw !== 0) {
+          const badge = diffSw < 0 ? 'advantage-badge-good' : 'advantage-badge-warn';
+          summaryContent += ' <span class="advantage-badge ' + badge + '" style="font-size:9px;padding:2px 6px;margin-left:4px">' + (diffSw > 0 ? '+' : '') + diffSw + '%</span>';
+        }
+        summaryContent += '</span></div>';
+        summaryContent += '<div class="stat-row"><span class="stat-label">Total optics</span><span class="stat-value">' + fmtN(d.optics);
+        if (diffOpt !== 0) {
+          const badge = diffOpt < 0 ? 'advantage-badge-good' : 'advantage-badge-warn';
+          summaryContent += ' <span class="advantage-badge ' + badge + '" style="font-size:9px;padding:2px 6px;margin-left:4px">' + (diffOpt > 0 ? '+' : '') + diffOpt + '%</span>';
+        }
+        summaryContent += '</span></div>';
+        summaryContent += '<div class="stat-row"><span class="stat-label">Rack space</span><span class="stat-value">' + fmtN(d.ru) + ' RU</span></div>';
+        summaryContent += '<div class="stat-row"><span class="stat-label">Est. power (80%)</span><span class="stat-value">' + fmtN(d.power) + ' kW</span></div>';
+        const applyArgs = tierNum === 1
+          ? d.spRadix + ', null'
+          : d.spRadix + ', ' + d.lfRadix;
+        summaryContent += '<button onclick="applyAlternative(' + applyArgs + ')" style="margin-top:10px;width:100%;padding:6px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:6px;border:1.5px solid var(--primary);background:var(--primary-light);color:var(--primary);transition:all 0.15s">Apply &amp; Recalculate</button>';
+        summaryContent += '</div>';
+      }
+
+      summaryContent += '</div></div>';
+    }
+  }
+
   // Power consumption estimates
   function kw(w) { return (w / 1000).toFixed(1) + ' kW'; }
 
@@ -3097,6 +3384,33 @@ function calculate() {
   let powerHtml = buildPowerHtml(opticCounts, totalLeaf, totalSpine);
 
   fabricContent = switchHtml + fabricContent;
+
+  // Frontend network integration
+  const feResult = calculateFE(hosts, gpusPerNode);
+  if (feResult) {
+    if (lastTopoConfig) {
+      lastTopoConfig.feConfig = { tiers: feResult.topoTiers, links: feResult.topoLinks, hosts: feResult.topoHosts };
+    }
+    const beTotalOptics = opticCounts.spine + opticCounts.hostSwitch + opticCounts.hostEnd + opticCounts.fabric;
+    let combinedSummary = '<div class="metrics-grid">';
+    combinedSummary += metric(fmtN(totalSwitches + feResult.totalSwitches), 'Total Switches', 'BE + FE combined');
+    combinedSummary += metric(fmtN(beTotalOptics + feResult.totalOptics), 'Total Optics', 'BE + FE combined');
+    combinedSummary += '</div>';
+
+    summaryContent = combinedSummary + '<div class="network-header backend">Backend Network</div>' + summaryContent;
+    summaryContent += '<div class="network-divider"></div><div class="network-header frontend">Frontend Network</div>' + feResult.summaryContent;
+
+    fabricContent = '<div class="network-header backend">Backend Network</div>' + fabricContent;
+    fabricContent += '<div class="network-divider"></div><div class="network-header frontend">Frontend Network</div>' + feResult.switchHtml;
+
+    const beOptPower = '<div class="network-header backend">Backend Network</div>' + optHtml + powerHtml;
+    const feOptPower = '<div class="network-divider"></div><div class="network-header frontend">Frontend Network</div>' + feResult.optHtml + feResult.powerHtml;
+    optHtml = beOptPower + feOptPower;
+    powerHtml = '';
+
+    const feDiagHeader = '<div class="diagram-wrapper" style="margin-top:16px"><div class="diag-title"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Front-End Logical Data Path</div>';
+    diagramHtml += feDiagHeader + buildDiagram(feResult.diagNodes, 1) + '</div>';
+  }
 
   // Planned scale optics & power (when scale-out is enabled)
   let plannedOptPower = '';
@@ -3216,7 +3530,7 @@ function calculate() {
   const targetGpusPrint = getTargetGPUs();
   if (targetGpusPrint > gpus) pcParts.push('<strong>Target scale:</strong> ' + fmtN(targetGpusPrint) + ' GPUs');
   document.getElementById('print-config').innerHTML = pcParts.join(' &nbsp;&middot;&nbsp; ');
-  document.getElementById('print-footer').textContent = 'Generated ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' — Arista Networks AI Backend Network Calculator v' + APP_VERSION;
+  document.getElementById('print-footer').textContent = 'Generated ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' — Arista Networks AI Network Calculator v' + APP_VERSION;
   updateSectionSummaries();
 }
 
@@ -3465,6 +3779,55 @@ function buildMRCTopoData() {
     nodes.push({ id: 'host-' + (totalHosts - 1), label: 'Node ' + totalHosts, tier: 'host', rank: hostRank, plane: -1, pos: { x: hostSx + 4 * GAP_X, y: hostRank * GAP_Y } });
   }
 
+  // Frontend network tiers (below hosts, single-plane, centered across full width)
+  const feRealIdx = {};
+  if (c.feConfig) {
+    const fe = c.feConfig;
+    fe.tiers.forEach((tier, ti) => {
+      const feRank = hostRank + 1 + ti;
+      const count = tier.perPlane;
+      const dCount = count <= MAX_SHOW ? count : 5;
+      const feRowW = (dCount - 1) * GAP_X;
+      const feSx = (totalPlanesWidth - feRowW) / 2;
+      feRealIdx[tier.id] = [];
+
+      if (count <= MAX_SHOW) {
+        for (let i = 0; i < count; i++) {
+          feRealIdx[tier.id].push(i);
+          nodes.push({
+            id: tier.id + '-' + i, label: tier.label + ' ' + (i + 1),
+            tier: tier.id, platform: tier.label, radix: tier.radix,
+            rank: feRank, plane: -1,
+            pos: { x: feSx + i * GAP_X, y: feRank * GAP_Y }
+          });
+        }
+      } else {
+        const showFirst = dCount - 2;
+        for (let i = 0; i < showFirst; i++) {
+          feRealIdx[tier.id].push(i);
+          nodes.push({
+            id: tier.id + '-' + i, label: tier.label + ' ' + (i + 1),
+            tier: tier.id, platform: tier.label, radix: tier.radix,
+            rank: feRank, plane: -1,
+            pos: { x: feSx + i * GAP_X, y: feRank * GAP_Y }
+          });
+        }
+        nodes.push({
+          id: tier.id + '-ellipsis', label: '…+' + (count - showFirst - 1),
+          tier: 'ellipsis', rank: feRank, plane: -1,
+          pos: { x: feSx + showFirst * GAP_X, y: feRank * GAP_Y }
+        });
+        feRealIdx[tier.id].push(count - 1);
+        nodes.push({
+          id: tier.id + '-' + (count - 1), label: tier.label + ' ' + count,
+          tier: tier.id, platform: tier.label, radix: tier.radix,
+          rank: feRank, plane: -1,
+          pos: { x: feSx + (showFirst + 1) * GAP_X, y: feRank * GAP_Y }
+        });
+      }
+    });
+  }
+
   // Compute real connection counts per node
   const realConns = {};
   for (const link of c.links) {
@@ -3510,9 +3873,38 @@ function buildMRCTopoData() {
       }
     }
   }
+  // FE realConns (MRC)
+  if (c.feConfig) {
+    const fe = c.feConfig;
+    const feHostLink = fe.links.find(l => l.from === 'host');
+    if (feHostLink) {
+      const feLeafTier = fe.tiers[0];
+      const feLeafCount = feLeafTier.perPlane;
+      const hostsPerFeLeaf = Math.max(1, Math.ceil(totalHosts / feLeafCount));
+      for (const idx of (feRealIdx[feLeafTier.id] || [])) {
+        realConns[feLeafTier.id + '-' + idx] = (realConns[feLeafTier.id + '-' + idx] || 0) + hostsPerFeLeaf;
+      }
+    }
+    if (fe.tiers.length > 1) {
+      const feLeafCount = fe.tiers[0].perPlane;
+      const feSpineCount = fe.tiers[1].perPlane;
+      for (const idx of (feRealIdx[fe.tiers[0].id] || [])) {
+        realConns[fe.tiers[0].id + '-' + idx] = (realConns[fe.tiers[0].id + '-' + idx] || 0) + feSpineCount;
+      }
+      for (const idx of (feRealIdx[fe.tiers[1].id] || [])) {
+        realConns[fe.tiers[1].id + '-' + idx] = (realConns[fe.tiers[1].id + '-' + idx] || 0) + feLeafCount;
+      }
+    }
+  }
   nodes.forEach(n => {
     if (realConns[n.id]) n.realConns = realConns[n.id];
-    if (n.tier === 'host') n.realConns = c.hosts.linksPerNode;
+    if (n.tier === 'host') {
+      n.realConns = c.hosts.linksPerNode;
+      if (c.feConfig) {
+        const feHostLink = c.feConfig.links.find(l => l.from === 'host');
+        if (feHostLink) n.realConns += feHostLink.bundle;
+      }
+    }
   });
 
   // Cross-plane host edges: each host connects to leaf(s) in each plane
@@ -3554,6 +3946,48 @@ function buildMRCTopoData() {
           weight: 1.5, bundle: linksPerNodePerPlane,
           speed: hostLink ? hostLink.speed : 400, plane: p
         });
+      }
+    }
+  }
+
+  // Frontend network edges (single-plane, below hosts)
+  if (c.feConfig) {
+    const fe = c.feConfig;
+    const feLeafTier = fe.tiers[0];
+    const feHostLink = fe.links.find(l => l.from === 'host');
+    const feHostNodes = nodes.filter(n => n.tier === 'host');
+    if (feHostLink) {
+      const feLeafIdxs = feRealIdx[feLeafTier.id] || [];
+      if (feLeafIdxs.length > 0) {
+        const hostsPerFeLeaf = Math.max(1, Math.floor(feLeafTier.radix / feHostLink.bundle));
+        for (let hi = 0; hi < feHostNodes.length; hi++) {
+          const realIdx = parseInt(feHostNodes[hi].id.replace('host-', ''));
+          if (isNaN(realIdx)) continue;
+          const feLeafIdx = feLeafIdxs[Math.min(Math.floor(realIdx / hostsPerFeLeaf), feLeafIdxs.length - 1)];
+          edges.push({
+            source: feHostNodes[hi].id, target: feLeafTier.id + '-' + feLeafIdx,
+            label: feHostLink.bundle + '×' + feHostLink.speed + 'G',
+            weight: Math.min(Math.max(1, feHostLink.bundle / 2), 3),
+            bundle: feHostLink.bundle, speed: feHostLink.speed, fe: true
+          });
+        }
+      }
+    }
+    if (fe.tiers.length > 1) {
+      const feSpineLink = fe.links.find(l => l.from === 'feLeaf');
+      const feLeafIdxs = feRealIdx[fe.tiers[0].id] || [];
+      const feSpineIdxs = feRealIdx[fe.tiers[1].id] || [];
+      if (feSpineLink && feLeafIdxs.length > 0 && feSpineIdxs.length > 0) {
+        for (const li of feLeafIdxs) {
+          for (const si of feSpineIdxs) {
+            edges.push({
+              source: fe.tiers[0].id + '-' + li, target: fe.tiers[1].id + '-' + si,
+              label: feSpineLink.bundle + '×' + feSpineLink.speed + 'G',
+              weight: Math.min(Math.max(1, feSpineLink.bundle / 2), 3),
+              bundle: feSpineLink.bundle, speed: feSpineLink.speed, fe: true
+            });
+          }
+        }
       }
     }
   }
@@ -3636,6 +4070,46 @@ function buildTopoData() {
     nodes.push({ id: 'host-last', label: hostCountPerLeaf + ' hosts', tier: 'host', rank: hostRank });
   }
 
+  // Frontend network tiers (below hosts)
+  const feRealIdx = {};
+  if (c.feConfig) {
+    const fe = c.feConfig;
+    fe.tiers.forEach((tier, ti) => {
+      const feRank = hostRank + 1 + ti;
+      const count = tier.perPlane;
+      feRealIdx[tier.id] = [];
+      if (count <= MAX_SHOW) {
+        for (let i = 0; i < count; i++) {
+          feRealIdx[tier.id].push(i);
+          nodes.push({
+            id: tier.id + '-' + i, label: tier.label + ' ' + (i + 1),
+            tier: tier.id, platform: tier.label, radix: tier.radix,
+            rank: feRank, plane: -1
+          });
+        }
+      } else {
+        for (let i = 0; i < 3; i++) {
+          feRealIdx[tier.id].push(i);
+          nodes.push({
+            id: tier.id + '-' + i, label: tier.label + ' ' + (i + 1),
+            tier: tier.id, platform: tier.label, radix: tier.radix,
+            rank: feRank, plane: -1
+          });
+        }
+        nodes.push({
+          id: tier.id + '-ellipsis', label: '…+' + (count - 4) + ' more',
+          tier: 'ellipsis', rank: feRank, plane: -1
+        });
+        feRealIdx[tier.id].push(count - 1);
+        nodes.push({
+          id: tier.id + '-' + (count - 1), label: tier.label + ' ' + count,
+          tier: tier.id, platform: tier.label, radix: tier.radix,
+          rank: feRank, plane: -1
+        });
+      }
+    });
+  }
+
   const byRank = {};
   nodes.forEach(n => {
     if (!byRank[n.rank]) byRank[n.rank] = [];
@@ -3689,9 +4163,39 @@ function buildTopoData() {
       }
     }
   }
+  // FE realConns
+  if (c.feConfig) {
+    const fe = c.feConfig;
+    const feHostLink = fe.links.find(l => l.from === 'host');
+    if (feHostLink) {
+      const feLeafTier = fe.tiers[0];
+      const feLeafCount = feLeafTier.perPlane;
+      const totalHostCount = bottomTier.perPlane * hostCountPerLeaf;
+      const hostsPerFeLeaf = Math.max(1, Math.ceil(totalHostCount / feLeafCount));
+      for (const idx of (feRealIdx[feLeafTier.id] || [])) {
+        realConns[feLeafTier.id + '-' + idx] = (realConns[feLeafTier.id + '-' + idx] || 0) + hostsPerFeLeaf;
+      }
+    }
+    if (fe.tiers.length > 1) {
+      const feLeafCount = fe.tiers[0].perPlane;
+      const feSpineCount = fe.tiers[1].perPlane;
+      for (const idx of (feRealIdx[fe.tiers[0].id] || [])) {
+        realConns[fe.tiers[0].id + '-' + idx] = (realConns[fe.tiers[0].id + '-' + idx] || 0) + feSpineCount;
+      }
+      for (const idx of (feRealIdx[fe.tiers[1].id] || [])) {
+        realConns[fe.tiers[1].id + '-' + idx] = (realConns[fe.tiers[1].id + '-' + idx] || 0) + feLeafCount;
+      }
+    }
+  }
   nodes.forEach(n => {
     if (realConns[n.id]) n.realConns = realConns[n.id];
-    if (n.tier === 'host') n.realConns = c.hosts.linksPerNode;
+    if (n.tier === 'host') {
+      n.realConns = c.hosts.linksPerNode;
+      if (c.feConfig) {
+        const feHostLink = c.feConfig.links.find(l => l.from === 'host');
+        if (feHostLink) n.realConns += feHostLink.bundle;
+      }
+    }
   });
 
   for (const link of c.links) {
@@ -3810,6 +4314,55 @@ function buildTopoData() {
           label: fromIdxs.length + '×' + bStr + '×' + speedLabel(link.speed),
           weight: 3, bundle: link.bundle, speed: link.speed
         });
+      }
+    }
+  }
+
+  // Frontend network edges
+  if (c.feConfig) {
+    const fe = c.feConfig;
+    const feLeafTier = fe.tiers[0];
+    const hostLink = fe.links.find(l => l.from === 'host');
+    if (hostLink) {
+      const hostNodes = nodes.filter(n => n.tier === 'host');
+      const feLeafIdxs = feRealIdx[feLeafTier.id] || [];
+      if (feLeafIdxs.length > 0) {
+        const hostsPerFeLeaf = Math.max(1, Math.floor(feLeafTier.radix / hostLink.bundle));
+        for (let hi = 0; hi < hostNodes.length; hi++) {
+          const hn = hostNodes[hi];
+          const idSuffix = hn.id.replace('host-', '');
+          let feLeafIdx;
+          if (idSuffix === 'last') {
+            feLeafIdx = feLeafIdxs[feLeafIdxs.length - 1];
+          } else {
+            const realIdx = parseInt(idSuffix);
+            if (isNaN(realIdx)) continue;
+            feLeafIdx = feLeafIdxs[Math.min(Math.floor(realIdx / hostsPerFeLeaf), feLeafIdxs.length - 1)];
+          }
+          edges.push({
+            source: hn.id, target: feLeafTier.id + '-' + feLeafIdx,
+            label: hostLink.bundle + '×' + hostLink.speed + 'G',
+            weight: Math.min(Math.max(1, hostLink.bundle / 2), 4),
+            bundle: hostLink.bundle, speed: hostLink.speed, fe: true
+          });
+        }
+      }
+    }
+    if (fe.tiers.length > 1) {
+      const feSpineLink = fe.links.find(l => l.from === 'feLeaf');
+      const feLeafIdxs = feRealIdx[fe.tiers[0].id] || [];
+      const feSpineIdxs = feRealIdx[fe.tiers[1].id] || [];
+      if (feSpineLink && feLeafIdxs.length > 0 && feSpineIdxs.length > 0) {
+        for (const li of feLeafIdxs) {
+          for (const si of feSpineIdxs) {
+            edges.push({
+              source: fe.tiers[0].id + '-' + li, target: fe.tiers[1].id + '-' + si,
+              label: feSpineLink.bundle + '×' + feSpineLink.speed + 'G',
+              weight: Math.min(Math.max(1, feSpineLink.bundle / 2), 4),
+              bundle: feSpineLink.bundle, speed: feSpineLink.speed, fe: true
+            });
+          }
+        }
       }
     }
   }
@@ -3939,7 +4492,9 @@ function renderTopology() {
       .attr('x1', srcPos.x).attr('y1', srcPos.y)
       .attr('x2', tgtPos.x).attr('y2', tgtPos.y);
     let sColor, tColor;
-    if (isMRC && e.plane >= 0) {
+    if (e.fe) {
+      sColor = tColor = v('--accent');
+    } else if (isMRC && e.plane >= 0) {
       sColor = tColor = RAIL_COLORS[e.plane % RAIL_COLORS.length];
     } else {
       sColor = (tierById[e.source] === 'spine') ? v('--primary') :
@@ -4026,7 +4581,7 @@ function renderTopology() {
   const minNodeX = Math.min(...data.nodes.map(n => n.pos.x));
   const is3Tier = lastTopoConfig && lastTopoConfig.tier === 3;
   const tierNames = { spine: is3Tier ? 'Super-Spines' : 'Spines', leaf: 'Leaves', edgeLeaf: 'Leaves',
-    aggLeaf: 'Spines', host: 'Hosts', ellipsis: null };
+    aggLeaf: 'Spines', host: 'Hosts', feLeaf: 'FE Leaves', feSpine: 'FE Spines', ellipsis: null };
   const labeledRanks = new Set();
   for (const n of data.nodes) {
     const name = tierNames[n.tier];
@@ -4040,16 +4595,44 @@ function renderTopology() {
       .text(name.toUpperCase());
   }
 
+  // Backend/Frontend divider
+  const maxNodeX = Math.max(...data.nodes.map(n => n.pos.x));
+  if (c.feConfig) {
+    const hostY = Math.max(...data.nodes.filter(n => n.tier === 'host' || (n.tier === 'ellipsis' && n.id.startsWith('host'))).map(n => n.pos.y));
+    const feY = Math.min(...data.nodes.filter(n => n.tier === 'feLeaf' || n.tier === 'feSpine').map(n => n.pos.y));
+    const divY = (hostY + feY) / 2;
+    const divX1 = minNodeX - 80;
+    const divX2 = maxNodeX + 80;
+    const divGroup = g.append('g').attr('class', 'topo-divider');
+    divGroup.append('line')
+      .attr('x1', divX1).attr('y1', divY).attr('x2', divX2).attr('y2', divY)
+      .attr('stroke', v('--border')).attr('stroke-width', 1).attr('stroke-dasharray', '8 4');
+    divGroup.append('text')
+      .attr('x', divX1 + 4).attr('y', divY - 8)
+      .attr('fill', v('--text3')).attr('font-size', 9).attr('font-weight', 600).attr('letter-spacing', '1px')
+      .text('BACKEND');
+    divGroup.append('text')
+      .attr('x', divX1 + 4).attr('y', divY + 15)
+      .attr('fill', v('--text3')).attr('font-size', 9).attr('font-weight', 600).attr('letter-spacing', '1px')
+      .text('FRONTEND');
+  }
+
   // Link annotations between tiers (right side)
   const annotGroup = g.append('g').attr('class', 'topo-annotations');
-  const maxNodeX = Math.max(...data.nodes.map(n => n.pos.x));
 
-  for (const link of c.links) {
+  const rankMap = {};
+  c.tiers.forEach((t, i) => { rankMap[t.id] = i; });
+  rankMap['host'] = c.tiers.length;
+  if (c.feConfig) {
+    c.feConfig.tiers.forEach((t, i) => { rankMap[t.id] = c.tiers.length + 1 + i; });
+  }
+
+  function drawAnnotation(link, isFE) {
     let fromRank, toRank, labelText;
     if (link.to === 'host') {
       const btId = c.tiers[c.tiers.length - 1].id;
-      fromRank = c.tiers.findIndex(t => t.id === btId);
-      toRank = c.tiers.length;
+      fromRank = rankMap[btId];
+      toRank = rankMap['host'];
       if (isRail) {
         labelText = '1×' + link.speed + 'G/rail';
       } else if (isMRC) {
@@ -4059,20 +4642,22 @@ function renderTopology() {
         labelText = link.bundle + '×' + link.speed + 'G/node';
       }
     } else {
-      fromRank = c.tiers.findIndex(t => t.id === link.from);
-      toRank = c.tiers.findIndex(t => t.id === link.to);
+      fromRank = rankMap[link.from];
+      toRank = rankMap[link.to];
       const bStr = Number.isInteger(link.bundle) ? String(link.bundle) : link.bundle.toFixed(1);
-      labelText = bStr + '×' + speedLabel(link.speed);
+      labelText = bStr + '×' + link.speed + 'G';
     }
+    if (fromRank == null || toRank == null) return;
     const midY = ((fromRank + toRank) / 2) * 160;
     const ax = maxNodeX + 110;
 
     const ag = annotGroup.append('g')
       .attr('transform', 'translate(' + ax + ',' + midY + ')');
 
+    const fillColor = isFE ? v('--accent') : v('--primary');
     const txt = ag.append('text')
       .attr('text-anchor', 'middle').attr('dy', '0.35em')
-      .attr('fill', v('--primary')).attr('font-size', 11).attr('font-weight', 600)
+      .attr('fill', fillColor).attr('font-size', 11).attr('font-weight', 600)
       .text(labelText);
 
     const bx = txt.node().getBBox();
@@ -4083,6 +4668,15 @@ function renderTopology() {
       .attr('rx', ph / 2)
       .attr('fill', v('--bg2'))
       .attr('stroke', v('--border')).attr('stroke-width', 1);
+  }
+
+  for (const link of c.links) {
+    drawAnnotation(link, false);
+  }
+  if (c.feConfig) {
+    for (const link of c.feConfig.links) {
+      drawAnnotation(link, true);
+    }
   }
 
   // Draw nodes with drop shadow and fade-in
@@ -4151,13 +4745,14 @@ function renderTopology() {
 
   // ── Flow visualization ──
   function findPath(sourceId, targetId) {
+    const isFETier = id => id.startsWith('feLeaf') || id.startsWith('feSpine') || id.includes('-feLeaf-') || id.includes('-feSpine-');
     const visited = new Set([sourceId]);
     const queue = [[sourceId, [sourceId]]];
     while (queue.length > 0) {
       const [current, path] = queue.shift();
       if (current === targetId) return path;
       for (const neighbor of (adj[current] || [])) {
-        if (!visited.has(neighbor)) {
+        if (!visited.has(neighbor) && !isFETier(neighbor)) {
           visited.add(neighbor);
           queue.push([neighbor, [...path, neighbor]]);
         }
@@ -4167,6 +4762,12 @@ function renderTopology() {
   }
 
   function classifyPath(path) {
+    const hasFE = path.some(id => id.startsWith('feLeaf') || id.startsWith('feSpine') || id.includes('-feLeaf-') || id.includes('-feSpine-'));
+    if (hasFE) {
+      const hops = path.length - 1;
+      return { type: 'frontend', label: 'Frontend path', hops, detail: hops + ' hops via frontend fabric', color: v('--accent') };
+    }
+
     const tiers = path.map(id => tierById[id]);
     const devices = path.filter(id => tierById[id] !== 'host').length;
     const hasSpine = tiers.includes('spine');
@@ -4409,7 +5010,7 @@ function renderTopology() {
     const nicY = hostPos.y + 50;
     const nicStartX = hostPos.x - nicRowWidth / 2;
 
-    const hostEdges = data.edges.filter(e => e.target === d.id || e.source === d.id);
+    const hostEdges = data.edges.filter(e => (e.target === d.id || e.source === d.id) && !e.fe);
     const isRailView = currentTopoType === 'rail';
 
     const railEdges = isRailView
@@ -4495,6 +5096,25 @@ function renderTopology() {
       }
     });
 
+    // Draw FE lines from each NIC downward to FE leaves
+    const feEdges = data.edges.filter(e => (e.target === d.id || e.source === d.id) && e.fe);
+    if (feEdges.length > 0) {
+      nics.forEach(nic => {
+        feEdges.forEach(edge => {
+          const feLeafId = edge.source === d.id ? edge.target : edge.source;
+          const feLeafPos = posLookup[feLeafId];
+          if (!feLeafPos) return;
+          nicEdgeLayer.append('line').attr('class', 'nic-edge')
+            .attr('x1', nic.pos.x).attr('y1', nic.pos.y)
+            .attr('x2', nic.pos.x).attr('y2', nic.pos.y)
+            .attr('stroke', v('--accent')).attr('stroke-width', 1.2).attr('stroke-opacity', 0)
+            .attr('stroke-dasharray', '4,3')
+            .transition().duration(350).delay(100).ease(d3.easeCubicOut)
+            .attr('x2', feLeafPos.x).attr('y2', feLeafPos.y).attr('stroke-opacity', 0.45);
+        });
+      });
+    }
+
     // Draw GPU circles
     const nicGs = nicOverlayGroup.selectAll('g.nic-node')
       .data(nics).join('g').attr('class', 'nic-node')
@@ -4523,7 +5143,7 @@ function renderTopology() {
     nicOverlayGroup.append('text').attr('class', 'nic-label')
       .attr('x', hostPos.x).attr('y', nicY + 22).attr('text-anchor', 'middle')
       .attr('fill', v('--text2')).attr('font-size', 9).attr('font-weight', 600).style('opacity', 0)
-      .text(gpus + ' GPUs · ' + h.linksPerNode + ' backend links · ' + nicSpeedLabel + (isRailView ? ' per rail' : ' per link'))
+      .text(gpus + ' GPUs · ' + h.linksPerNode + ' backend links · ' + nicSpeedLabel + (isRailView ? ' per rail' : ' per link') + (feEdges.length > 0 ? ' · FE connected' : ''))
       .transition().duration(350).style('opacity', 1);
   }
 
@@ -4534,6 +5154,8 @@ function renderTopology() {
     if (d.platform) html += '<br>Platform: ' + esc(d.platform);
     if (d.radix) html += '<br>Ports: ' + d.radix;
     if (d.tier === 'host') html += '<br>' + lastTopoConfig.hosts.gpusPerNode + ' GPUs/node';
+    if (d.tier === 'feLeaf') html += '<br>Frontend leaf switch';
+    if (d.tier === 'feSpine') html += '<br>Frontend spine switch';
     const conns = d.realConns || (adj[d.id] || new Set()).size;
     if (conns) html += '<br>Connections: ' + conns;
     tooltip.innerHTML = html;
