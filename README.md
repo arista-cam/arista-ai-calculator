@@ -6,7 +6,8 @@ A browser-based tool for sizing AI network fabrics — both backend (GPU trainin
 
 - **Four fabric tiers** — single-tier (collapsed spine), two-tier (leaf-spine Clos), three-tier (super-spine / spine / leaf), and DES (Distributed Etherlink Switch)
 - **Platform suggestions** — suggests the smallest balanced switch combination based on cluster size, with Apply/Dismiss controls
-- **Frontend network** — optional frontend fabric (storage/management) with its own leaf-spine topology, oversubscription control, and combined optics & power reporting alongside the backend
+- **Frontend network** — optional frontend fabric (management/scheduling) with its own leaf-spine topology, oversubscription control, and combined optics & power reporting alongside the backend
+- **Storage network** — optional storage fabric with two connection modes: shared (storage nodes on frontend leaves) or dedicated (independent storage leaf-spine), sized by GPU ratio (1:8 to 1:64)
 - **Full optics breakdown** — per-device transceiver counts (spine, leaf uplink/downlink, host NIC) with Conventional/LPO toggle (LPO available at 800G only), OSFP form factor for all switch ports
 - **Interactive topology** — D3-powered diagrams with multi-plane view; click any compute node to expand GPU/NIC detail with plane-colored connectivity lines; frontend tiers shown below hosts with green edges and backend/frontend divider
 - **Multi-plane NIC breakout** — correctly models single-NIC hosts across multiple planes (e.g. 1×800G NIC → 4×200G links, one per plane)

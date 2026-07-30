@@ -754,6 +754,8 @@
   .network-header.backend { background: var(--primary-light); color: var(--primary-text); border-left: 3px solid var(--primary); }
   .network-header.frontend { background: #edf7ed; color: #3d7a28; border-left: 3px solid var(--accent); }
   :root:not([data-theme="light"]) .network-header.frontend { background: rgba(108,194,74,0.1); color: #7ed95c; }
+  .network-header.storage { background: #fef3e2; color: #8a5d1e; border-left: 3px solid #e8a020; }
+  :root:not([data-theme="light"]) .network-header.storage { background: rgba(232,160,32,0.1); color: #f0c050; }
   .sidebar-group-label {
     font-size: 10px; font-weight: 700; text-transform: uppercase;
     letter-spacing: 0.08em; color: var(--text3);
@@ -768,7 +770,7 @@
 <div class="topbar">
   <div class="topbar-left">
     <div class="topbar-logo"><svg viewBox="0 0 1115 175" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="M391.027,103.426c36.994,0,55.491-25.688,55.491-51.378c0-25.688-18.498-50.353-57.546-50.353c-28.773-1.029-134.617-1.029-134.617-1.029v173.668h32.879V28.413c25.691,0,90.43,0,103.79,0c18.496,0,27.745,6.163,27.745,23.635c0,14.385-9.247,22.606-26.718,22.606h-86.315l102.761,98.648h40.078l-73.991-71.932C381.78,103.426,390,103.426,391.027,103.426z"/><rect x="480.429" y="0.669" width="31.856" height="173.665"/><polygon points="916.137,27.387 916.137,0.669 848.313,0.669 816.457,0.669 759.938,0.669 741.441,27.387 816.457,27.387 816.457,174.334 848.313,174.334 848.313,27.387"/><path d="M678.756,72.6c-16.441,0-57.543,0-81.182,0c-16.438,0-25.689-7.192-25.689-21.58c0-16.44,11.305-23.633,25.689-23.633c22.609,0,110.98,0,110.98,0l14.387-26.718c0,0-107.898,0-126.395,0c-28.775,0-52.407,21.577-52.407,51.382c0,26.715,22.608,48.294,53.434,48.294c17.473,0,69.877,0,81.182,0c18.5,0,28.775,8.224,28.775,23.637c0,13.357-11.305,22.608-28.775,22.608H566.748l-16.44,27.744c0,0,98.649,0,132.558,0c33.912,0,52.406-24.658,52.406-52.404C735.275,96.233,713.695,72.6,678.756,72.6z"/><path d="M104.325,11.972C97.133,23.272,1.564,174.334,1.564,174.334h33.91l31.858-51.381h67.822l17.47-27.746H84.8l36.993-59.602l86.321,137.697h33.911c0,0-94.542-149.001-102.765-162.359C130.013-2.413,113.574-1.387,104.325,11.972z"/><path d="M1079.523,174.334h33.912c0,0-94.539-149.003-102.764-162.362c-9.244-15.415-25.689-14.385-34.938-1.028c-7.195,11.301-102.762,162.359-102.762,162.359h33.91l31.855-51.378h68.852l17.467-27.746h-67.82l36.996-59.603L1079.523,174.334z"/></g></svg></div>
-    <h1>AI Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.6.0</span></h1>
+    <h1>AI Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.7.0</span></h1>
   </div>
   <div class="topbar-right">
     <a href="#" onclick="event.preventDefault();document.getElementById('changelog-modal').classList.add('open')" title="What's new" style="color:var(--text3);margin-right:12px;display:inline-flex;align-items:center;gap:5px;font-size:13px;text-decoration:none;opacity:0.7;transition:opacity .2s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
@@ -1058,6 +1060,76 @@
         </div>
       </div>
 
+      <div class="sidebar-group-label">Storage Network</div>
+      <div class="input-section collapsed" id="section-storage">
+        <div class="input-section-header" onclick="toggleSection('section-storage')">
+          <div class="section-icon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></div>
+          <span class="section-title">Storage Network</span>
+          <span class="section-summary" id="summary-storage"></span>
+          <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="input-section-body">
+          <div class="field" style="margin-bottom:12px">
+            <label>Storage network</label>
+            <span class="optic-toggle" style="margin-left:0">
+              <button type="button" class="optic-toggle-btn active" id="stor-toggle-off" onclick="setStorEnabled(false)">Off</button>
+              <button type="button" class="optic-toggle-btn" id="stor-toggle-on" onclick="setStorEnabled(true)">On</button>
+            </span>
+          </div>
+          <div id="stor-fields" style="display:none">
+            <div class="field">
+              <label for="stor-ratio">Storage nodes per GPU ratio</label>
+              <select id="stor-ratio" onchange="clearResults()">
+                <option value="8">1:8 (1 per 8 GPUs)</option>
+                <option value="16" selected>1:16 (1 per 16 GPUs)</option>
+                <option value="32">1:32 (1 per 32 GPUs)</option>
+                <option value="64">1:64 (1 per 64 GPUs)</option>
+              </select>
+              <div class="hint">storage server density</div>
+            </div>
+            <div class="field">
+              <label for="stor-nic-speed">Storage NIC speed</label>
+              <select id="stor-nic-speed" onchange="syncStorLeafOptions(); clearResults()">
+                <option value="25" selected>25G</option>
+                <option value="100">100G</option>
+              </select>
+              <div class="hint">storage node ↔ leaf switch</div>
+            </div>
+            <div class="field" style="margin-bottom:12px">
+              <label>Connection</label>
+              <span class="optic-toggle" style="margin-left:0">
+                <button type="button" class="optic-toggle-btn active" id="stor-mode-shared" onclick="setStorMode('shared')">Shared Frontend</button>
+                <button type="button" class="optic-toggle-btn" id="stor-mode-dedicated" onclick="setStorMode('dedicated')">Dedicated Fabric</button>
+              </span>
+            </div>
+            <div id="stor-dedicated-fields" style="display:none">
+              <div class="field">
+                <label for="stor-oversub">Oversubscription</label>
+                <select id="stor-oversub" onchange="clearResults()">
+                  <option value="1">1:1 (non-blocking)</option>
+                  <option value="2">2:1</option>
+                  <option value="3">3:1</option>
+                  <option value="4" selected>4:1</option>
+                  <option value="6">6:1</option>
+                  <option value="8">8:1</option>
+                </select>
+                <div class="hint">downlink:uplink ratio target</div>
+              </div>
+              <div class="field">
+                <label for="stor-leaf">Storage leaf switch</label>
+                <select id="stor-leaf"></select>
+              </div>
+              <div class="field">
+                <label for="stor-spine">Storage spine switch</label>
+                <select id="stor-spine">
+                  <option value="none">None (single-tier)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <div class="sidebar-footer">
@@ -1127,6 +1199,14 @@
       <button style="background:none;border:none;cursor:pointer;color:var(--text3);padding:4px" onclick="document.getElementById('changelog-modal').classList.remove('open')"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="changelog-body">
+      <h3>v1.7.0 — July 2025</h3>
+      <ul>
+        <li><strong>Storage network module</strong> — optional storage fabric design with two connection modes: Shared Frontend (storage nodes connect to existing FE leaves) or Dedicated Fabric (independent storage leaf-spine with its own platform selection and oversubscription)</li>
+        <li><strong>Storage node sizing</strong> — GPU ratio dropdown (1:8, 1:16, 1:32, 1:64) automatically calculates storage node count from cluster size</li>
+        <li><strong>Storage optics &amp; power</strong> — separate optics and power estimates for storage switches (SFP28 25G, QSFP28 100G), with amber-colored sections in the combined Optics &amp; Power tab</li>
+        <li><strong>Storage topology integration</strong> — D3 topology viewer shows storage nodes and dedicated switches with amber edges; shared mode connects storage to frontend leaves</li>
+        <li><strong>Storage inline diagram</strong> — Storage Logical Data Path diagram appended below frontend diagram in results</li>
+      </ul>
       <h3>v1.6.0 — July 2025</h3>
       <ul>
         <li><strong>Frontend network module</strong> — optional frontend fabric design alongside the backend AI training network, with its own leaf/spine topology, oversubscription control, and platform selection (7050SX3, 7050CX3, 7280CR3)</li>
@@ -1243,7 +1323,7 @@ function toggleSection(id) {
   updateSectionSummaries();
 }
 
-const SECTION_ORDER = ['section-cluster', 'section-gpu', 'section-tier', 'section-switch', 'section-optics', 'section-fe'];
+const SECTION_ORDER = ['section-cluster', 'section-gpu', 'section-tier', 'section-switch', 'section-optics', 'section-fe', 'section-storage'];
 
 function nextSection(currentId) {
   const idx = SECTION_ORDER.indexOf(currentId);
@@ -1315,6 +1395,18 @@ function updateSectionSummaries() {
       document.getElementById('summary-fe').textContent = 'On · ' + feSpeed + 'G · ' + feOversub + ':1';
     } else {
       document.getElementById('summary-fe').textContent = 'Off';
+    }
+  }
+
+  const storOn = document.getElementById('stor-toggle-on')?.classList.contains('active');
+  if (document.getElementById('summary-storage')) {
+    if (storOn) {
+      const storSpeed = document.getElementById('stor-nic-speed')?.value || '';
+      const storRatio = document.getElementById('stor-ratio')?.value || '';
+      const storDedicated = document.getElementById('stor-mode-dedicated')?.classList.contains('active');
+      document.getElementById('summary-storage').textContent = 'On · ' + (storDedicated ? 'Dedicated' : 'Shared FE') + ' · ' + storSpeed + 'G · 1:' + storRatio;
+    } else {
+      document.getElementById('summary-storage').textContent = 'Off';
     }
   }
 }
@@ -1579,6 +1671,44 @@ function syncFELeafOptions() {
   if (sel.querySelector('option[value="' + prev + '"]')) sel.value = prev;
 }
 
+function setStorEnabled(on) {
+  document.getElementById('stor-toggle-off').className = 'optic-toggle-btn' + (on ? '' : ' active');
+  document.getElementById('stor-toggle-on').className = 'optic-toggle-btn' + (on ? ' active' : '');
+  document.getElementById('stor-fields').style.display = on ? '' : 'none';
+  clearResults();
+}
+function isStorEnabled() {
+  return document.getElementById('stor-toggle-on')?.classList.contains('active') || false;
+}
+function setStorMode(mode) {
+  document.getElementById('stor-mode-shared').className = 'optic-toggle-btn' + (mode === 'shared' ? ' active' : '');
+  document.getElementById('stor-mode-dedicated').className = 'optic-toggle-btn' + (mode === 'dedicated' ? ' active' : '');
+  document.getElementById('stor-dedicated-fields').style.display = mode === 'dedicated' ? '' : 'none';
+  clearResults();
+}
+function isStorDedicated() {
+  return document.getElementById('stor-mode-dedicated')?.classList.contains('active') || false;
+}
+function populateStorDropdowns() {
+  syncStorLeafOptions();
+  const spSel = document.getElementById('stor-spine');
+  spSel.innerHTML = '<option value="none">None (single-tier)</option>';
+  FE_SPINE_PLATFORMS.forEach((p, i) => {
+    spSel.innerHTML += '<option value="' + i + '">' + esc(p.desc) + '</option>';
+  });
+  spSel.value = '0';
+}
+function syncStorLeafOptions() {
+  const speed = parseInt(document.getElementById('stor-nic-speed').value) || 25;
+  const sel = document.getElementById('stor-leaf');
+  const prev = sel.value;
+  sel.innerHTML = '';
+  FE_PLATFORMS.filter(p => p.downlinkSpeed === speed).forEach((p, i) => {
+    sel.innerHTML += '<option value="' + p.name + '">' + esc(p.desc) + '</option>';
+  });
+  if (sel.querySelector('option[value="' + prev + '"]')) sel.value = prev;
+}
+
 function clearResults() {
   document.getElementById('results').innerHTML =
     '<div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg></div><h2>No results yet</h2><p>Enter your cluster size and configuration, then click Calculate to see network requirements.</p></div>';
@@ -1610,8 +1740,14 @@ function resetInputs() {
   document.getElementById('fe-links-per-server').value = 1;
   document.getElementById('fe-nic-speed').value = '25';
   document.getElementById('fe-oversub').value = '3';
+  setStorEnabled(false);
+  setStorMode('shared');
+  document.getElementById('stor-ratio').value = '16';
+  document.getElementById('stor-nic-speed').value = '25';
+  document.getElementById('stor-oversub').value = '4';
   populateDropdowns();
   populateFEDropdowns();
+  populateStorDropdowns();
   filterPlatformDropdowns();
   syncBreakout();
   clearResults();
@@ -1859,6 +1995,7 @@ const APP_VERSION = '1.6.0';
 window.addEventListener('DOMContentLoaded', () => {
   populateDropdowns();
   populateFEDropdowns();
+  populateStorDropdowns();
   filterPlatformDropdowns();
   syncBreakout();
   updateTierHint();
@@ -2129,6 +2266,178 @@ function nextDivisorGte(min, n) {
     if (n % d === 0) return d;
   }
   return min;
+}
+
+function calculateStorage(totalGPUs, feResult) {
+  if (!isStorEnabled()) return null;
+  const storRatio = parseInt(document.getElementById('stor-ratio').value) || 16;
+  const storNicSpeed = parseInt(document.getElementById('stor-nic-speed').value) || 25;
+  const dedicated = isStorDedicated();
+  const storageNodes = Math.ceil(totalGPUs / storRatio);
+  const storLinksTotal = storageNodes;
+
+  if (!dedicated) {
+    if (!feResult) return { error: 'Shared storage requires Frontend Network to be enabled.' };
+    const dlOptics = storLinksTotal * 2;
+    const dlOpticW = dlOptics * (OPTIC_POWER[storNicSpeed]?.conventional || 1.5);
+
+    let summaryContent = '<div class="metrics-grid">';
+    summaryContent += metric(fmtN(storageNodes), 'Storage Nodes', '1 per ' + storRatio + ' GPUs');
+    summaryContent += metric(fmtN(storLinksTotal), 'Storage Links', storNicSpeed + 'G to frontend leaves');
+    summaryContent += metric(fmtN(dlOptics), 'Storage Optics', feOpticType(storNicSpeed));
+    summaryContent += '</div>';
+
+    let optHtml = opticsSection([
+      ['Storage node ↔ frontend leaf links', fmtN(storLinksTotal)],
+      ['In frontend leaf (storage-facing) · ' + feOpticType(storNicSpeed), fmtN(storLinksTotal)],
+      ['In storage node NIC · ' + feOpticType(storNicSpeed), fmtN(storLinksTotal)],
+      ['Storage grand total optics', fmtN(dlOptics), true],
+    ], 'Storage: ' + feOpticType(storNicSpeed) + '. Shared with frontend leaf switches. Typical reach: ~100m (multi-mode).', false);
+
+    function kw(w) { return (w / 1000).toFixed(1) + ' kW'; }
+    let powerHtml = '<div class="result-section"><h3>' + iconPlug() + 'Storage power consumption</h3>';
+    powerHtml += '<table class="breakdown-table">';
+    powerHtml += '<tr><td>Storage optics (' + fmtN(dlOptics) + ')</td><td>' + kw(dlOpticW) + '</td></tr>';
+    powerHtml += '<tr class="subtotal"><td>Storage total power</td><td>' + kw(dlOpticW) + '</td></tr>';
+    powerHtml += '</table><div class="note-box">Shared mode: storage nodes connect to frontend leaf switches. No additional network switches required.</div></div>';
+
+    const diagNodes = [
+      { title: '1× FE Leaf Switch', sub: 'Shared frontend leaf', stacked: true },
+      { link: '1× ' + storNicSpeed + 'G link', optic: { conv: feOpticType(storNicSpeed), lpo: feOpticType(storNicSpeed) } },
+      { title: '1× Storage Node', sub: 'Parallel filesystem / NAS', stacked: storageNodes > 1 },
+    ];
+
+    return { summaryContent, switchHtml: '', optHtml, powerHtml, diagNodes, totalSwitches: 0, totalOptics: dlOptics,
+      powerW: { typ: Math.round(dlOpticW), eightyPct: Math.round(dlOpticW), max: Math.round(dlOpticW) },
+      storageNodes, isShared: true, topoTiers: [], topoLinks: [{ from: 'feLeaf', to: 'storage', bundle: 1, speed: storNicSpeed }],
+      topoHosts: { storageNodes, storNicSpeed } };
+  }
+
+  const storLeafName = document.getElementById('stor-leaf').value;
+  const storSpineVal = document.getElementById('stor-spine').value;
+  const storOversub = parseInt(document.getElementById('stor-oversub').value) || 4;
+
+  const storLeaf = FE_PLATFORMS.find(p => p.name === storLeafName);
+  if (!storLeaf) return null;
+
+  const storLeafCount = Math.ceil(storLinksTotal / storLeaf.downlinkPorts);
+  const hostsPerLeaf = Math.ceil(storLinksTotal / storLeafCount);
+
+  let storSpine = null, storSpineCount = 0, bundleSize = 0, actualOversub = '—';
+  if (storSpineVal !== 'none') {
+    const spIdx = parseInt(storSpineVal);
+    storSpine = FE_SPINE_PLATFORMS[spIdx] || null;
+  }
+  if (storSpine && storLeaf.uplinkPorts > 0) {
+    const downlinkBW = hostsPerLeaf * storLeaf.downlinkSpeed;
+    const uplinksNeeded = Math.max(1, Math.ceil(downlinkBW / (storLeaf.uplinkSpeed * storOversub)));
+    storSpineCount = Math.min(uplinksNeeded, storLeaf.uplinkPorts);
+    bundleSize = 1;
+    if (storLeafCount > storSpine.ports) {
+      storSpineCount = Math.min(storLeaf.uplinkPorts, storSpine.ports);
+    }
+    actualOversub = ((hostsPerLeaf * storLeaf.downlinkSpeed) / (storSpineCount * storLeaf.uplinkSpeed)).toFixed(1);
+  } else if (storLeaf.uplinkPorts > 0) {
+    actualOversub = ((storLeaf.downlinkPorts * storLeaf.downlinkSpeed) / (storLeaf.uplinkPorts * storLeaf.uplinkSpeed)).toFixed(1);
+  }
+
+  const storTotalSwitches = storLeafCount + storSpineCount;
+
+  const dlOptics = storLinksTotal * 2;
+  const ulOptics = storSpineCount > 0 ? storLeafCount * storSpineCount * 2 : 0;
+  const storTotalOptics = dlOptics + ulOptics;
+  const dlOpticW = dlOptics * (OPTIC_POWER[storNicSpeed]?.conventional || 1.5);
+  const ulOpticW = ulOptics * (OPTIC_POWER[storLeaf.uplinkSpeed]?.conventional || 3.5);
+
+  const storLeafPowerTyp = storLeafCount * storLeaf.powerTyp;
+  const storLeafPowerMax = storLeafCount * storLeaf.powerMax;
+  const storSpinePowerTyp = storSpine ? storSpineCount * storSpine.powerTyp : 0;
+  const storSpinePowerMax = storSpine ? storSpineCount * storSpine.powerMax : 0;
+  const storSwitchTypW = storLeafPowerTyp + storSpinePowerTyp;
+  const storSwitchMaxW = storLeafPowerMax + storSpinePowerMax;
+  const storSwitch80W = Math.round(storSwitchMaxW * 0.8);
+  const storOpticW = dlOpticW + ulOpticW;
+
+  let switchHtml = '';
+  if (storSpineCount > 0) {
+    switchHtml += mkSection(iconServer(), 'Storage Spine layer', [
+      ['Spine platform', storSpine.desc],
+      ['Total storage spines', storSpineCount],
+      ['Downlink ports used', storLeafCount + ' of ' + storSpine.ports],
+      ['Leaf ↔ spine links', fmtN(storLeafCount * storSpineCount) + ' (' + storLeafCount + ' leaves × ' + storSpineCount + ' spines)'],
+    ]);
+  }
+  switchHtml += mkSection(iconBranch(), 'Storage Leaf layer', [
+    ['Leaf platform', storLeaf.desc],
+    ['Total storage leaves', storLeafCount],
+    ['Storage links per leaf', hostsPerLeaf + ' × ' + storNicSpeed + 'G'],
+    ['Downlink ports used', hostsPerLeaf + ' of ' + storLeaf.downlinkPorts],
+  ].concat(storSpineCount > 0 ? [
+    ['Uplinks per leaf', storSpineCount + ' × ' + storLeaf.uplinkSpeed + 'G (of ' + storLeaf.uplinkPorts + ' available)'],
+    ['Links per spine', bundleSize],
+    ['Oversubscription', actualOversub + ':1'],
+  ] : []),
+  storSpineCount > 0 ? 'Full mesh: each storage leaf connects to every storage spine.' : 'Single-tier: all storage nodes connect directly to storage leaves.');
+
+  let optRows = [];
+  if (storSpineCount > 0) {
+    const storUplinkTotal = storLeafCount * storSpineCount;
+    optRows.push(['Storage leaf ↔ spine links', fmtN(storUplinkTotal)]);
+    optRows.push(['In storage spine · ' + feOpticType(storLeaf.uplinkSpeed), fmtN(storUplinkTotal)]);
+    optRows.push(['In storage leaf (spine-facing) · ' + feOpticType(storLeaf.uplinkSpeed), fmtN(storUplinkTotal)]);
+    optRows.push(['Storage fabric subtotal', fmtN(ulOptics), true]);
+  }
+  optRows.push(['Storage node ↔ leaf links', fmtN(storLinksTotal), false, storSpineCount > 0]);
+  optRows.push(['In storage leaf (host-facing) · ' + feOpticType(storNicSpeed), fmtN(storLinksTotal)]);
+  optRows.push(['In storage node NIC · ' + feOpticType(storNicSpeed), fmtN(storLinksTotal)]);
+  optRows.push(['Storage host subtotal', fmtN(dlOptics), true]);
+  optRows.push(['Storage grand total optics', fmtN(storTotalOptics), true]);
+  const optHtml = opticsSection(optRows,
+    'Storage fabric: ' + feOpticType(storLeaf.uplinkSpeed) + ' (spine) · ' + feOpticType(storNicSpeed) + ' (host). Typical reach: ~100m (multi-mode).',
+    false);
+
+  function kw(w) { return (w / 1000).toFixed(1) + ' kW'; }
+  function swTriple(t, e, m) {
+    return '<span class="power-typ">' + kw(t) + '</span>'
+      + '<span class="power-80">' + kw(e) + '</span>'
+      + '<span class="power-max">' + kw(m) + '</span>';
+  }
+  let powerHtml = '<div class="result-section"><h3>' + iconPlug() + 'Storage power consumption</h3>';
+  powerHtml += '<table class="breakdown-table">';
+  powerHtml += '<tr><td>Storage optics (' + fmtN(storTotalOptics) + ')</td><td>' + kw(storOpticW) + '</td></tr>';
+  if (storSpineCount > 0) powerHtml += '<tr><td>Storage spine switches (' + fmtN(storSpineCount) + ')</td><td>' + swTriple(storSpinePowerTyp, Math.round(storSpinePowerMax * 0.8), storSpinePowerMax) + '</td></tr>';
+  powerHtml += '<tr><td>Storage leaf switches (' + fmtN(storLeafCount) + ')</td><td>' + swTriple(storLeafPowerTyp, Math.round(storLeafPowerMax * 0.8), storLeafPowerMax) + '</td></tr>';
+  powerHtml += '<tr class="subtotal"><td>Storage total power</td><td>' + swTriple(storSwitchTypW + Math.round(storOpticW), storSwitch80W + Math.round(storOpticW), storSwitchMaxW + Math.round(storOpticW)) + '</td></tr>';
+  powerHtml += '</table></div>';
+
+  let summaryContent = '<div class="metrics-grid">';
+  summaryContent += metric(fmtN(storageNodes), 'Storage Nodes', '1 per ' + storRatio + ' GPUs');
+  summaryContent += metric(fmtN(storLinksTotal), 'Storage Links', storNicSpeed + 'G dedicated fabric');
+  if (storSpineCount > 0) summaryContent += metric(fmtN(storSpineCount), 'Storage Spines', storSpine.name);
+  summaryContent += metric(fmtN(storLeafCount), 'Storage Leaves', storLeaf.name);
+  summaryContent += metric(fmtN(storTotalSwitches), 'Total Storage Switches', 'all tiers');
+  summaryContent += metric(actualOversub + ':1', 'Storage Oversub', hostsPerLeaf + ' nodes/leaf × ' + storNicSpeed + 'G / ' + storSpineCount + '×' + storLeaf.uplinkSpeed + 'G');
+  summaryContent += '</div>';
+
+  const diagNodes = [];
+  if (storSpineCount > 0) {
+    diagNodes.push({ title: '1× Spine Switch', sub: storSpine.name + '\n' + storSpine.ports + '×' + storLeaf.uplinkSpeed + 'G', stacked: storSpineCount > 1 });
+    diagNodes.push({ link: bundleSize + '× ' + storLeaf.uplinkSpeed + 'G uplinks', optic: { conv: feOpticType(storLeaf.uplinkSpeed), lpo: feOpticType(storLeaf.uplinkSpeed) } });
+  }
+  diagNodes.push({ title: '1× Leaf Switch', sub: storLeaf.name + '\n' + storLeaf.downlinkPorts + '×' + storNicSpeed + 'G + ' + storLeaf.uplinkPorts + '×' + storLeaf.uplinkSpeed + 'G', stacked: storLeafCount > 1 });
+  diagNodes.push({ link: '1× ' + storNicSpeed + 'G link', optic: { conv: feOpticType(storNicSpeed), lpo: feOpticType(storNicSpeed) } });
+  diagNodes.push({ title: '1× Storage Node', sub: 'Parallel filesystem / NAS', stacked: storageNodes > 1 });
+
+  const topoTiers = [{ id: 'storLeaf', label: storLeaf.name, perPlane: storLeafCount, radix: storLeaf.downlinkPorts }];
+  const topoLinks = [{ from: 'storage', to: 'storLeaf', bundle: 1, speed: storNicSpeed }];
+  if (storSpineCount > 0) {
+    topoTiers.push({ id: 'storSpine', label: storSpine.name, perPlane: storSpineCount, radix: storSpine.ports });
+    topoLinks.push({ from: 'storLeaf', to: 'storSpine', bundle: bundleSize, speed: storLeaf.uplinkSpeed });
+  }
+
+  return { summaryContent, switchHtml, optHtml, powerHtml, diagNodes, totalSwitches: storTotalSwitches, totalOptics: storTotalOptics,
+    powerW: { typ: storSwitchTypW + Math.round(storOpticW), eightyPct: storSwitch80W + Math.round(storOpticW), max: storSwitchMaxW + Math.round(storOpticW) },
+    storageNodes, isShared: false, topoTiers, topoLinks, topoHosts: { storageNodes, storNicSpeed } };
 }
 
 function calculateFE(hosts, gpusPerNode) {
@@ -3422,6 +3731,46 @@ function calculate() {
     diagramHtml += feDiagHeader + buildDiagram(feResult.diagNodes, 1) + '</div>';
   }
 
+  // Storage network integration
+  const storResult = calculateStorage(gpus, feResult);
+  if (storResult && storResult.error) {
+    summaryContent += '<div class="note-box" style="border-color:#e8a020;background:#fef3e2;color:#8a5d1e">' + esc(storResult.error) + '</div>';
+  } else if (storResult) {
+    if (lastTopoConfig) {
+      lastTopoConfig.storConfig = { tiers: storResult.topoTiers, links: storResult.topoLinks, hosts: storResult.topoHosts, isShared: storResult.isShared };
+    }
+
+    if (feResult) {
+      const existingCombined = summaryContent.match(/<div class="metrics-grid">([\s\S]*?)<\/div>/);
+      if (existingCombined) {
+        const beTotalOptics = opticCounts.spine + opticCounts.hostSwitch + opticCounts.hostEnd + opticCounts.fabric;
+        let combinedSummary = '<div class="metrics-grid">';
+        combinedSummary += metric(fmtN(totalSwitches + feResult.totalSwitches + storResult.totalSwitches), 'Total Switches', 'BE + FE + Storage combined');
+        combinedSummary += metric(fmtN(beTotalOptics + feResult.totalOptics + storResult.totalOptics), 'Total Optics', 'BE + FE + Storage combined');
+        combinedSummary += '</div>';
+        summaryContent = summaryContent.replace(existingCombined[0], combinedSummary);
+      }
+    } else {
+      const beTotalOptics = opticCounts.spine + opticCounts.hostSwitch + opticCounts.hostEnd + opticCounts.fabric;
+      let combinedSummary = '<div class="metrics-grid">';
+      combinedSummary += metric(fmtN(totalSwitches + storResult.totalSwitches), 'Total Switches', 'BE + Storage combined');
+      combinedSummary += metric(fmtN(beTotalOptics + storResult.totalOptics), 'Total Optics', 'BE + Storage combined');
+      combinedSummary += '</div>';
+      summaryContent = combinedSummary + '<div class="network-header backend">Backend Network</div>' + summaryContent;
+    }
+    summaryContent += '<div class="network-divider"></div><div class="network-header storage">Storage Network</div>' + storResult.summaryContent;
+
+    if (storResult.switchHtml) {
+      fabricContent += '<div class="network-divider"></div><div class="network-header storage">Storage Network</div>' + storResult.switchHtml;
+    }
+
+    const storOptPower = '<div class="network-divider"></div><div class="network-header storage">Storage Network</div>' + storResult.optHtml + storResult.powerHtml;
+    optHtml += storOptPower;
+
+    const storDiagHeader = '<div class="diagram-wrapper" style="margin-top:16px"><div class="diag-title"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg> Storage Logical Data Path</div>';
+    diagramHtml += storDiagHeader + buildDiagram(storResult.diagNodes, 1) + '</div>';
+  }
+
   // Planned scale optics & power (when scale-out is enabled)
   let plannedOptPower = '';
   const scaleTarget = getTargetGPUs();
@@ -4002,6 +4351,94 @@ function buildMRCTopoData() {
     }
   }
 
+  // Storage network tiers and edges
+  const storRealIdx = {};
+  if (c.storConfig) {
+    const stor = c.storConfig;
+    const lastRank = Math.max(...nodes.map(n => typeof n.rank === 'number' ? n.rank : 0));
+
+    // Storage host nodes
+    const storCount = stor.hosts.storageNodes;
+    const storRank = lastRank + 1;
+    const storDCount = storCount <= MAX_SHOW ? storCount : 5;
+    const storRowW = (storDCount - 1) * GAP_X;
+    const storSx = (totalPlanesWidth - storRowW) / 2;
+    if (storCount <= MAX_SHOW) {
+      for (let i = 0; i < storCount; i++) {
+        nodes.push({ id: 'storage-' + i, label: 'Storage ' + (i + 1), tier: 'storage', rank: storRank, plane: -1, pos: { x: storSx + i * GAP_X, y: storRank * GAP_Y } });
+      }
+    } else {
+      for (let i = 0; i < 3; i++) {
+        nodes.push({ id: 'storage-' + i, label: 'Storage ' + (i + 1), tier: 'storage', rank: storRank, plane: -1, pos: { x: storSx + i * GAP_X, y: storRank * GAP_Y } });
+      }
+      nodes.push({ id: 'storage-ellipsis', label: '…+' + (storCount - 4) + ' more', tier: 'ellipsis', rank: storRank, plane: -1, pos: { x: storSx + 3 * GAP_X, y: storRank * GAP_Y } });
+      nodes.push({ id: 'storage-' + (storCount - 1), label: 'Storage ' + storCount, tier: 'storage', rank: storRank, plane: -1, pos: { x: storSx + 4 * GAP_X, y: storRank * GAP_Y } });
+    }
+
+    // Dedicated storage tiers
+    stor.tiers.forEach((tier, ti) => {
+      const tRank = storRank + 1 + ti;
+      const count = tier.perPlane;
+      const dCount = count <= MAX_SHOW ? count : 5;
+      const rW = (dCount - 1) * GAP_X;
+      const sx = (totalPlanesWidth - rW) / 2;
+      storRealIdx[tier.id] = [];
+      if (count <= MAX_SHOW) {
+        for (let i = 0; i < count; i++) {
+          storRealIdx[tier.id].push(i);
+          nodes.push({ id: tier.id + '-' + i, label: tier.label + ' ' + (i + 1), tier: tier.id, platform: tier.label, radix: tier.radix, rank: tRank, plane: -1, pos: { x: sx + i * GAP_X, y: tRank * GAP_Y } });
+        }
+      } else {
+        const sf = dCount - 2;
+        for (let i = 0; i < sf; i++) {
+          storRealIdx[tier.id].push(i);
+          nodes.push({ id: tier.id + '-' + i, label: tier.label + ' ' + (i + 1), tier: tier.id, platform: tier.label, radix: tier.radix, rank: tRank, plane: -1, pos: { x: sx + i * GAP_X, y: tRank * GAP_Y } });
+        }
+        nodes.push({ id: tier.id + '-ellipsis', label: '…+' + (count - sf - 1), tier: 'ellipsis', rank: tRank, plane: -1, pos: { x: sx + sf * GAP_X, y: tRank * GAP_Y } });
+        storRealIdx[tier.id].push(count - 1);
+        nodes.push({ id: tier.id + '-' + (count - 1), label: tier.label + ' ' + count, tier: tier.id, platform: tier.label, radix: tier.radix, rank: tRank, plane: -1, pos: { x: sx + (sf + 1) * GAP_X, y: tRank * GAP_Y } });
+      }
+    });
+
+    // Storage edges
+    const storLink = stor.links.find(l => l.from === 'storage');
+    if (storLink) {
+      const storNodes = nodes.filter(n => n.tier === 'storage');
+      if (stor.isShared) {
+        const feLeafNodes = nodes.filter(n => n.tier === 'feLeaf');
+        if (feLeafNodes.length > 0) {
+          for (const sn of storNodes) {
+            edges.push({ source: sn.id, target: feLeafNodes[0].id, label: storLink.bundle + '×' + storLink.speed + 'G', weight: 1.5, bundle: storLink.bundle, speed: storLink.speed, stor: true });
+          }
+        }
+      } else {
+        const storLeafIdxs = storRealIdx[stor.tiers[0]?.id] || [];
+        if (storLeafIdxs.length > 0) {
+          const storLeafTier = stor.tiers[0];
+          const nodesPerLeaf = Math.max(1, Math.floor(storLeafTier.radix / storLink.bundle));
+          for (let si = 0; si < storNodes.length; si++) {
+            const idx = parseInt(storNodes[si].id.replace('storage-', ''));
+            if (isNaN(idx)) continue;
+            const leafIdx = storLeafIdxs[Math.min(Math.floor(idx / nodesPerLeaf), storLeafIdxs.length - 1)];
+            edges.push({ source: storNodes[si].id, target: storLeafTier.id + '-' + leafIdx, label: storLink.bundle + '×' + storLink.speed + 'G', weight: 1.5, bundle: storLink.bundle, speed: storLink.speed, stor: true });
+          }
+        }
+        if (stor.tiers.length > 1) {
+          const sLeafIdxs = storRealIdx[stor.tiers[0].id] || [];
+          const sSpineIdxs = storRealIdx[stor.tiers[1].id] || [];
+          const spLink = stor.links.find(l => l.from === 'storLeaf');
+          if (spLink && sLeafIdxs.length > 0 && sSpineIdxs.length > 0) {
+            for (const li of sLeafIdxs) {
+              for (const si of sSpineIdxs) {
+                edges.push({ source: stor.tiers[0].id + '-' + li, target: stor.tiers[1].id + '-' + si, label: spLink.bundle + '×' + spLink.speed + 'G', weight: 1.5, bundle: spLink.bundle, speed: spLink.speed, stor: true });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   return { nodes, edges, isMRC: true, planeCount };
 }
 
@@ -4377,6 +4814,109 @@ function buildTopoData() {
     }
   }
 
+  // Storage network tiers and edges
+  const storRealIdx = {};
+  if (c.storConfig) {
+    const stor = c.storConfig;
+    const lastRank = Math.max(...nodes.map(n => typeof n.rank === 'number' ? n.rank : 0));
+    const storCount = stor.hosts.storageNodes;
+    const storRank = lastRank + 1;
+    if (storCount <= MAX_SHOW) {
+      for (let i = 0; i < storCount; i++) {
+        nodes.push({ id: 'storage-' + i, label: 'Storage ' + (i + 1), tier: 'storage', rank: storRank, plane: -1 });
+      }
+    } else {
+      for (let i = 0; i < 3; i++) {
+        nodes.push({ id: 'storage-' + i, label: 'Storage ' + (i + 1), tier: 'storage', rank: storRank, plane: -1 });
+      }
+      nodes.push({ id: 'storage-ellipsis', label: '…+' + (storCount - 4) + ' more', tier: 'ellipsis', rank: storRank, plane: -1 });
+      nodes.push({ id: 'storage-' + (storCount - 1), label: 'Storage ' + storCount, tier: 'storage', rank: storRank, plane: -1 });
+    }
+
+    stor.tiers.forEach((tier, ti) => {
+      const tRank = storRank + 1 + ti;
+      const count = tier.perPlane;
+      storRealIdx[tier.id] = [];
+      if (count <= MAX_SHOW) {
+        for (let i = 0; i < count; i++) {
+          storRealIdx[tier.id].push(i);
+          nodes.push({ id: tier.id + '-' + i, label: tier.label + ' ' + (i + 1), tier: tier.id, platform: tier.label, radix: tier.radix, rank: tRank, plane: -1 });
+        }
+      } else {
+        for (let i = 0; i < 3; i++) {
+          storRealIdx[tier.id].push(i);
+          nodes.push({ id: tier.id + '-' + i, label: tier.label + ' ' + (i + 1), tier: tier.id, platform: tier.label, radix: tier.radix, rank: tRank, plane: -1 });
+        }
+        nodes.push({ id: tier.id + '-ellipsis', label: '…+' + (count - 4) + ' more', tier: 'ellipsis', rank: tRank, plane: -1 });
+        storRealIdx[tier.id].push(count - 1);
+        nodes.push({ id: tier.id + '-' + (count - 1), label: tier.label + ' ' + count, tier: tier.id, platform: tier.label, radix: tier.radix, rank: tRank, plane: -1 });
+      }
+    });
+  }
+
+  // Re-layout positions after adding storage nodes
+  const byRank2 = {};
+  nodes.forEach(n => {
+    if (!byRank2[n.rank]) byRank2[n.rank] = [];
+    byRank2[n.rank].push(n);
+  });
+  const ranks2 = Object.keys(byRank2).sort((a, b) => a - b);
+  const maxInRow2 = Math.max(...ranks2.map(r => byRank2[r].length));
+  const totalWidth2 = (maxInRow2 - 1) * GAP_X;
+  for (const rank of ranks2) {
+    const row = byRank2[rank];
+    if (row.every(n => n.pos)) continue;
+    const rowWidth = (row.length - 1) * GAP_X;
+    const startX = (totalWidth2 - rowWidth) / 2;
+    row.forEach((n, i) => {
+      if (!n.pos) n.pos = { x: startX + i * GAP_X, y: parseInt(rank) * GAP_Y };
+    });
+  }
+
+  // Storage edges
+  if (c.storConfig) {
+    const stor = c.storConfig;
+    const storLink = stor.links.find(l => l.from === 'storage');
+    if (storLink) {
+      const storNodes = nodes.filter(n => n.tier === 'storage');
+      if (stor.isShared) {
+        const feLeafNodes = nodes.filter(n => n.tier === 'feLeaf');
+        if (feLeafNodes.length > 0) {
+          for (const sn of storNodes) {
+            edges.push({ source: sn.id, target: feLeafNodes[0].id, label: storLink.bundle + '×' + storLink.speed + 'G', weight: 1.5, bundle: storLink.bundle, speed: storLink.speed, stor: true });
+          }
+        }
+      } else {
+        const storLeafIdxs = storRealIdx[stor.tiers[0]?.id] || [];
+        if (storLeafIdxs.length > 0) {
+          const storLeafTier = stor.tiers[0];
+          const nodesPerLeaf = Math.max(1, Math.floor(storLeafTier.radix / storLink.bundle));
+          for (let si = 0; si < storNodes.length; si++) {
+            const hn = storNodes[si];
+            const idSuffix = hn.id.replace('storage-', '');
+            if (idSuffix === 'last') continue;
+            const realIdx = parseInt(idSuffix);
+            if (isNaN(realIdx)) continue;
+            const leafIdx = storLeafIdxs[Math.min(Math.floor(realIdx / nodesPerLeaf), storLeafIdxs.length - 1)];
+            edges.push({ source: hn.id, target: storLeafTier.id + '-' + leafIdx, label: storLink.bundle + '×' + storLink.speed + 'G', weight: 1.5, bundle: storLink.bundle, speed: storLink.speed, stor: true });
+          }
+        }
+        if (stor.tiers.length > 1) {
+          const sLeafIdxs = storRealIdx[stor.tiers[0].id] || [];
+          const sSpineIdxs = storRealIdx[stor.tiers[1].id] || [];
+          const spLink = stor.links.find(l => l.from === 'storLeaf');
+          if (spLink && sLeafIdxs.length > 0 && sSpineIdxs.length > 0) {
+            for (const li of sLeafIdxs) {
+              for (const si of sSpineIdxs) {
+                edges.push({ source: stor.tiers[0].id + '-' + li, target: stor.tiers[1].id + '-' + si, label: spLink.bundle + '×' + spLink.speed + 'G', weight: 1.5, bundle: spLink.bundle, speed: spLink.speed, stor: true });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   return { nodes, edges };
 }
 
@@ -4502,7 +5042,9 @@ function renderTopology() {
       .attr('x1', srcPos.x).attr('y1', srcPos.y)
       .attr('x2', tgtPos.x).attr('y2', tgtPos.y);
     let sColor, tColor;
-    if (e.fe) {
+    if (e.stor) {
+      sColor = tColor = '#e8a020';
+    } else if (e.fe) {
       sColor = tColor = v('--accent');
     } else if (isMRC && e.plane >= 0) {
       sColor = tColor = RAIL_COLORS[e.plane % RAIL_COLORS.length];
@@ -4591,7 +5133,8 @@ function renderTopology() {
   const minNodeX = Math.min(...data.nodes.map(n => n.pos.x));
   const is3Tier = lastTopoConfig && lastTopoConfig.tier === 3;
   const tierNames = { spine: is3Tier ? 'Super-Spines' : 'Spines', leaf: 'Leaves', edgeLeaf: 'Leaves',
-    aggLeaf: 'Spines', host: 'Hosts', feLeaf: 'FE Leaves', feSpine: 'FE Spines', ellipsis: null };
+    aggLeaf: 'Spines', host: 'Hosts', feLeaf: 'FE Leaves', feSpine: 'FE Spines',
+    storage: 'Storage', storLeaf: 'Stor Leaves', storSpine: 'Stor Spines', ellipsis: null };
   const labeledRanks = new Set();
   for (const n of data.nodes) {
     const name = tierNames[n.tier];
@@ -4636,6 +5179,11 @@ function renderTopology() {
   if (c.feConfig) {
     c.feConfig.tiers.forEach((t, i) => { rankMap[t.id] = c.tiers.length + 1 + i; });
   }
+  let storBaseRank = c.tiers.length + 1 + (c.feConfig ? c.feConfig.tiers.length : 0);
+  if (c.storConfig) {
+    rankMap['storage'] = storBaseRank;
+    c.storConfig.tiers.forEach((t, i) => { rankMap[t.id] = storBaseRank + 1 + i; });
+  }
 
   function drawAnnotation(link, isFE) {
     let fromRank, toRank, labelText;
@@ -4664,7 +5212,7 @@ function renderTopology() {
     const ag = annotGroup.append('g')
       .attr('transform', 'translate(' + ax + ',' + midY + ')');
 
-    const fillColor = isFE ? v('--accent') : v('--primary');
+    const fillColor = isFE === 'storage' ? '#e8a020' : isFE ? v('--accent') : v('--primary');
     const txt = ag.append('text')
       .attr('text-anchor', 'middle').attr('dy', '0.35em')
       .attr('fill', fillColor).attr('font-size', 11).attr('font-weight', 600)
@@ -4686,6 +5234,11 @@ function renderTopology() {
   if (c.feConfig) {
     for (const link of c.feConfig.links) {
       drawAnnotation(link, true);
+    }
+  }
+  if (c.storConfig) {
+    for (const link of c.storConfig.links) {
+      drawAnnotation(link, 'storage');
     }
   }
 
@@ -4755,14 +5308,14 @@ function renderTopology() {
 
   // ── Flow visualization ──
   function findPath(sourceId, targetId) {
-    const isFETier = id => id.startsWith('feLeaf') || id.startsWith('feSpine') || id.includes('-feLeaf-') || id.includes('-feSpine-');
+    const isNonBETier = id => id.startsWith('feLeaf') || id.startsWith('feSpine') || id.includes('-feLeaf-') || id.includes('-feSpine-') || id.startsWith('storage') || id.startsWith('storLeaf') || id.startsWith('storSpine');
     const visited = new Set([sourceId]);
     const queue = [[sourceId, [sourceId]]];
     while (queue.length > 0) {
       const [current, path] = queue.shift();
       if (current === targetId) return path;
       for (const neighbor of (adj[current] || [])) {
-        if (!visited.has(neighbor) && !isFETier(neighbor)) {
+        if (!visited.has(neighbor) && !isNonBETier(neighbor)) {
           visited.add(neighbor);
           queue.push([neighbor, [...path, neighbor]]);
         }
@@ -5166,6 +5719,9 @@ function renderTopology() {
     if (d.tier === 'host') html += '<br>' + lastTopoConfig.hosts.gpusPerNode + ' GPUs/node';
     if (d.tier === 'feLeaf') html += '<br>Frontend leaf switch';
     if (d.tier === 'feSpine') html += '<br>Frontend spine switch';
+    if (d.tier === 'storage') html += '<br>Storage node';
+    if (d.tier === 'storLeaf') html += '<br>Storage leaf switch';
+    if (d.tier === 'storSpine') html += '<br>Storage spine switch';
     const conns = d.realConns || (adj[d.id] || new Set()).size;
     if (conns) html += '<br>Connections: ' + conns;
     tooltip.innerHTML = html;
