@@ -3274,7 +3274,8 @@ function calculate() {
 
     if (shown.length > 0) {
       const tierNames = { 1: 'Single-tier', 2: 'Two-tier', 3: 'Three-tier' };
-      summaryContent += '<div class="result-section"><h3><svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M21 3l-7 7"/><path d="M21 14v5a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h5"/></svg>Alternative Platform Options</h3>';
+      summaryContent += '<div class="result-section"><h3 style="cursor:pointer;user-select:none" onclick="var b=this.nextElementSibling;var open=b.style.display!==\'none\';b.style.display=open?\'none\':\'block\';this.querySelector(\'.alt-chevron\').style.transform=open?\'rotate(-90deg)\':\'\'"><svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M21 3l-7 7"/><path d="M21 14v5a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h5"/></svg>Alternative Platform Options <svg class="alt-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-left:4px;transition:transform 0.15s;transform:rotate(-90deg)"><polyline points="6 9 12 15 18 9"/></svg></h3>';
+      summaryContent += '<div style="display:none">';
       summaryContent += '<div style="font-size:12px;color:var(--text3);margin-bottom:12px">Other valid platform combinations for this cluster. Click Apply to recalculate with that configuration.</div>';
       summaryContent += '<div class="mrc-comparison" style="grid-template-columns:repeat(' + Math.min(shown.length, 3) + ', 1fr)">';
 
@@ -3307,7 +3308,7 @@ function calculate() {
         summaryContent += '</div>';
       }
 
-      summaryContent += '</div></div>';
+      summaryContent += '</div></div></div>';
     }
   }
 
