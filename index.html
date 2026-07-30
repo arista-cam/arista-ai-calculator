@@ -3704,71 +3704,53 @@ function calculate() {
 
   fabricContent = switchHtml + fabricContent;
 
-  // Frontend network integration
+  // Frontend and Storage network integration
   const feResult = calculateFE(hosts, gpusPerNode);
+  const storResult = calculateStorage(gpus, feResult);
+  const hasExtra = feResult || (storResult && !storResult.error);
+  const beTotalOptics = opticCounts.spine + opticCounts.hostSwitch + opticCounts.hostEnd + opticCounts.fabric;
+
   if (feResult) {
-    if (lastTopoConfig) {
-      lastTopoConfig.feConfig = { tiers: feResult.topoTiers, links: feResult.topoLinks, hosts: feResult.topoHosts };
-    }
-    const beTotalOptics = opticCounts.spine + opticCounts.hostSwitch + opticCounts.hostEnd + opticCounts.fabric;
+    if (lastTopoConfig) lastTopoConfig.feConfig = { tiers: feResult.topoTiers, links: feResult.topoLinks, hosts: feResult.topoHosts };
+    diagramHtml += '<div class="diagram-wrapper" style="margin-top:16px"><div class="diag-title"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Front-End Logical Data Path</div>' + buildDiagram(feResult.diagNodes, 1) + '</div>';
+  }
+  if (storResult && storResult.error) {
+    summaryContent += '<div class="note-box" style="border-color:#e8a020;background:#fef3e2;color:#8a5d1e">' + esc(storResult.error) + '</div>';
+  }
+  if (storResult && !storResult.error) {
+    if (lastTopoConfig) lastTopoConfig.storConfig = { tiers: storResult.topoTiers, links: storResult.topoLinks, hosts: storResult.topoHosts, isShared: storResult.isShared };
+    diagramHtml += '<div class="diagram-wrapper" style="margin-top:16px"><div class="diag-title"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg> Storage Logical Data Path</div>' + buildDiagram(storResult.diagNodes, 1) + '</div>';
+  }
+
+  if (hasExtra) {
+    let combinedSw = totalSwitches, combinedOpt = beTotalOptics;
+    const parts = ['BE'];
+    if (feResult) { combinedSw += feResult.totalSwitches; combinedOpt += feResult.totalOptics; parts.push('FE'); }
+    if (storResult && !storResult.error) { combinedSw += storResult.totalSwitches; combinedOpt += storResult.totalOptics; parts.push('Storage'); }
+    const combinedLabel = parts.join(' + ') + ' combined';
+
     let combinedSummary = '<div class="metrics-grid">';
-    combinedSummary += metric(fmtN(totalSwitches + feResult.totalSwitches), 'Total Switches', 'BE + FE combined');
-    combinedSummary += metric(fmtN(beTotalOptics + feResult.totalOptics), 'Total Optics', 'BE + FE combined');
+    combinedSummary += metric(fmtN(combinedSw), 'Total Switches', combinedLabel);
+    combinedSummary += metric(fmtN(combinedOpt), 'Total Optics', combinedLabel);
     combinedSummary += '</div>';
 
     summaryContent = combinedSummary + '<div class="network-header backend">Backend Network</div>' + summaryContent;
-    summaryContent += '<div class="network-divider"></div><div class="network-header frontend">Frontend Network</div>' + feResult.summaryContent;
-
     fabricContent = '<div class="network-header backend">Backend Network</div>' + fabricContent;
-    fabricContent += '<div class="network-divider"></div><div class="network-header frontend">Frontend Network</div>' + feResult.switchHtml;
-
     const beOptPower = '<div class="network-header backend">Backend Network</div>' + optHtml + powerHtml;
-    const feOptPower = '<div class="network-divider"></div><div class="network-header frontend">Frontend Network</div>' + feResult.optHtml + feResult.powerHtml;
-    optHtml = beOptPower + feOptPower;
+    optHtml = beOptPower;
     powerHtml = '';
 
-    const feDiagHeader = '<div class="diagram-wrapper" style="margin-top:16px"><div class="diag-title"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Front-End Logical Data Path</div>';
-    diagramHtml += feDiagHeader + buildDiagram(feResult.diagNodes, 1) + '</div>';
-  }
-
-  // Storage network integration
-  const storResult = calculateStorage(gpus, feResult);
-  if (storResult && storResult.error) {
-    summaryContent += '<div class="note-box" style="border-color:#e8a020;background:#fef3e2;color:#8a5d1e">' + esc(storResult.error) + '</div>';
-  } else if (storResult) {
-    if (lastTopoConfig) {
-      lastTopoConfig.storConfig = { tiers: storResult.topoTiers, links: storResult.topoLinks, hosts: storResult.topoHosts, isShared: storResult.isShared };
-    }
-
     if (feResult) {
-      const existingCombined = summaryContent.match(/<div class="metrics-grid">([\s\S]*?)<\/div>/);
-      if (existingCombined) {
-        const beTotalOptics = opticCounts.spine + opticCounts.hostSwitch + opticCounts.hostEnd + opticCounts.fabric;
-        let combinedSummary = '<div class="metrics-grid">';
-        combinedSummary += metric(fmtN(totalSwitches + feResult.totalSwitches + storResult.totalSwitches), 'Total Switches', 'BE + FE + Storage combined');
-        combinedSummary += metric(fmtN(beTotalOptics + feResult.totalOptics + storResult.totalOptics), 'Total Optics', 'BE + FE + Storage combined');
-        combinedSummary += '</div>';
-        summaryContent = summaryContent.replace(existingCombined[0], combinedSummary);
-      }
-    } else {
-      const beTotalOptics = opticCounts.spine + opticCounts.hostSwitch + opticCounts.hostEnd + opticCounts.fabric;
-      let combinedSummary = '<div class="metrics-grid">';
-      combinedSummary += metric(fmtN(totalSwitches + storResult.totalSwitches), 'Total Switches', 'BE + Storage combined');
-      combinedSummary += metric(fmtN(beTotalOptics + storResult.totalOptics), 'Total Optics', 'BE + Storage combined');
-      combinedSummary += '</div>';
-      summaryContent = combinedSummary + '<div class="network-header backend">Backend Network</div>' + summaryContent;
-    }
-    summaryContent += '<div class="network-divider"></div><div class="network-header storage">Storage Network</div>' + storResult.summaryContent;
-
-    if (storResult.switchHtml) {
-      fabricContent += '<div class="network-divider"></div><div class="network-header storage">Storage Network</div>' + storResult.switchHtml;
+      summaryContent += '<div class="network-divider"></div><div class="network-header frontend">Frontend Network</div>' + feResult.summaryContent;
+      fabricContent += '<div class="network-divider"></div><div class="network-header frontend">Frontend Network</div>' + feResult.switchHtml;
+      optHtml += '<div class="network-divider"></div><div class="network-header frontend">Frontend Network</div>' + feResult.optHtml + feResult.powerHtml;
     }
 
-    const storOptPower = '<div class="network-divider"></div><div class="network-header storage">Storage Network</div>' + storResult.optHtml + storResult.powerHtml;
-    optHtml += storOptPower;
-
-    const storDiagHeader = '<div class="diagram-wrapper" style="margin-top:16px"><div class="diag-title"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg> Storage Logical Data Path</div>';
-    diagramHtml += storDiagHeader + buildDiagram(storResult.diagNodes, 1) + '</div>';
+    if (storResult && !storResult.error) {
+      summaryContent += '<div class="network-divider"></div><div class="network-header storage">Storage Network</div>' + storResult.summaryContent;
+      if (storResult.switchHtml) fabricContent += '<div class="network-divider"></div><div class="network-header storage">Storage Network</div>' + storResult.switchHtml;
+      optHtml += '<div class="network-divider"></div><div class="network-header storage">Storage Network</div>' + storResult.optHtml + storResult.powerHtml;
+    }
   }
 
   // Planned scale optics & power (when scale-out is enabled)
