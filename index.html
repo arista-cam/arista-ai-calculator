@@ -1133,6 +1133,11 @@
         <li><strong>Frontend topology integration</strong> — D3 topology viewer shows frontend leaf/spine tiers below hosts with green edges, backend/frontend divider, and NIC expansion renders dashed FE links downward</li>
         <li><strong>Combined summary metrics</strong> — when frontend is enabled, Summary tab shows combined BE + FE totals for switches and optics, with colored section headers</li>
         <li><strong>Frontend inline diagram</strong> — Front-End Logical Data Path diagram appended below the backend diagram in results</li>
+        <li><strong>Alternative platform options</strong> — platform suggestions replaced with comparison cards in the Summary tab after calculation, showing up to 3 alternatives with % diff badges for switches, optics, RU, and power, plus an "Apply &amp; Recalculate" button</li>
+        <li><strong>Uplinks per spine</strong> — "Balance topology" toggle replaced with an "Uplinks per spine" dropdown that shows valid divisor options with resulting spine counts (e.g. "2 (8 spines/plane)"); topology is now always balanced</li>
+        <li><strong>NICs per GPU moved</strong> — "Links per GPU" renamed to "Physical NICs per GPU" with info tooltip, moved from Cluster Size to the Optics section where it logically belongs</li>
+        <li><strong>GPU NIC link speed</strong> — "Host NIC link speed" renamed to "GPU NIC link speed" with an info tooltip explaining the distinction from breakout</li>
+        <li><strong>Automatic NIC breakout</strong> — Distribute/NIC Breakout toggle removed; NIC breakout is now always active when GPUs have fewer NICs than planes</li>
         <li><strong>NIC breakout fix</strong> — fixed NIC breakout mode undercounting links per plane, which caused scale-out target sizing to accept designs that wouldn't actually fit</li>
         <li><strong>Single-tier summary chips</strong> — switch summary now shows only the chassis platform (not redundant leaf+spine), and optics summary shows host speed only since single-tier has no separate spine speed</li>
         <li><strong>Renamed</strong> — tool renamed from "AI Backend Network Calculator" to "AI Network Calculator"</li>
