@@ -8,10 +8,11 @@ A browser-based tool for sizing AI network fabrics — both backend (GPU trainin
 - **Platform suggestions** — suggests the smallest balanced switch combination based on cluster size, with Apply/Dismiss controls
 - **Frontend network** — optional frontend fabric (management/scheduling) with its own leaf-spine topology, oversubscription control, and combined optics & power reporting alongside the backend
 - **Storage network** — optional storage fabric with two connection modes: shared (storage nodes on frontend leaves) or dedicated (independent storage leaf-spine), sized by GPU ratio (1:8 to 1:64)
-- **Full optics breakdown** — per-device transceiver counts (spine, leaf uplink/downlink, host NIC) with Conventional/LPO toggle (LPO available at 800G only), OSFP form factor for all switch ports
+- **Full optics breakdown** — per-device transceiver counts (spine, leaf uplink/downlink, host NIC) with Conventional/LPO toggle (LPO available at 800G), OSFP form factor for all switch ports; supports 100G–1.6T optics
 - **Interactive topology** — D3-powered diagrams with multi-plane view; click any compute node to expand GPU/NIC detail with plane-colored connectivity lines; frontend tiers shown below hosts with green edges and backend/frontend divider
 - **Multi-plane NIC breakout** — correctly models single-NIC hosts across multiple planes (e.g. 1×800G NIC → 4×200G links, one per plane)
-- **Spine-link breakout** — host port breakout (e.g. 800G → 2×400G) automatically applies to spine-facing uplinks too, doubling effective connectivity with 800G breakout optics
+- **Spine-link breakout** — host port breakout (e.g. 800G → 2×400G) automatically applies to spine-facing uplinks too, doubling effective connectivity with breakout optics
+- **1.6T Ethernet** — full support for 1.6T spine and host speeds with decoupled spine speed selection (e.g. 800G hosts with 1.6T spine fabric)
 - **Built-in validation** — hard errors for invalid topologies and warnings for unbalanced fabrics, with minimum platform suggestions
 - **Light/dark theme** — follows system preference automatically
 - **Print-friendly** — clean output for reports and proposals
@@ -25,6 +26,7 @@ Traditional Clos topologies using independent switches interconnected with stand
 | Platform | Ports | Type |
 |----------|-------|------|
 | 7060X6 | 32 / 64 | Fixed 800G |
+| 7060XE7 | 64 | Fixed 1.6T |
 | 7800R4 | 144 / 288 / 432 / 576 | Chassis (4/8/12/16-slot × 36-port line cards) |
 
 Use standard platforms when you need flexible topology design, custom oversubscription ratios, or clusters that don't fit the DES constraints.
@@ -76,19 +78,19 @@ The tool suggests optimal switch platforms based on your inputs. Apply the sugge
 | Input | Description |
 |-------|-------------|
 | Total GPUs / Nodes | Cluster size — syncs bidirectionally |
-| GPUs per node | Typically 8 for modern GPU servers |
+| GPUs per node | 8 for GPU servers, 72 for NVL72 rack-scale (auto-set by GPU model) |
 | Links per GPU | Backend NIC links (1 standard, 2 for dual-rail) |
 | Fabric tier | Single, two-tier, three-tier Clos, or DES |
 | Leaf / Spine switch | Arista platform or custom port count |
 | Planes | Redundant parallel fabrics (1–8) |
 | Downlink:Uplink ratio | Port allocation ratio (1 = non-blocking, <1 = more uplinks) |
 | Host port breakout | Switch port splitting (1:1, 1:2, 1:4) — applies to both host-facing and spine-facing ports |
-| Spine / Host link speed | Spine link speed auto-syncs with breakout (e.g. 1:2 → 400G). 100G–800G host links |
+| Spine / Host link speed | Independently selectable spine speed (100G–1.6T); host link speed 100G–1.6T |
 
 ## Output
 
 - **Metrics grid** — total GPUs, backend links, spine/leaf/total switch counts
 - **Switch breakdown** — per-tier tables with platform names, switch counts per plane, port utilization, and bundle sizes
 - **Interactive topology diagram** — D3-powered visualization with multi-plane view, click-to-expand GPU/NIC detail showing per-GPU connectivity to leaf switches with plane-colored links
-- **Optics breakdown** — transceiver counts by tier and type (QSFP28, QSFP-DD, OSFP) with grand total, plus a **Conventional / LPO** toggle (shown only when 800G optics are in the design) to switch between standard DSP-based and Linear Pluggable Optics
+- **Optics breakdown** — transceiver counts by tier and type (QSFP28, QSFP-DD, OSFP, OSFP-1.6T) with grand total, plus a **FRO / LPO** toggle (shown when 800G optics are in the design) to switch between standard DSP-based and Linear Pluggable Optics
 - **Estimated power consumption** — optics and switch power with a **Typical / 80% / Max** toggle. Switch power figures sourced from Arista platform datasheets (excludes optics, calculated separately). LPO mode shows total power savings vs conventional
