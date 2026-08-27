@@ -770,7 +770,7 @@
 <div class="topbar">
   <div class="topbar-left">
     <div class="topbar-logo"><svg viewBox="0 0 1115 175" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="M391.027,103.426c36.994,0,55.491-25.688,55.491-51.378c0-25.688-18.498-50.353-57.546-50.353c-28.773-1.029-134.617-1.029-134.617-1.029v173.668h32.879V28.413c25.691,0,90.43,0,103.79,0c18.496,0,27.745,6.163,27.745,23.635c0,14.385-9.247,22.606-26.718,22.606h-86.315l102.761,98.648h40.078l-73.991-71.932C381.78,103.426,390,103.426,391.027,103.426z"/><rect x="480.429" y="0.669" width="31.856" height="173.665"/><polygon points="916.137,27.387 916.137,0.669 848.313,0.669 816.457,0.669 759.938,0.669 741.441,27.387 816.457,27.387 816.457,174.334 848.313,174.334 848.313,27.387"/><path d="M678.756,72.6c-16.441,0-57.543,0-81.182,0c-16.438,0-25.689-7.192-25.689-21.58c0-16.44,11.305-23.633,25.689-23.633c22.609,0,110.98,0,110.98,0l14.387-26.718c0,0-107.898,0-126.395,0c-28.775,0-52.407,21.577-52.407,51.382c0,26.715,22.608,48.294,53.434,48.294c17.473,0,69.877,0,81.182,0c18.5,0,28.775,8.224,28.775,23.637c0,13.357-11.305,22.608-28.775,22.608H566.748l-16.44,27.744c0,0,98.649,0,132.558,0c33.912,0,52.406-24.658,52.406-52.404C735.275,96.233,713.695,72.6,678.756,72.6z"/><path d="M104.325,11.972C97.133,23.272,1.564,174.334,1.564,174.334h33.91l31.858-51.381h67.822l17.47-27.746H84.8l36.993-59.602l86.321,137.697h33.911c0,0-94.542-149.001-102.765-162.359C130.013-2.413,113.574-1.387,104.325,11.972z"/><path d="M1079.523,174.334h33.912c0,0-94.539-149.003-102.764-162.362c-9.244-15.415-25.689-14.385-34.938-1.028c-7.195,11.301-102.762,162.359-102.762,162.359h33.91l31.855-51.378h68.852l17.467-27.746h-67.82l36.996-59.603L1079.523,174.334z"/></g></svg></div>
-    <h1>AI Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.8.0</span></h1>
+    <h1>AI Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.8.1</span></h1>
   </div>
   <div class="topbar-right">
     <a href="#" onclick="event.preventDefault();document.getElementById('changelog-modal').classList.add('open')" title="What's new" style="color:var(--text3);margin-right:12px;display:inline-flex;align-items:center;gap:5px;font-size:13px;text-decoration:none;opacity:0.7;transition:opacity .2s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
@@ -951,7 +951,7 @@
           </div>
           <div class="field" id="balance-row">
             <label>Uplinks per spine <span class="info-tip" data-tip="Number of uplink connections from each leaf to each spine switch. Higher values reduce spine count but lower path diversity. The topology is always balanced — every option produces even link distribution."><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.2"/><text x="8" y="12" text-anchor="middle" font-size="10" font-weight="600" font-style="italic" fill="currentColor">i</text></svg></span></label>
-            <select id="uplinks-per-spine" onchange="clearResults()">
+            <select id="uplinks-per-spine" onchange="clearResults(); this.dataset.userSet='true'">
               <option value="1" selected>1</option>
             </select>
           </div>
@@ -1199,6 +1199,11 @@
       <button style="background:none;border:none;cursor:pointer;color:var(--text3);padding:4px" onclick="document.getElementById('changelog-modal').classList.remove('open')"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="changelog-body">
+      <h3>v1.8.1 — August 2025</h3>
+      <ul>
+        <li><strong>Single-tier modular comparison fix</strong> — fixed crash when calculating single-tier designs with fixed platforms (e.g. 7060X6, 7060XE7) where the modular-vs-fixed comparison tried to access a null leaf platform</li>
+        <li><strong>Spine count default fix</strong> — two-tier and three-tier designs now default to capacity-matched spine count instead of always using non-blocking maximum, preventing absurdly high spine counts for small clusters (e.g. 64 spines for 16 GPUs); users can still select non-blocking via the uplinks-per-spine dropdown</li>
+      </ul>
       <h3>v1.8.0 — August 2025</h3>
       <ul>
         <li><strong>NVIDIA Rubin GPU support</strong> — added Vera Rubin NVL72 (72 GPUs, 2× CX9 800G per GPU), DGX Rubin NVL8, and HGX Rubin NVL8 (8 GPUs, 1× CX9 800G per GPU) to the GPU model selector</li>
@@ -1735,6 +1740,7 @@ function resetInputs() {
   document.getElementById('planes').value = 1;
   document.getElementById('oversub').value = 1;
   document.getElementById('uplinks-per-spine').value = '1';
+  document.getElementById('uplinks-per-spine').dataset.userSet = '';
   document.getElementById('breakout').value = 2;
   document.getElementById('spine-speed').value = 800;
   document.getElementById('host-speed').value = 400;
@@ -1963,6 +1969,7 @@ function applyAlternative(spineRadix, leafRadix) {
 
 function updateTierHint() {
   clearResults();
+  document.getElementById('uplinks-per-spine').dataset.userSet = '';
   const t = document.querySelector('input[name=tier]:checked').value;
   document.getElementById('tier-hint').textContent = TIER_HINTS[t];
 
@@ -1999,7 +2006,7 @@ function updateTierHint() {
   autoSelectPlatforms();
 }
 
-const APP_VERSION = '1.8.0';
+const APP_VERSION = '1.8.1';
 
 window.addEventListener('DOMContentLoaded', () => {
   populateDropdowns();
@@ -2159,7 +2166,11 @@ function updateUplinksPerSpineOptions() {
   }
 
   const prevOption = [...select.options].find(o => o.value === prev);
-  select.value = prevOption ? prev : '1';
+  if (select.dataset.userSet === 'true' && prevOption) {
+    select.value = prev;
+  } else {
+    select.value = select.options[select.options.length - 1]?.value || '1';
+  }
 }
 
 function opticType(speed, tier, peerSpeed) {
@@ -3429,20 +3440,21 @@ function calculate() {
     } else {
       const chassis = PLATFORMS.filter(p => p.type === 'chassis');
       const canSingleTier = chassis.some(ch => Math.ceil(modularLPP / breakout) <= ch.radix);
+      const altLeaf = leafPlatform || LEAF_PLATFORMS[LEAF_PLATFORMS.length - 1];
       if (canSingleTier && tierNum >= 2) {
         for (const ch of chassis) {
-          const d = calcAltDesign(ch, leafPlatform, 1);
+          const d = calcAltDesign(ch, altLeaf, 1);
           if (d) { alt = d; break; }
         }
         if (alt) altLabel = 'Single-Tier Modular (' + alt.spName + ')';
       }
       if (!alt) {
         for (const ch of chassis) {
-          const d = calcAltDesign(ch, leafPlatform, 2);
+          const d = calcAltDesign(ch, altLeaf, 2);
           if (d && d.maxScale >= scaleGpus) { alt = d; break; }
         }
         if (!alt && chassis.length > 0) {
-          const d = calcAltDesign(chassis[chassis.length - 1], leafPlatform, 2);
+          const d = calcAltDesign(chassis[chassis.length - 1], altLeaf, 2);
           if (d && d.maxScale >= scaleGpus) alt = d;
         }
         if (alt) altLabel = '2-Tier Modular (' + alt.spName + ')';
