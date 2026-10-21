@@ -990,6 +990,11 @@
             <input type="number" id="spine-radix-custom" min="2" max="1024" step="2" placeholder="ports" style="display:none; margin-top:4px" oninput="clearResults()">
             <div class="hint" id="spine-radix-hint">Arista switching platform</div>
           </div>
+          <div class="field">
+            <label>Planes</label>
+            <input type="number" id="planes" min="1" max="8" value="1" oninput="syncBreakout(); autoSelectPlatforms()">
+            <div class="hint">redundant fabrics</div>
+          </div>
           <div id="switch-advanced-fields">
           <div class="field" id="single-tier-ports-row" style="display:none">
             <label>Ports per line card</label>
@@ -997,11 +1002,6 @@
             <div class="hint">e.g. 36 for 800G, 32 for 1.6T</div>
           </div>
           <div class="field-row">
-            <div class="field">
-              <label>Planes</label>
-              <input type="number" id="planes" min="1" max="8" value="1" oninput="syncBreakout(); autoSelectPlatforms()">
-              <div class="hint">redundant fabrics</div>
-            </div>
             <div class="field">
               <label>Rails <span class="info-tip" data-tip="Number of rails (leaf groups). Each rail serves the same GPU index across all nodes. Leaf count per plane is rounded up to a multiple of the rail count to match reference architectures."><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.2"/><text x="8" y="12" text-anchor="middle" font-size="10" font-weight="600" font-style="italic" fill="currentColor">i</text></svg></span></label>
               <input type="number" id="rail-count" min="1" max="32" value="1" oninput="clearResults(); autoSelectPlatforms()">
@@ -1105,6 +1105,8 @@
                 <option value="10">10G</option>
                 <option value="25" selected>25G</option>
                 <option value="100">100G</option>
+                <option value="400">400G</option>
+                <option value="800">800G</option>
               </select>
               <div class="hint">server ↔ frontend leaf</div>
             </div>
@@ -1121,7 +1123,7 @@
             </div>
             <div class="field">
               <label for="fe-leaf">Frontend leaf switch</label>
-              <select id="fe-leaf"></select>
+              <select id="fe-leaf" onchange="syncFESpineOptions(); clearResults()"></select>
             </div>
             <div class="field">
               <label for="fe-spine">Frontend spine switch</label>
@@ -1165,6 +1167,8 @@
               <select id="stor-nic-speed" onchange="syncStorLeafOptions(); clearResults()">
                 <option value="25" selected>25G</option>
                 <option value="100">100G</option>
+                <option value="400">400G</option>
+                <option value="800">800G</option>
               </select>
               <div class="hint">storage node ↔ leaf switch</div>
             </div>
@@ -1190,7 +1194,7 @@
               </div>
               <div class="field">
                 <label for="stor-leaf">Storage leaf switch</label>
-                <select id="stor-leaf"></select>
+                <select id="stor-leaf" onchange="syncStorSpineOptions(); clearResults()"></select>
               </div>
               <div class="field">
                 <label for="stor-spine">Storage spine switch</label>
@@ -1672,16 +1676,24 @@ const PLATFORMS = [
 ];
 
 const FE_PLATFORMS = [
-  { name: '7050SX3-48C8',    downlinkPorts: 48, uplinkPorts: 8,  downlinkSpeed: 10,  uplinkSpeed: 100, desc: '7050SX3-48C8 (48×10G + 8×100G)',    powerTyp: 106, powerMax: 285, ru: 1 },
-  { name: '7050SX3-48YC8C',  downlinkPorts: 48, uplinkPorts: 8,  downlinkSpeed: 25,  uplinkSpeed: 100, desc: '7050SX3-48YC8C (48×25G + 8×100G)',  powerTyp: 105, powerMax: 259, ru: 1 },
-  { name: '7050SX3-48YC12',  downlinkPorts: 48, uplinkPorts: 12, downlinkSpeed: 25,  uplinkSpeed: 100, desc: '7050SX3-48YC12 (48×25G + 12×100G)', powerTyp: 170, powerMax: 325, ru: 1 },
-  { name: '7050SX3-96YC8',   downlinkPorts: 96, uplinkPorts: 8,  downlinkSpeed: 25,  uplinkSpeed: 100, desc: '7050SX3-96YC8 (96×25G + 8×100G)',  powerTyp: 218, powerMax: 453, ru: 2 },
-  { name: '7050CX3-32C',     downlinkPorts: 32, uplinkPorts: 0,  downlinkSpeed: 100, uplinkSpeed: 100, desc: '7050CX3-32C (32×100G)',              powerTyp: 165, powerMax: 334, ru: 1 },
+  { name: '7050SX3-48C8',    downlinkPorts: 48, uplinkPorts: 8,  downlinkSpeed: 10,  portSpeed: 10,  uplinkSpeed: 100, desc: '7050SX3-48C8 (48×10G + 8×100G)',    powerTyp: 106, powerMax: 285, ru: 1 },
+  { name: '7050SX3-48YC8C',  downlinkPorts: 48, uplinkPorts: 8,  downlinkSpeed: 25,  portSpeed: 25,  uplinkSpeed: 100, desc: '7050SX3-48YC8C (48×25G + 8×100G)',  powerTyp: 105, powerMax: 259, ru: 1 },
+  { name: '7050SX3-48YC12',  downlinkPorts: 48, uplinkPorts: 12, downlinkSpeed: 25,  portSpeed: 25,  uplinkSpeed: 100, desc: '7050SX3-48YC12 (48×25G + 12×100G)', powerTyp: 170, powerMax: 325, ru: 1 },
+  { name: '7050SX3-96YC8',   downlinkPorts: 96, uplinkPorts: 8,  downlinkSpeed: 25,  portSpeed: 25,  uplinkSpeed: 100, desc: '7050SX3-96YC8 (96×25G + 8×100G)',  powerTyp: 218, powerMax: 453, ru: 2 },
+  { name: '7050CX3-32C',     downlinkPorts: 32, uplinkPorts: 0,  downlinkSpeed: 100, portSpeed: 100, uplinkSpeed: 100, desc: '7050CX3-32C (32×100G)',              powerTyp: 165, powerMax: 334, ru: 1 },
+  { name: '7060X6-64-FE',    downlinkPorts: 64, uplinkPorts: 0,  downlinkSpeed: 400, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 64-port (64×800G, single-tier)', powerTyp: 640, powerMax: 1194, ru: 2 },
+  { name: '7060X6-32-48/16', downlinkPorts: 48, uplinkPorts: 16, downlinkSpeed: 400, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 64-port (48×800G down + 16×800G up)', powerTyp: 640, powerMax: 1194, ru: 2 },
+  { name: '7060X6-32-ST',    downlinkPorts: 32, uplinkPorts: 0,  downlinkSpeed: 800, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 32-port (32×800G, single-tier)', powerTyp: 320, powerMax: 600, ru: 1 },
+  { name: '7060X6-64-ST',    downlinkPorts: 64, uplinkPorts: 0,  downlinkSpeed: 800, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 64-port (64×800G, single-tier)', powerTyp: 640, powerMax: 1194, ru: 2 },
+  { name: '7060X6-32-16/16', downlinkPorts: 16, uplinkPorts: 16, downlinkSpeed: 800, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 32-port (16×800G down + 16×800G up)', powerTyp: 320, powerMax: 600, ru: 1 },
+  { name: '7060X6-64-48/16', downlinkPorts: 48, uplinkPorts: 16, downlinkSpeed: 800, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 64-port (48×800G down + 16×800G up)', powerTyp: 640, powerMax: 1194, ru: 2 },
 ];
 const FE_SPINE_PLATFORMS = [
-  { name: '7050CX3-32C',  ports: 32, desc: '7050CX3-32C (32×100G)',  powerTyp: 165, powerMax: 334, ru: 1 },
-  { name: '7280CR3-36S',  ports: 36, desc: '7280CR3-36S (36×100G)',  powerTyp: 254, powerMax: 690, ru: 1 },
-  { name: '7280CR3-32P4', ports: 32, desc: '7280CR3-32P4 (32×100G)', powerTyp: 535, powerMax: 849, ru: 1 },
+  { name: '7050CX3-32C',  ports: 32, speed: 100, desc: '7050CX3-32C (32×100G)',  powerTyp: 165, powerMax: 334, ru: 1 },
+  { name: '7280CR3-36S',  ports: 36, speed: 100, desc: '7280CR3-36S (36×100G)',  powerTyp: 254, powerMax: 690, ru: 1 },
+  { name: '7280CR3-32P4', ports: 32, speed: 100, desc: '7280CR3-32P4 (32×100G)', powerTyp: 535, powerMax: 849, ru: 1 },
+  { name: '7060X6-32',    ports: 32, speed: 800, desc: '7060X6 32-port (32×800G)',  powerTyp: 320, powerMax: 600, ru: 1 },
+  { name: '7060X6-64',    ports: 64, speed: 800, desc: '7060X6 64-port (64×800G)',  powerTyp: 640, powerMax: 1194, ru: 2 },
 ];
 
 /* GPU server and rack-scale models with per-model networking defaults.
@@ -1988,22 +2000,39 @@ function isFEEnabled() {
 }
 function populateFEDropdowns() {
   syncFELeafOptions();
+  syncFESpineOptions();
+}
+function syncFESpineOptions() {
+  const leafName = document.getElementById('fe-leaf').value;
+  const leaf = FE_PLATFORMS.find(p => p.name === leafName);
+  const ulSpeed = leaf ? leaf.uplinkSpeed : 100;
   const spSel = document.getElementById('fe-spine');
+  const prev = spSel.value;
   spSel.innerHTML = '<option value="none">None (single-tier)</option>';
-  FE_SPINE_PLATFORMS.forEach((p, i) => {
-    spSel.innerHTML += '<option value="' + i + '">' + esc(p.desc) + '</option>';
+  FE_SPINE_PLATFORMS.filter(p => p.speed === ulSpeed).forEach(p => {
+    const idx = FE_SPINE_PLATFORMS.indexOf(p);
+    spSel.innerHTML += '<option value="' + idx + '">' + esc(p.desc) + '</option>';
   });
-  spSel.value = '0';
+  if (spSel.querySelector('option[value="' + prev + '"]')) spSel.value = prev;
+  else if (leaf && leaf.uplinkPorts > 0) spSel.selectedIndex = 1;
+  else spSel.value = 'none';
 }
 function syncFELeafOptions() {
   const speed = parseInt(document.getElementById('fe-nic-speed').value) || 25;
   const sel = document.getElementById('fe-leaf');
   const prev = sel.value;
   sel.innerHTML = '';
-  FE_PLATFORMS.filter(p => p.downlinkSpeed === speed).forEach((p, i) => {
-    sel.innerHTML += '<option value="' + p.name + '">' + esc(p.desc) + '</option>';
+  FE_PLATFORMS.filter(p => p.downlinkSpeed <= speed && p.portSpeed >= speed).forEach(p => {
+    const breakout = p.portSpeed / speed;
+    const effDown = p.downlinkPorts * breakout;
+    const effUp = p.uplinkPorts > 0 ? p.uplinkPorts : 0;
+    const label = breakout > 1
+      ? p.name + ' (' + effDown + '×' + speed + 'G' + (effUp > 0 ? ' + ' + effUp + '×' + p.uplinkSpeed + 'G up' : ', single-tier') + ' via ' + breakout + ':1 breakout)'
+      : p.desc;
+    sel.innerHTML += '<option value="' + p.name + '">' + esc(label) + '</option>';
   });
   if (sel.querySelector('option[value="' + prev + '"]')) sel.value = prev;
+  syncFESpineOptions();
 }
 
 function setStorEnabled(on) {
@@ -2026,22 +2055,39 @@ function isStorDedicated() {
 }
 function populateStorDropdowns() {
   syncStorLeafOptions();
-  const spSel = document.getElementById('stor-spine');
-  spSel.innerHTML = '<option value="none">None (single-tier)</option>';
-  FE_SPINE_PLATFORMS.forEach((p, i) => {
-    spSel.innerHTML += '<option value="' + i + '">' + esc(p.desc) + '</option>';
-  });
-  spSel.value = '0';
+  syncStorSpineOptions();
 }
 function syncStorLeafOptions() {
   const speed = parseInt(document.getElementById('stor-nic-speed').value) || 25;
   const sel = document.getElementById('stor-leaf');
   const prev = sel.value;
   sel.innerHTML = '';
-  FE_PLATFORMS.filter(p => p.downlinkSpeed === speed).forEach((p, i) => {
-    sel.innerHTML += '<option value="' + p.name + '">' + esc(p.desc) + '</option>';
+  FE_PLATFORMS.filter(p => p.downlinkSpeed <= speed && p.portSpeed >= speed).forEach(p => {
+    const breakout = p.portSpeed / speed;
+    const effDown = p.downlinkPorts * breakout;
+    const effUp = p.uplinkPorts > 0 ? p.uplinkPorts : 0;
+    const label = breakout > 1
+      ? p.name + ' (' + effDown + '×' + speed + 'G' + (effUp > 0 ? ' + ' + effUp + '×' + p.uplinkSpeed + 'G up' : ', single-tier') + ' via ' + breakout + ':1 breakout)'
+      : p.desc;
+    sel.innerHTML += '<option value="' + p.name + '">' + esc(label) + '</option>';
   });
   if (sel.querySelector('option[value="' + prev + '"]')) sel.value = prev;
+  syncStorSpineOptions();
+}
+function syncStorSpineOptions() {
+  const leafName = document.getElementById('stor-leaf').value;
+  const leaf = FE_PLATFORMS.find(p => p.name === leafName);
+  const ulSpeed = leaf ? leaf.uplinkSpeed : 100;
+  const spSel = document.getElementById('stor-spine');
+  const prev = spSel.value;
+  spSel.innerHTML = '<option value="none">None (single-tier)</option>';
+  FE_SPINE_PLATFORMS.filter(p => p.speed === ulSpeed).forEach(p => {
+    const idx = FE_SPINE_PLATFORMS.indexOf(p);
+    spSel.innerHTML += '<option value="' + idx + '">' + esc(p.desc) + '</option>';
+  });
+  if (spSel.querySelector('option[value="' + prev + '"]')) spSel.value = prev;
+  else if (leaf && leaf.uplinkPorts > 0) spSel.selectedIndex = 1;
+  else spSel.value = 'none';
 }
 
 function clearResults() {
@@ -2758,7 +2804,7 @@ function fabricReach(leafPS, spinePS) {
 }
 
 function feOpticType(speed) {
-  return { 10: 'SFP+ 10G-SR', 25: 'SFP28 25G-SR', 100: 'QSFP28 100G-SR4' }[speed] || speed + 'G';
+  return { 10: 'SFP+ 10G-SR', 25: 'SFP28 25G-SR', 100: 'QSFP28 100G-SR4', 400: 'OSFP 400G 2DR4', 800: 'OSFP 800G 2DR4' }[speed] || speed + 'G';
 }
 
 function toggleOpticMode(mode) {
@@ -2943,7 +2989,9 @@ function calculateStorage(totalGPUs, feResult) {
   const storLeaf = FE_PLATFORMS.find(p => p.name === storLeafName);
   if (!storLeaf) return null;
 
-  const storLeafCount = Math.ceil(storLinksTotal / storLeaf.downlinkPorts);
+  const storBreakout = storLeaf.portSpeed / storNicSpeed;
+  const storEffDownlinks = storLeaf.downlinkPorts * storBreakout;
+  const storLeafCount = Math.ceil(storLinksTotal / storEffDownlinks);
   const hostsPerLeaf = Math.ceil(storLinksTotal / storLeafCount);
 
   let storSpine = null, storSpineCount = 0, bundleSize = 0, actualOversub = '—';
@@ -2994,7 +3042,7 @@ function calculateStorage(totalGPUs, feResult) {
     ['Leaf platform', storLeaf.desc],
     ['Total storage leaves', storLeafCount],
     ['Storage links per leaf', hostsPerLeaf + ' × ' + storNicSpeed + 'G'],
-    ['Downlink ports used', hostsPerLeaf + ' of ' + storLeaf.downlinkPorts],
+    ['Downlink ports used', hostsPerLeaf + ' of ' + storEffDownlinks + (storBreakout > 1 ? ' (' + storLeaf.downlinkPorts + '×' + storLeaf.portSpeed + 'G with ' + storBreakout + ':1 breakout)' : '')],
   ].concat(storSpineCount > 0 ? [
     ['Uplinks per leaf', storSpineCount + ' × ' + storLeaf.uplinkSpeed + 'G (of ' + storLeaf.uplinkPorts + ' available)'],
     ['Links per spine', bundleSize],
@@ -3084,9 +3132,11 @@ function calculateFE(hosts) {
   const feLeaf = FE_PLATFORMS.find(p => p.name === feLeafName);
   if (!feLeaf) return null;
 
+  const feBreakout = feLeaf.portSpeed / feNicSpeed;
+  const feEffDownlinks = feLeaf.downlinkPorts * feBreakout;
   const feLinksPerNode = feLinksPerServer;
   const feLinksTotal = hosts * feLinksPerServer;
-  const feLeafCount = Math.ceil(feLinksTotal / feLeaf.downlinkPorts);
+  const feLeafCount = Math.ceil(feLinksTotal / feEffDownlinks);
   const linksPerLeaf = Math.ceil(feLinksTotal / feLeafCount);
 
   let feSpine = null, feSpineCount = 0, bundleSize = 0, actualOversub = '—';
@@ -3139,7 +3189,7 @@ function calculateFE(hosts) {
     ['Leaf platform', feLeaf.desc],
     ['Total frontend leaves', feLeafCount],
     ['Host links per leaf', linksPerLeaf + ' × ' + feNicSpeed + 'G'],
-    ['Downlink ports used', linksPerLeaf + ' of ' + feLeaf.downlinkPorts],
+    ['Downlink ports used', linksPerLeaf + ' of ' + feEffDownlinks + (feBreakout > 1 ? ' (' + feLeaf.downlinkPorts + '×' + feLeaf.portSpeed + 'G with ' + feBreakout + ':1 breakout)' : '')],
   ].concat(feSpineCount > 0 ? [
     ['Uplinks per leaf', feUplinksPerLeaf + ' × ' + feLeaf.uplinkSpeed + 'G (of ' + feLeaf.uplinkPorts + ' available)'],
     ['Links per spine', bundleSize],
@@ -3212,7 +3262,7 @@ function calculateFE(hosts) {
   return { summaryContent, switchHtml, optHtml, powerHtml, diagTitle, diagNodes: feNodes, totalSwitches: feTotalSwitches, totalOptics: feTotalOptics, powerW: { typ: feSwitchTypW + Math.round(feOpticW), eightyPct: feSwitch80W + Math.round(feOpticW), max: feSwitchMaxW + Math.round(feOpticW) },
     topoTiers, topoLinks, topoHosts: { feLinksPerServer, feNicSpeed },
     leafCount: feLeafCount, leafDownlinkSpeed: feLeaf.downlinkSpeed,
-    availableDownlinkPorts: feLeafCount * feLeaf.downlinkPorts - feLinksTotal };
+    availableDownlinkPorts: feLeafCount * feEffDownlinks - feLinksTotal };
 }
 
 /* ============================================================================
@@ -7116,7 +7166,7 @@ function buildSlideSVG() {
   const r = window.lastCalcResults;
   if (!r) return null;
 
-  const W = 1280, H = 720;
+  const W = 1414, H = 1000;
   const ARISTA_BLUE = '#0065A3';
   const ARISTA_DARK = '#003D66';
   const DARK = '#1A2332';
@@ -7154,11 +7204,11 @@ function buildSlideSVG() {
   svg += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#F7FAFC"/>';
 
   // === TITLE BAR ===
-  svg += '<rect x="20" y="12" width="1240" height="56" rx="8" fill="' + ARISTA_BLUE + '"/>';
+  svg += '<rect x="20" y="12" width="' + (W - 40) + '" height="56" rx="8" fill="' + ARISTA_BLUE + '"/>';
   svg += '<text x="38" y="48" font-size="24" font-weight="bold" fill="#FFFFFF">' + esc(titleStr) + '</text>';
 
   // === BOM (left panel) ===
-  svg += '<rect x="20" y="78" width="310" height="594" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>';
+  svg += '<rect x="20" y="78" width="310" height="' + (H - 98) + '" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>';
   svg += '<text x="175" y="100" font-size="12" font-weight="bold" fill="' + ARISTA_BLUE + '" text-anchor="middle" letter-spacing="1.5">BILL OF MATERIALS</text>';
   svg += '<line x1="40" y1="110" x2="310" y2="110" stroke="' + ARISTA_BLUE + '" stroke-width="0.5" opacity="0.3"/>';
   let by = 138;
@@ -7250,7 +7300,7 @@ function buildSlideSVG() {
   }
 
   // === TOPOLOGY DIAGRAM (right panel) ===
-  const diagCX = 840;
+  const diagCX = 880;
 
   // Port usage banner
   const topLinkBundle = lastTopoConfig?.links?.[0]?.bundle || 1;
@@ -7456,8 +7506,9 @@ function buildSlideSVG() {
   }
 
   // === FOOTER ===
-  svg += '<rect x="20" y="680" width="1240" height="30" rx="6" fill="' + ARISTA_BLUE + '" opacity="0.06"/>';
-  svg += '<g transform="translate(30,684) scale(0.1)">'
+  const footY = H - 40;
+  svg += '<rect x="20" y="' + footY + '" width="' + (W - 40) + '" height="30" rx="6" fill="' + ARISTA_BLUE + '" opacity="0.06"/>';
+  svg += '<g transform="translate(30,' + (footY + 4) + ') scale(0.1)">'
     + '<g fill="' + ARISTA_BLUE + '">'
     + '<path d="M391.027,103.426c36.994,0,55.491-25.688,55.491-51.378c0-25.688-18.498-50.353-57.546-50.353c-28.773-1.029-134.617-1.029-134.617-1.029v173.668h32.879V28.413c25.691,0,90.43,0,103.79,0c18.496,0,27.745,6.163,27.745,23.635c0,14.385-9.247,22.606-26.718,22.606h-86.315l102.761,98.648h40.078l-73.991-71.932C381.78,103.426,390,103.426,391.027,103.426z"/>'
     + '<rect x="480.429" y="0.669" width="31.856" height="173.665"/>'
@@ -7466,9 +7517,9 @@ function buildSlideSVG() {
     + '<path d="M104.325,11.972C97.133,23.272,1.564,174.334,1.564,174.334h33.91l31.858-51.381h67.822l17.47-27.746H84.8l36.993-59.602l86.321,137.697h33.911c0,0-94.542-149.001-102.765-162.359C130.013-2.413,113.574-1.387,104.325,11.972z"/>'
     + '<path d="M1079.523,174.334h33.912c0,0-94.539-149.003-102.764-162.362c-9.244-15.415-25.689-14.385-34.938-1.028c-7.195,11.301-102.762,162.359-102.762,162.359h33.91l31.855-51.378h68.852l17.467-27.746h-67.82l36.996-59.603L1079.523,174.334z"/>'
     + '</g></g>';
-  svg += '<text x="148" y="700" font-size="9" fill="' + LIGHT + '">Copyright © Arista ' + new Date().getFullYear() + '. All rights reserved.</text>';
-  svg += '<text x="640" y="700" font-size="9" fill="' + LIGHT + '" text-anchor="middle">Confidential.</text>';
-  svg += '<text x="1245" y="700" font-size="9" fill="' + LIGHT + '" text-anchor="end">AI Network Calculator v' + APP_VERSION + '</text>';
+  svg += '<text x="148" y="' + (footY + 20) + '" font-size="9" fill="' + LIGHT + '">Copyright © Arista ' + new Date().getFullYear() + '. All rights reserved.</text>';
+  svg += '<text x="' + (W / 2) + '" y="' + (footY + 20) + '" font-size="9" fill="' + LIGHT + '" text-anchor="middle">Confidential.</text>';
+  svg += '<text x="' + (W - 25) + '" y="' + (footY + 20) + '" font-size="9" fill="' + LIGHT + '" text-anchor="end">AI Network Calculator v' + APP_VERSION + '</text>';
 
   svg += '</svg>';
   return svg;
@@ -7479,7 +7530,7 @@ function buildRailSlideSVG() {
   if (!r) return null;
   if (r.tierNum !== 2 || !supportsRailTopology(lastTopoConfig)) return buildSlideSVG();
 
-  const W = 1280, H = 720;
+  const W = 1414, H = 1000;
   const ARISTA_BLUE = '#0065A3';
   const ARISTA_DARK = '#003D66';
   const DARK = '#1A2332';
@@ -7512,11 +7563,11 @@ function buildRailSlideSVG() {
   svg += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#F7FAFC"/>';
 
   // === TITLE BAR ===
-  svg += '<rect x="20" y="12" width="1240" height="56" rx="8" fill="' + ARISTA_BLUE + '"/>';
+  svg += '<rect x="20" y="12" width="' + (W - 40) + '" height="56" rx="8" fill="' + ARISTA_BLUE + '"/>';
   svg += '<text x="38" y="48" font-size="22" font-weight="bold" fill="#FFFFFF">' + esc(titleStr) + '</text>';
 
   // === BOM (left panel) ===
-  svg += '<rect x="20" y="78" width="310" height="594" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>';
+  svg += '<rect x="20" y="78" width="310" height="' + (H - 98) + '" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>';
   svg += '<text x="175" y="100" font-size="12" font-weight="bold" fill="' + ARISTA_BLUE + '" text-anchor="middle" letter-spacing="1.5">BILL OF MATERIALS</text>';
   svg += '<line x1="40" y1="110" x2="310" y2="110" stroke="' + ARISTA_BLUE + '" stroke-width="0.5" opacity="0.3"/>';
   let by = 138;
@@ -7580,8 +7631,8 @@ function buildRailSlideSVG() {
   bomText('Lic(E+Z)+Support+CV');
 
   // === RAIL DIAGRAM (right panel) ===
-  const diagCX = 790;
-  const diagW = 830;
+  const diagCX = 857;
+  const diagW = 960;
   const diagLeft = diagCX - diagW / 2;
   const displayName = isChassis ? chassisShort : spineName;
   const gpuCells = Math.min(r.gpusPerNode, 8);
@@ -7678,8 +7729,9 @@ function buildRailSlideSVG() {
   svg += '<text x="' + (diagCX + nodeTotalW/2 + 20 + hlLbl.length * 3.5) + '" y="' + (hlY + 3) + '" font-size="11" font-weight="600" fill="' + ARISTA_DARK + '" text-anchor="middle">' + esc(hlLbl) + '</text>';
 
   // === FOOTER ===
-  svg += '<rect x="20" y="680" width="1240" height="30" rx="6" fill="' + ARISTA_BLUE + '" opacity="0.06"/>';
-  svg += '<g transform="translate(30,684) scale(0.1)">'
+  const footY = H - 40;
+  svg += '<rect x="20" y="' + footY + '" width="' + (W - 40) + '" height="30" rx="6" fill="' + ARISTA_BLUE + '" opacity="0.06"/>';
+  svg += '<g transform="translate(30,' + (footY + 4) + ') scale(0.1)">'
     + '<g fill="' + ARISTA_BLUE + '">'
     + '<path d="M391.027,103.426c36.994,0,55.491-25.688,55.491-51.378c0-25.688-18.498-50.353-57.546-50.353c-28.773-1.029-134.617-1.029-134.617-1.029v173.668h32.879V28.413c25.691,0,90.43,0,103.79,0c18.496,0,27.745,6.163,27.745,23.635c0,14.385-9.247,22.606-26.718,22.606h-86.315l102.761,98.648h40.078l-73.991-71.932C381.78,103.426,390,103.426,391.027,103.426z"/>'
     + '<rect x="480.429" y="0.669" width="31.856" height="173.665"/>'
@@ -7688,9 +7740,9 @@ function buildRailSlideSVG() {
     + '<path d="M104.325,11.972C97.133,23.272,1.564,174.334,1.564,174.334h33.91l31.858-51.381h67.822l17.47-27.746H84.8l36.993-59.602l86.321,137.697h33.911c0,0-94.542-149.001-102.765-162.359C130.013-2.413,113.574-1.387,104.325,11.972z"/>'
     + '<path d="M1079.523,174.334h33.912c0,0-94.539-149.003-102.764-162.362c-9.244-15.415-25.689-14.385-34.938-1.028c-7.195,11.301-102.762,162.359-102.762,162.359h33.91l31.855-51.378h68.852l17.467-27.746h-67.82l36.996-59.603L1079.523,174.334z"/>'
     + '</g></g>';
-  svg += '<text x="148" y="700" font-size="9" fill="' + LIGHT + '">Copyright © Arista ' + new Date().getFullYear() + '. All rights reserved.</text>';
-  svg += '<text x="640" y="700" font-size="9" fill="' + LIGHT + '" text-anchor="middle">Confidential.</text>';
-  svg += '<text x="1245" y="700" font-size="9" fill="' + LIGHT + '" text-anchor="end">AI Network Calculator v' + APP_VERSION + '</text>';
+  svg += '<text x="148" y="' + (footY + 20) + '" font-size="9" fill="' + LIGHT + '">Copyright © Arista ' + new Date().getFullYear() + '. All rights reserved.</text>';
+  svg += '<text x="' + (W / 2) + '" y="' + (footY + 20) + '" font-size="9" fill="' + LIGHT + '" text-anchor="middle">Confidential.</text>';
+  svg += '<text x="' + (W - 25) + '" y="' + (footY + 20) + '" font-size="9" fill="' + LIGHT + '" text-anchor="end">AI Network Calculator v' + APP_VERSION + '</text>';
 
   svg += '</svg>';
   return svg;
@@ -7698,8 +7750,8 @@ function buildRailSlideSVG() {
 
 function renderSlidePNG(svgStr, callback) {
   const scale = 2;
-  const W = 1280 * scale;
-  const H = 720 * scale;
+  const W = 1414 * scale;
+  const H = 1000 * scale;
   const xml = svgStr.replace(/width="\d+"/, 'width="' + W + '"').replace(/height="\d+"/, 'height="' + H + '"');
   const img = new Image();
   img.onload = function() {
