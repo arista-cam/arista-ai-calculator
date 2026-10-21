@@ -810,7 +810,7 @@
 <div class="topbar">
   <div class="topbar-left">
     <div class="topbar-logo"><svg viewBox="0 0 1115 175" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="M391.027,103.426c36.994,0,55.491-25.688,55.491-51.378c0-25.688-18.498-50.353-57.546-50.353c-28.773-1.029-134.617-1.029-134.617-1.029v173.668h32.879V28.413c25.691,0,90.43,0,103.79,0c18.496,0,27.745,6.163,27.745,23.635c0,14.385-9.247,22.606-26.718,22.606h-86.315l102.761,98.648h40.078l-73.991-71.932C381.78,103.426,390,103.426,391.027,103.426z"/><rect x="480.429" y="0.669" width="31.856" height="173.665"/><polygon points="916.137,27.387 916.137,0.669 848.313,0.669 816.457,0.669 759.938,0.669 741.441,27.387 816.457,27.387 816.457,174.334 848.313,174.334 848.313,27.387"/><path d="M678.756,72.6c-16.441,0-57.543,0-81.182,0c-16.438,0-25.689-7.192-25.689-21.58c0-16.44,11.305-23.633,25.689-23.633c22.609,0,110.98,0,110.98,0l14.387-26.718c0,0-107.898,0-126.395,0c-28.775,0-52.407,21.577-52.407,51.382c0,26.715,22.608,48.294,53.434,48.294c17.473,0,69.877,0,81.182,0c18.5,0,28.775,8.224,28.775,23.637c0,13.357-11.305,22.608-28.775,22.608H566.748l-16.44,27.744c0,0,98.649,0,132.558,0c33.912,0,52.406-24.658,52.406-52.404C735.275,96.233,713.695,72.6,678.756,72.6z"/><path d="M104.325,11.972C97.133,23.272,1.564,174.334,1.564,174.334h33.91l31.858-51.381h67.822l17.47-27.746H84.8l36.993-59.602l86.321,137.697h33.911c0,0-94.542-149.001-102.765-162.359C130.013-2.413,113.574-1.387,104.325,11.972z"/><path d="M1079.523,174.334h33.912c0,0-94.539-149.003-102.764-162.362c-9.244-15.415-25.689-14.385-34.938-1.028c-7.195,11.301-102.762,162.359-102.762,162.359h33.91l31.855-51.378h68.852l17.467-27.746h-67.82l36.996-59.603L1079.523,174.334z"/></g></svg></div>
-    <h1>AI Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.9.1</span></h1>
+    <h1>AI Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.9.2</span></h1>
   </div>
   <div class="topbar-right">
     <a href="#" onclick="event.preventDefault();document.getElementById('changelog-modal').classList.add('open')" title="What's new" style="color:var(--text3);margin-right:12px;display:inline-flex;align-items:center;gap:5px;font-size:13px;text-decoration:none;opacity:0.7;transition:opacity .2s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
@@ -1276,6 +1276,14 @@
       <button style="background:none;border:none;cursor:pointer;color:var(--text3);padding:4px" onclick="document.getElementById('changelog-modal').classList.remove('open')"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="changelog-body">
+      <h3>v1.9.2 — October 2025</h3>
+      <ul>
+        <li><strong>400G/800G frontend &amp; storage</strong> — NIC speed dropdowns now include 400G and 800G options with 7060X6 leaf and spine platforms</li>
+        <li><strong>Breakout support</strong> — 800G leaf switches can serve 400G NICs via 2:1 breakout; effective downlink count auto-calculated</li>
+        <li><strong>Spine filtering</strong> — frontend and storage spine dropdowns filter by leaf uplink speed and re-sync when leaf selection changes</li>
+        <li><strong>Planes in simple mode</strong> — planes field moved outside advanced-only section so it is always visible</li>
+        <li><strong>Landscape A4 slides</strong> — slide canvas updated to 1414×1000 (A4 landscape aspect ratio) with relative footer/BOM positioning</li>
+      </ul>
       <h3>v1.9.1 — September 2025</h3>
       <ul>
         <li><strong>Advanced mode warning</strong> — modal dialog with acknowledgement checkbox before entering Advanced mode, warning that overriding values can produce invalid designs</li>
@@ -2548,7 +2556,7 @@ function updateTierHint() {
   autoSelectPlatforms();
 }
 
-const APP_VERSION = '1.9.1';
+const APP_VERSION = '1.9.2';
 
 window.addEventListener('DOMContentLoaded', () => {
   populateDropdowns();
