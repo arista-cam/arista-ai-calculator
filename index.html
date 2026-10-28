@@ -1139,8 +1139,8 @@
             <div class="field">
               <label>Scale-out planning</label>
               <span class="optic-toggle" style="margin-left:0">
-                <button type="button" class="scale-toggle-btn active" id="fe-scale-off" onclick="setFEScaleOut(false)">Off</button>
-                <button type="button" class="scale-toggle-btn" id="fe-scale-on" onclick="setFEScaleOut(true)">On</button>
+                <button type="button" class="optic-toggle-btn active" id="fe-scale-off" onclick="setFEScaleOut(false)">Off</button>
+                <button type="button" class="optic-toggle-btn" id="fe-scale-on" onclick="setFEScaleOut(true)">On</button>
               </span>
             </div>
             <div class="field" id="fe-target-row" style="display:none">
@@ -1998,8 +1998,8 @@ function setScaleOut(enabled) {
 }
 
 function setFEScaleOut(enabled) {
-  document.getElementById('fe-scale-off').className = 'scale-toggle-btn' + (enabled ? '' : ' active');
-  document.getElementById('fe-scale-on').className = 'scale-toggle-btn' + (enabled ? ' active' : '');
+  document.getElementById('fe-scale-off').className = 'optic-toggle-btn' + (enabled ? '' : ' active');
+  document.getElementById('fe-scale-on').className = 'optic-toggle-btn' + (enabled ? ' active' : '');
   document.getElementById('fe-target-row').style.display = enabled ? '' : 'none';
   if (!enabled) document.getElementById('fe-target-nodes').value = '';
   clearResults();
