@@ -810,7 +810,7 @@
 <div class="topbar">
   <div class="topbar-left">
     <div class="topbar-logo"><svg viewBox="0 0 1115 175" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="M391.027,103.426c36.994,0,55.491-25.688,55.491-51.378c0-25.688-18.498-50.353-57.546-50.353c-28.773-1.029-134.617-1.029-134.617-1.029v173.668h32.879V28.413c25.691,0,90.43,0,103.79,0c18.496,0,27.745,6.163,27.745,23.635c0,14.385-9.247,22.606-26.718,22.606h-86.315l102.761,98.648h40.078l-73.991-71.932C381.78,103.426,390,103.426,391.027,103.426z"/><rect x="480.429" y="0.669" width="31.856" height="173.665"/><polygon points="916.137,27.387 916.137,0.669 848.313,0.669 816.457,0.669 759.938,0.669 741.441,27.387 816.457,27.387 816.457,174.334 848.313,174.334 848.313,27.387"/><path d="M678.756,72.6c-16.441,0-57.543,0-81.182,0c-16.438,0-25.689-7.192-25.689-21.58c0-16.44,11.305-23.633,25.689-23.633c22.609,0,110.98,0,110.98,0l14.387-26.718c0,0-107.898,0-126.395,0c-28.775,0-52.407,21.577-52.407,51.382c0,26.715,22.608,48.294,53.434,48.294c17.473,0,69.877,0,81.182,0c18.5,0,28.775,8.224,28.775,23.637c0,13.357-11.305,22.608-28.775,22.608H566.748l-16.44,27.744c0,0,98.649,0,132.558,0c33.912,0,52.406-24.658,52.406-52.404C735.275,96.233,713.695,72.6,678.756,72.6z"/><path d="M104.325,11.972C97.133,23.272,1.564,174.334,1.564,174.334h33.91l31.858-51.381h67.822l17.47-27.746H84.8l36.993-59.602l86.321,137.697h33.911c0,0-94.542-149.001-102.765-162.359C130.013-2.413,113.574-1.387,104.325,11.972z"/><path d="M1079.523,174.334h33.912c0,0-94.539-149.003-102.764-162.362c-9.244-15.415-25.689-14.385-34.938-1.028c-7.195,11.301-102.762,162.359-102.762,162.359h33.91l31.855-51.378h68.852l17.467-27.746h-67.82l36.996-59.603L1079.523,174.334z"/></g></svg></div>
-    <h1>AI Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.9.2</span></h1>
+    <h1>AI Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.9.3</span></h1>
   </div>
   <div class="topbar-right">
     <a href="#" onclick="event.preventDefault();document.getElementById('changelog-modal').classList.add('open')" title="What's new" style="color:var(--text3);margin-right:12px;display:inline-flex;align-items:center;gap:5px;font-size:13px;text-decoration:none;opacity:0.7;transition:opacity .2s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
@@ -1131,6 +1131,23 @@
                 <option value="none">None (single-tier)</option>
               </select>
             </div>
+            <div class="field">
+              <label>Reserved ports per leaf</label>
+              <input type="number" id="fe-reserved-ports" value="0" min="0" max="64" oninput="clearResults()">
+              <div class="hint">Ports held back for storage, mgmt, or growth</div>
+            </div>
+            <div class="field">
+              <label>Scale-out planning</label>
+              <span class="optic-toggle" style="margin-left:0">
+                <button type="button" class="scale-toggle-btn active" id="fe-scale-off" onclick="setFEScaleOut(false)">Off</button>
+                <button type="button" class="scale-toggle-btn" id="fe-scale-on" onclick="setFEScaleOut(true)">On</button>
+              </span>
+            </div>
+            <div class="field" id="fe-target-row" style="display:none">
+              <label>Target nodes (fully scaled)</label>
+              <input type="number" id="fe-target-nodes" min="1" placeholder="e.g. 512" oninput="clearResults()">
+              <div class="hint">FE spine pre-provisioned for this node count</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1276,6 +1293,13 @@
       <button style="background:none;border:none;cursor:pointer;color:var(--text3);padding:4px" onclick="document.getElementById('changelog-modal').classList.remove('open')"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="changelog-body">
+      <h3>v1.9.3 — October 2025</h3>
+      <ul>
+        <li><strong>FE reserved ports</strong> — new "Reserved ports per leaf" field in the Frontend section; reserves capacity on each leaf for shared storage, management, or future growth</li>
+        <li><strong>FE scale-out planning</strong> — optional target node count pre-provisions the FE spine layer for future scale while sizing leaves for day-1, mirroring the backend scale-out pattern</li>
+        <li><strong>Shared storage error fix</strong> — actionable error when all FE leaf ports are consumed, directing users to increase reserved ports, upsize leaves, or switch to dedicated storage</li>
+        <li><strong>Shared storage speed validation</strong> — relaxed speed check allows storage NIC speeds ≤ the FE leaf port speed (supports breakout scenarios like 400G storage on 800G leaves)</li>
+      </ul>
       <h3>v1.9.2 — October 2025</h3>
       <ul>
         <li><strong>400G/800G frontend &amp; storage</strong> — NIC speed dropdowns now include 400G and 800G options with 7060X6 leaf and spine platforms</li>
@@ -1590,7 +1614,10 @@ function updateSectionSummaries() {
     if (feOn) {
       const feSpeed = document.getElementById('fe-nic-speed')?.value || '';
       const feOversub = document.getElementById('fe-oversub')?.value || '';
-      document.getElementById('summary-fe').textContent = 'On · ' + feSpeed + 'G · ' + feOversub + ':1';
+      let feSummary = 'On · ' + feSpeed + 'G · ' + feOversub + ':1';
+      const feTarget = getFETargetNodes();
+      if (feTarget > 0) feSummary += ' · scale→' + feTarget;
+      document.getElementById('summary-fe').textContent = feSummary;
     } else {
       document.getElementById('summary-fe').textContent = 'Off';
     }
@@ -1970,6 +1997,18 @@ function setScaleOut(enabled) {
   clearResults();
 }
 
+function setFEScaleOut(enabled) {
+  document.getElementById('fe-scale-off').className = 'scale-toggle-btn' + (enabled ? '' : ' active');
+  document.getElementById('fe-scale-on').className = 'scale-toggle-btn' + (enabled ? ' active' : '');
+  document.getElementById('fe-target-row').style.display = enabled ? '' : 'none';
+  if (!enabled) document.getElementById('fe-target-nodes').value = '';
+  clearResults();
+}
+function getFETargetNodes() {
+  if (!document.getElementById('fe-scale-on')?.classList.contains('active')) return 0;
+  return parseInt(document.getElementById('fe-target-nodes').value) || 0;
+}
+
 let fillMode = 'average';
 function setFillMode(mode) {
   fillMode = mode;
@@ -2137,6 +2176,8 @@ function resetInputs() {
   document.getElementById('fe-links-per-server').value = 1;
   document.getElementById('fe-nic-speed').value = '25';
   document.getElementById('fe-oversub').value = '3';
+  document.getElementById('fe-reserved-ports').value = 0;
+  setFEScaleOut(false);
   setStorEnabled(false);
   setStorMode('shared');
   document.getElementById('stor-ratio').value = '16';
@@ -2556,7 +2597,7 @@ function updateTierHint() {
   autoSelectPlatforms();
 }
 
-const APP_VERSION = '1.9.2';
+const APP_VERSION = '1.9.3';
 
 window.addEventListener('DOMContentLoaded', () => {
   populateDropdowns();
@@ -2929,8 +2970,10 @@ function countPackedModules(totalConnections, deviceCount, fanout, fill, deviceC
  *     own platform selection, optics, and power calculations.
  *
  * Storage node count is derived from the GPU cluster size using a configurable
- * GPU-to-storage ratio (1:8, 1:16, 1:32, 1:64). Each storage node connects
- * to the fabric via 25G or 100G links (much lower bandwidth than GPU traffic). */
+ * GPU-to-storage ratio (1:8, 1:16, 1:32, 1:64). Supports 25G–800G speeds.
+ * Shared mode validates: FE enabled, storage NIC ≤ FE leaf portSpeed, and
+ * FE leaves have availableDownlinkPorts (controlled by feReservedPorts).
+ * Dedicated mode supports breakout (storBreakout = portSpeed / nicSpeed). */
 function calculateStorage(totalGPUs, feResult) {
   if (!isStorEnabled()) return null;
   const storRatio = parseInt(document.getElementById('stor-ratio').value) || 16;
@@ -2943,17 +2986,22 @@ function calculateStorage(totalGPUs, feResult) {
     if (!feResult || feResult.error) {
       return { error: 'Shared storage requires an enabled, feasible frontend network design.' };
     }
-    if (feResult.leafDownlinkSpeed !== storNicSpeed) {
-      return { error: 'Shared storage speed mismatch: the selected frontend leaf provides '
-        + feResult.leafDownlinkSpeed + 'G host-facing ports, but storage is configured for '
-        + storNicSpeed + 'G. Match the storage and frontend speeds, or use a dedicated storage fabric.' };
+    const fePortSpeed = feResult.leafPortSpeed || feResult.leafDownlinkSpeed;
+    if (storNicSpeed > fePortSpeed) {
+      return { error: 'Shared storage speed mismatch: the frontend leaf has '
+        + fePortSpeed + 'G ports, but storage is configured for '
+        + storNicSpeed + 'G. Match the storage speed to the frontend leaf capability, or use a dedicated storage fabric.' };
     }
     if (storLinksTotal > feResult.availableDownlinkPorts) {
-      return { error: 'Shared storage needs ' + fmtN(storLinksTotal) + ' additional '
-        + storNicSpeed + 'G frontend leaf ports, but only ' + fmtN(feResult.availableDownlinkPorts)
-        + ' remain across ' + fmtN(feResult.leafCount) + ' frontend leaf switch'
-        + (feResult.leafCount === 1 ? '' : 'es') + ' after compute-server links. '
-        + 'Choose a higher-capacity frontend leaf design or use a dedicated storage fabric.' };
+      const advice = feResult.availableDownlinkPorts <= 0
+        ? 'All frontend leaf ports are used by compute links. '
+          + 'Increase "Reserved ports per leaf" in the Frontend section, select a higher-capacity leaf, or use a dedicated storage fabric.'
+        : 'Shared storage needs ' + fmtN(storLinksTotal) + ' additional '
+          + storNicSpeed + 'G ports, but only ' + fmtN(feResult.availableDownlinkPorts)
+          + ' remain across ' + fmtN(feResult.leafCount) + ' frontend leaf switch'
+          + (feResult.leafCount === 1 ? '' : 'es') + ' after compute-server links. '
+          + 'Increase "Reserved ports per leaf", select a higher-capacity leaf, or use a dedicated storage fabric.';
+      return { error: advice };
     }
     const dlOptics = storLinksTotal * 2;
     const dlOpticW = dlOptics * (OPTIC_POWER[storNicSpeed]?.conventional || 1.5);
@@ -3123,12 +3171,18 @@ function calculateStorage(totalGPUs, feResult) {
     storageNodes, isShared: false, topoTiers, topoLinks, topoHosts: { storageNodes, storNicSpeed } };
 }
 
-/* Calculates the frontend (non-GPU) network fabric. This is a separate
- * leaf-spine network running alongside the backend AI fabric, typically
- * for management traffic, data ingestion, and checkpoint storage I/O.
- * Uses different platforms (7050SX3, 7050CX3, 7280CR3) at lower speeds
- * (10G-100G) than the backend (400G-1.6T). Each compute node gets 1-4
- * frontend NIC connections in addition to its GPU backend connections. */
+/* Calculates the frontend (non-GPU) network fabric. Separate leaf-spine
+ * network for management, data ingestion, and checkpoint storage I/O.
+ * Supports 10G–800G NIC speeds with 7050SX3/7050CX3/7280CR3 (≤100G)
+ * and 7060X6 (400G/800G) platforms. 800G switches serve 400G NICs via
+ * 2:1 breakout (feBreakout = portSpeed / nicSpeed).
+ *
+ * Reserved ports: feReservedPorts subtracted from effective downlinks
+ *   so leaves have headroom for shared storage, management, or growth.
+ *
+ * Scale-out planning: when feTargetNodes > hosts, the spine full-mesh
+ *   check and sizing use targetLeafCount (pre-provisioned for the target)
+ *   while leaves are sized for day-1. Mirrors backend getTargetGPUs(). */
 function calculateFE(hosts) {
   if (!isFEEnabled()) return null;
   const feLinksPerServer = parseInt(document.getElementById('fe-links-per-server').value) || 1;
@@ -3141,11 +3195,16 @@ function calculateFE(hosts) {
   if (!feLeaf) return null;
 
   const feBreakout = feLeaf.portSpeed / feNicSpeed;
-  const feEffDownlinks = feLeaf.downlinkPorts * feBreakout;
+  const feReservedPorts = parseInt(document.getElementById('fe-reserved-ports').value) || 0;
+  const feEffDownlinks = feLeaf.downlinkPorts * feBreakout - feReservedPorts;
   const feLinksPerNode = feLinksPerServer;
   const feLinksTotal = hosts * feLinksPerServer;
   const feLeafCount = Math.ceil(feLinksTotal / feEffDownlinks);
   const linksPerLeaf = Math.ceil(feLinksTotal / feLeafCount);
+
+  const feTargetNodes = getFETargetNodes();
+  const targetLinksTotal = feTargetNodes > hosts ? feTargetNodes * feLinksPerServer : feLinksTotal;
+  const targetLeafCount = feTargetNodes > hosts ? Math.ceil(targetLinksTotal / feEffDownlinks) : feLeafCount;
 
   let feSpine = null, feSpineCount = 0, bundleSize = 0, actualOversub = '—';
   if (feSpineVal !== 'none') {
@@ -3153,8 +3212,8 @@ function calculateFE(hosts) {
     feSpine = FE_SPINE_PLATFORMS[spIdx] || null;
   }
   if (feSpine && feLeaf.uplinkPorts > 0) {
-    if (feLeafCount > feSpine.ports) {
-      return { error: 'Frontend full mesh is not feasible: ' + fmtN(feLeafCount)
+    if (targetLeafCount > feSpine.ports) {
+      return { error: 'Frontend full mesh is not feasible: ' + fmtN(targetLeafCount)
         + ' frontend leaves require one port each on every spine, but ' + feSpine.name
         + ' provides ' + fmtN(feSpine.ports) + ' ports. Select a larger spine or a higher-capacity frontend leaf.' };
     }
@@ -3186,23 +3245,31 @@ function calculateFE(hosts) {
   const feUplinksPerLeaf = feSpineCount;
   let switchHtml = '';
   if (feSpineCount > 0) {
-    switchHtml += mkSection(iconServer(), 'Frontend Spine layer', [
+    const spineRows = [
       ['Spine platform', feSpine.desc],
       ['Total frontend spines', feSpineCount],
       ['Downlink ports used', feLeafCount + ' of ' + feSpine.ports],
       ['Leaf ↔ spine links', fmtN(feSpineLinks) + ' (' + feLeafCount + ' leaves × ' + feSpineCount + ' spines)'],
-    ]);
+    ];
+    if (feTargetNodes > hosts) {
+      spineRows.push(['Pre-provisioned for', fmtN(feTargetNodes) + ' nodes (' + fmtN(targetLeafCount) + ' leaves)']);
+      spineRows.push(['Day-1 FE spine utilization', Math.round((feLeafCount / targetLeafCount) * 100) + '%']);
+    }
+    switchHtml += mkSection(iconServer(), 'Frontend Spine layer', spineRows);
   }
-  switchHtml += mkSection(iconBranch(), 'Frontend Leaf layer', [
+  const leafRows = [
     ['Leaf platform', feLeaf.desc],
     ['Total frontend leaves', feLeafCount],
     ['Host links per leaf', linksPerLeaf + ' × ' + feNicSpeed + 'G'],
     ['Downlink ports used', linksPerLeaf + ' of ' + feEffDownlinks + (feBreakout > 1 ? ' (' + feLeaf.downlinkPorts + '×' + feLeaf.portSpeed + 'G with ' + feBreakout + ':1 breakout)' : '')],
-  ].concat(feSpineCount > 0 ? [
-    ['Uplinks per leaf', feUplinksPerLeaf + ' × ' + feLeaf.uplinkSpeed + 'G (of ' + feLeaf.uplinkPorts + ' available)'],
-    ['Links per spine', bundleSize],
-    ['Oversubscription', actualOversub + ':1'],
-  ] : []),
+  ];
+  if (feReservedPorts > 0) leafRows.push(['Reserved ports per leaf', feReservedPorts + ' (for storage, mgmt, or growth)']);
+  if (feSpineCount > 0) {
+    leafRows.push(['Uplinks per leaf', feUplinksPerLeaf + ' × ' + feLeaf.uplinkSpeed + 'G (of ' + feLeaf.uplinkPorts + ' available)']);
+    leafRows.push(['Links per spine', bundleSize]);
+    leafRows.push(['Oversubscription', actualOversub + ':1']);
+  }
+  switchHtml += mkSection(iconBranch(), 'Frontend Leaf layer', leafRows,
   feSpineCount > 0 ? 'Full mesh: each frontend leaf connects to every frontend spine.' : 'Single-tier: all servers connect directly to frontend leaves.');
 
   let optRows = [];
@@ -3269,7 +3336,7 @@ function calculateFE(hosts) {
 
   return { summaryContent, switchHtml, optHtml, powerHtml, diagTitle, diagNodes: feNodes, totalSwitches: feTotalSwitches, totalOptics: feTotalOptics, powerW: { typ: feSwitchTypW + Math.round(feOpticW), eightyPct: feSwitch80W + Math.round(feOpticW), max: feSwitchMaxW + Math.round(feOpticW) },
     topoTiers, topoLinks, topoHosts: { feLinksPerServer, feNicSpeed },
-    leafCount: feLeafCount, leafDownlinkSpeed: feLeaf.downlinkSpeed,
+    leafCount: feLeafCount, leafDownlinkSpeed: feNicSpeed, leafPortSpeed: feLeaf.portSpeed,
     availableDownlinkPorts: feLeafCount * feEffDownlinks - feLinksTotal };
 }
 
