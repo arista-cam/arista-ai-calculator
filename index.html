@@ -3216,6 +3216,11 @@ function calculateFE(hosts) {
   const targetLinksTotal = feTargetNodes > hosts ? feTargetNodes * feLinksPerServer : feLinksTotal;
   const targetLeafCount = feTargetNodes > hosts ? Math.ceil(targetLinksTotal / feEffDownlinks) : feLeafCount;
 
+  if (feLeafCount > 1 && feSpineVal === 'none') {
+    return { error: 'Frontend network requires ' + fmtN(feLeafCount)
+      + ' leaves but no spine is selected. Multiple disconnected leaves cannot form a functional network. Select a spine platform or choose a larger leaf.' };
+  }
+
   let feSpine = null, feSpineCount = 0, bundleSize = 0, actualOversub = '—';
   if (feSpineVal !== 'none') {
     const spIdx = parseInt(feSpineVal);
