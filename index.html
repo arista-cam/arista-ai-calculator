@@ -3214,12 +3214,12 @@ function calculateFE(hosts) {
     feSpine = FE_SPINE_PLATFORMS[spIdx] || null;
   }
   if (feSpine && feLeaf.uplinkPorts > 0) {
-    if (targetLeafCount > feSpine.ports) {
+    feSpineCount = Math.max(2, Math.ceil(targetLeafCount / feSpine.ports));
+    if (feSpineCount > feLeaf.uplinkPorts) {
       return { error: 'Frontend full mesh is not feasible: ' + fmtN(targetLeafCount)
-        + ' frontend leaves require one port each on every spine, but ' + feSpine.name
-        + ' provides ' + fmtN(feSpine.ports) + ' ports. Select a larger spine or a higher-capacity frontend leaf.' };
+        + ' frontend leaves need ' + feSpineCount + ' spines (' + feSpine.ports + ' ports each), but the leaf only has '
+        + feLeaf.uplinkPorts + ' uplink ports. Select a larger spine or a higher-capacity frontend leaf.' };
     }
-    feSpineCount = Math.min(2, feLeaf.uplinkPorts);
     bundleSize = 1;
     actualOversub = ((linksPerLeaf * feNicSpeed) / (feSpineCount * feLeaf.uplinkSpeed)).toFixed(1);
   }
