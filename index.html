@@ -1729,11 +1729,14 @@ const FE_PLATFORMS = [
   { name: '7060X6-64-ST',    downlinkPorts: 64, uplinkPorts: 0,  downlinkSpeed: 800, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 64-port (64×800G, single-tier)', powerTyp: 640, powerMax: 1194, ru: 2 },
   { name: '7060X6-32-16/16', downlinkPorts: 16, uplinkPorts: 16, downlinkSpeed: 800, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 32-port (16×800G down + 16×800G up)', powerTyp: 320, powerMax: 600, ru: 1 },
   { name: '7060X6-64-48/16', downlinkPorts: 48, uplinkPorts: 16, downlinkSpeed: 800, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 64-port (48×800G down + 16×800G up)', powerTyp: 640, powerMax: 1194, ru: 2 },
+  { name: '7060DX5-64S-FE',    downlinkPorts: 64, uplinkPorts: 0,  downlinkSpeed: 100, portSpeed: 400, uplinkSpeed: 400, desc: '7060DX5-64S (64×400G, single-tier)',           powerTyp: 548, powerMax: 1247, ru: 1 },
+  { name: '7060DX5-64S-48/16', downlinkPorts: 48, uplinkPorts: 16, downlinkSpeed: 100, portSpeed: 400, uplinkSpeed: 400, desc: '7060DX5-64S (48×400G down + 16×400G up)',      powerTyp: 548, powerMax: 1247, ru: 1 },
 ];
 const FE_SPINE_PLATFORMS = [
   { name: '7050CX3-32C',  ports: 32, speed: 100, desc: '7050CX3-32C (32×100G)',  powerTyp: 165, powerMax: 334, ru: 1 },
   { name: '7280CR3-36S',  ports: 36, speed: 100, desc: '7280CR3-36S (36×100G)',  powerTyp: 254, powerMax: 690, ru: 1 },
   { name: '7280CR3-32P4', ports: 32, speed: 100, desc: '7280CR3-32P4 (32×100G)', powerTyp: 535, powerMax: 849, ru: 1 },
+  { name: '7060DX5-64S',  ports: 64, speed: 400, desc: '7060DX5-64S (64×400G)',  powerTyp: 548, powerMax: 1247, ru: 1 },
   { name: '7060X6-32',    ports: 32, speed: 800, desc: '7060X6 32-port (32×800G)',  powerTyp: 320, powerMax: 600, ru: 1 },
   { name: '7060X6-64',    ports: 64, speed: 800, desc: '7060X6 64-port (64×800G)',  powerTyp: 640, powerMax: 1194, ru: 2 },
 ];
@@ -3180,8 +3183,8 @@ function calculateStorage(totalGPUs, feResult) {
 
 /* Calculates the frontend (non-GPU) network fabric. Separate leaf-spine
  * network for management, data ingestion, and checkpoint storage I/O.
- * Supports 10G–800G NIC speeds with 7050SX3/7050CX3/7280CR3 (≤100G)
- * and 7060X6 (200G/400G/800G) platforms. 800G switches serve lower-speed
+ * Supports 10G–800G NIC speeds with 7050SX3/7050CX3/7280CR3 (≤100G),
+ * 7060DX5 (100G–400G), and 7060X6 (200G/400G/800G) platforms. Higher-speed switches serve lower-speed
  * NICs via breakout (feBreakout = portSpeed / nicSpeed).
  *
  * Reserved ports: feReservedPorts subtracted from effective downlinks
