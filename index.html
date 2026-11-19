@@ -810,7 +810,7 @@
 <div class="topbar">
   <div class="topbar-left">
     <div class="topbar-logo"><svg viewBox="0 0 1115 175" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="M391.027,103.426c36.994,0,55.491-25.688,55.491-51.378c0-25.688-18.498-50.353-57.546-50.353c-28.773-1.029-134.617-1.029-134.617-1.029v173.668h32.879V28.413c25.691,0,90.43,0,103.79,0c18.496,0,27.745,6.163,27.745,23.635c0,14.385-9.247,22.606-26.718,22.606h-86.315l102.761,98.648h40.078l-73.991-71.932C381.78,103.426,390,103.426,391.027,103.426z"/><rect x="480.429" y="0.669" width="31.856" height="173.665"/><polygon points="916.137,27.387 916.137,0.669 848.313,0.669 816.457,0.669 759.938,0.669 741.441,27.387 816.457,27.387 816.457,174.334 848.313,174.334 848.313,27.387"/><path d="M678.756,72.6c-16.441,0-57.543,0-81.182,0c-16.438,0-25.689-7.192-25.689-21.58c0-16.44,11.305-23.633,25.689-23.633c22.609,0,110.98,0,110.98,0l14.387-26.718c0,0-107.898,0-126.395,0c-28.775,0-52.407,21.577-52.407,51.382c0,26.715,22.608,48.294,53.434,48.294c17.473,0,69.877,0,81.182,0c18.5,0,28.775,8.224,28.775,23.637c0,13.357-11.305,22.608-28.775,22.608H566.748l-16.44,27.744c0,0,98.649,0,132.558,0c33.912,0,52.406-24.658,52.406-52.404C735.275,96.233,713.695,72.6,678.756,72.6z"/><path d="M104.325,11.972C97.133,23.272,1.564,174.334,1.564,174.334h33.91l31.858-51.381h67.822l17.47-27.746H84.8l36.993-59.602l86.321,137.697h33.911c0,0-94.542-149.001-102.765-162.359C130.013-2.413,113.574-1.387,104.325,11.972z"/><path d="M1079.523,174.334h33.912c0,0-94.539-149.003-102.764-162.362c-9.244-15.415-25.689-14.385-34.938-1.028c-7.195,11.301-102.762,162.359-102.762,162.359h33.91l31.855-51.378h68.852l17.467-27.746h-67.82l36.996-59.603L1079.523,174.334z"/></g></svg></div>
-    <h1>AI Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.9.3</span></h1>
+    <h1>AI Network Calculator <span style="font-weight:400;font-size:14px;opacity:0.6">v1.9.4</span></h1>
   </div>
   <div class="topbar-right">
     <a href="#" onclick="event.preventDefault();document.getElementById('changelog-modal').classList.add('open')" title="What's new" style="color:var(--text3);margin-right:12px;display:inline-flex;align-items:center;gap:5px;font-size:13px;text-decoration:none;opacity:0.7;transition:opacity .2s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
@@ -1105,6 +1105,7 @@
                 <option value="10">10G</option>
                 <option value="25" selected>25G</option>
                 <option value="100">100G</option>
+                <option value="200">200G</option>
                 <option value="400">400G</option>
                 <option value="800">800G</option>
               </select>
@@ -1184,6 +1185,7 @@
               <select id="stor-nic-speed" onchange="syncStorLeafOptions(); clearResults()">
                 <option value="25" selected>25G</option>
                 <option value="100">100G</option>
+                <option value="200">200G</option>
                 <option value="400">400G</option>
                 <option value="800">800G</option>
               </select>
@@ -1293,6 +1295,11 @@
       <button style="background:none;border:none;cursor:pointer;color:var(--text3);padding:4px" onclick="document.getElementById('changelog-modal').classList.remove('open')"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="changelog-body">
+      <h3>v1.9.4 — November 2025</h3>
+      <ul>
+        <li><strong>200G frontend &amp; storage</strong> — NIC speed dropdowns now include 200G; 7060X6 platforms serve 200G NICs via 4:1 breakout from 800G ports</li>
+        <li><strong>Oversub bandwidth fix</strong> — frontend and storage oversubscription calculations now use the actual NIC speed instead of the platform's base downlink speed, fixing accuracy under breakout</li>
+      </ul>
       <h3>v1.9.3 — October 2025</h3>
       <ul>
         <li><strong>FE reserved ports</strong> — new "Reserved ports per leaf" field in the Frontend section; reserves capacity on each leaf for shared storage, management, or future growth</li>
@@ -1716,8 +1723,8 @@ const FE_PLATFORMS = [
   { name: '7050SX3-48YC12',  downlinkPorts: 48, uplinkPorts: 12, downlinkSpeed: 25,  portSpeed: 25,  uplinkSpeed: 100, desc: '7050SX3-48YC12 (48×25G + 12×100G)', powerTyp: 170, powerMax: 325, ru: 1 },
   { name: '7050SX3-96YC8',   downlinkPorts: 96, uplinkPorts: 8,  downlinkSpeed: 25,  portSpeed: 25,  uplinkSpeed: 100, desc: '7050SX3-96YC8 (96×25G + 8×100G)',  powerTyp: 218, powerMax: 453, ru: 2 },
   { name: '7050CX3-32C',     downlinkPorts: 32, uplinkPorts: 0,  downlinkSpeed: 100, portSpeed: 100, uplinkSpeed: 100, desc: '7050CX3-32C (32×100G)',              powerTyp: 165, powerMax: 334, ru: 1 },
-  { name: '7060X6-64-FE',    downlinkPorts: 64, uplinkPorts: 0,  downlinkSpeed: 400, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 64-port (64×800G, single-tier)', powerTyp: 640, powerMax: 1194, ru: 2 },
-  { name: '7060X6-32-48/16', downlinkPorts: 48, uplinkPorts: 16, downlinkSpeed: 400, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 64-port (48×800G down + 16×800G up)', powerTyp: 640, powerMax: 1194, ru: 2 },
+  { name: '7060X6-64-FE',    downlinkPorts: 64, uplinkPorts: 0,  downlinkSpeed: 200, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 64-port (64×800G, single-tier)', powerTyp: 640, powerMax: 1194, ru: 2 },
+  { name: '7060X6-32-48/16', downlinkPorts: 48, uplinkPorts: 16, downlinkSpeed: 200, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 64-port (48×800G down + 16×800G up)', powerTyp: 640, powerMax: 1194, ru: 2 },
   { name: '7060X6-32-ST',    downlinkPorts: 32, uplinkPorts: 0,  downlinkSpeed: 800, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 32-port (32×800G, single-tier)', powerTyp: 320, powerMax: 600, ru: 1 },
   { name: '7060X6-64-ST',    downlinkPorts: 64, uplinkPorts: 0,  downlinkSpeed: 800, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 64-port (64×800G, single-tier)', powerTyp: 640, powerMax: 1194, ru: 2 },
   { name: '7060X6-32-16/16', downlinkPorts: 16, uplinkPorts: 16, downlinkSpeed: 800, portSpeed: 800, uplinkSpeed: 800, desc: '7060X6 32-port (16×800G down + 16×800G up)', powerTyp: 320, powerMax: 600, ru: 1 },
@@ -2853,7 +2860,7 @@ function fabricReach(leafPS, spinePS) {
 }
 
 function feOpticType(speed) {
-  return { 10: 'SFP+ 10G-SR', 25: 'SFP28 25G-SR', 100: 'QSFP28 100G-SR4', 400: 'OSFP 400G 2DR4', 800: 'OSFP 800G 2DR4' }[speed] || speed + 'G';
+  return { 10: 'SFP+ 10G-SR', 25: 'SFP28 25G-SR', 100: 'QSFP28 100G-SR4', 200: 'QSFP56 200G SR4', 400: 'OSFP 400G 2DR4', 800: 'OSFP 800G 2DR4' }[speed] || speed + 'G';
 }
 
 function toggleOpticMode(mode) {
@@ -3061,11 +3068,11 @@ function calculateStorage(totalGPUs, feResult) {
         + ' storage leaves require one port each on every spine, but ' + storSpine.name
         + ' provides ' + fmtN(storSpine.ports) + ' ports. Select a larger spine or a higher-capacity storage leaf.' };
     }
-    const downlinkBW = hostsPerLeaf * storLeaf.downlinkSpeed;
+    const downlinkBW = hostsPerLeaf * storNicSpeed;
     const uplinksNeeded = Math.max(1, Math.ceil(downlinkBW / (storLeaf.uplinkSpeed * storOversub)));
     storSpineCount = Math.min(uplinksNeeded, storLeaf.uplinkPorts);
     bundleSize = 1;
-    actualOversub = ((hostsPerLeaf * storLeaf.downlinkSpeed) / (storSpineCount * storLeaf.uplinkSpeed)).toFixed(1);
+    actualOversub = ((hostsPerLeaf * storNicSpeed) / (storSpineCount * storLeaf.uplinkSpeed)).toFixed(1);
   }
 
   const storTotalSwitches = storLeafCount + storSpineCount;
@@ -3174,8 +3181,8 @@ function calculateStorage(totalGPUs, feResult) {
 /* Calculates the frontend (non-GPU) network fabric. Separate leaf-spine
  * network for management, data ingestion, and checkpoint storage I/O.
  * Supports 10G–800G NIC speeds with 7050SX3/7050CX3/7280CR3 (≤100G)
- * and 7060X6 (400G/800G) platforms. 800G switches serve 400G NICs via
- * 2:1 breakout (feBreakout = portSpeed / nicSpeed).
+ * and 7060X6 (200G/400G/800G) platforms. 800G switches serve lower-speed
+ * NICs via breakout (feBreakout = portSpeed / nicSpeed).
  *
  * Reserved ports: feReservedPorts subtracted from effective downlinks
  *   so leaves have headroom for shared storage, management, or growth.
@@ -3217,11 +3224,11 @@ function calculateFE(hosts) {
         + ' frontend leaves require one port each on every spine, but ' + feSpine.name
         + ' provides ' + fmtN(feSpine.ports) + ' ports. Select a larger spine or a higher-capacity frontend leaf.' };
     }
-    const downlinkBW = linksPerLeaf * feLeaf.downlinkSpeed;
+    const downlinkBW = linksPerLeaf * feNicSpeed;
     const uplinksNeeded = Math.max(1, Math.ceil(downlinkBW / (feLeaf.uplinkSpeed * feOversub)));
     feSpineCount = Math.min(uplinksNeeded, feLeaf.uplinkPorts);
     bundleSize = 1;
-    actualOversub = ((linksPerLeaf * feLeaf.downlinkSpeed) / (feSpineCount * feLeaf.uplinkSpeed)).toFixed(1);
+    actualOversub = ((linksPerLeaf * feNicSpeed) / (feSpineCount * feLeaf.uplinkSpeed)).toFixed(1);
   }
 
   const feTotalSwitches = feLeafCount + feSpineCount;
