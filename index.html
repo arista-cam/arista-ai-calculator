@@ -3233,7 +3233,9 @@ function calculateFE(hosts) {
         + ' frontend leaves require one port each on every spine, but ' + feSpine.name
         + ' provides ' + fmtN(feSpine.ports) + ' ports. Select a larger spine or a higher-capacity frontend leaf.' };
     }
-    feSpineCount = Math.min(2, feLeaf.uplinkPorts);
+    const downlinkBW = linksPerLeaf * feNicSpeed;
+    const uplinksNeeded = Math.max(2, Math.ceil(downlinkBW / (feLeaf.uplinkSpeed * feOversub)));
+    feSpineCount = Math.min(uplinksNeeded, feLeaf.uplinkPorts);
     bundleSize = 1;
     actualOversub = ((linksPerLeaf * feNicSpeed) / (feSpineCount * feLeaf.uplinkSpeed)).toFixed(1);
   }
