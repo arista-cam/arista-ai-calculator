@@ -3272,6 +3272,17 @@ function calculateFE(hosts) {
   switchHtml += mkSection(iconBranch(), 'Frontend Leaf layer', leafRows,
   feSpineCount > 0 ? 'Full mesh: each frontend leaf connects to every frontend spine.' : 'Single-tier: all servers connect directly to frontend leaves.');
 
+  if (feSpineCount > 0) {
+    const feMaxLeaves = feSpine.ports;
+    const feMaxNodes = Math.floor(feMaxLeaves * feEffDownlinks / feLinksPerServer);
+    const feUtilPct = Math.round((hosts / feMaxNodes) * 100);
+    switchHtml += '<div class="note-box" style="margin-bottom:16px">';
+    switchHtml += '<strong>Frontend Max Scale:</strong> ';
+    switchHtml += fmtN(feMaxNodes) + ' nodes — using ' + feUtilPct + '% capacity';
+    switchHtml += '<br><span style="color:var(--text3);font-size:11px">Formula: spine ports (' + feSpine.ports + ') × leaf downlinks (' + feEffDownlinks + ') ÷ links/server (' + feLinksPerServer + ')</span>';
+    switchHtml += '</div>';
+  }
+
   let optRows = [];
   if (feSpineCount > 0) {
     const feUplinkTotal = feLeafCount * feSpineCount;
