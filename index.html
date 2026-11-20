@@ -1112,6 +1112,16 @@
               <div class="hint">server ↔ frontend leaf</div>
             </div>
             <div class="field">
+              <label for="fe-oversub">Oversubscription target</label>
+              <select id="fe-oversub" onchange="clearResults()">
+                <option value="1">1:1 (non-blocking)</option>
+                <option value="2">2:1</option>
+                <option value="3">3:1</option>
+                <option value="4" selected>4:1</option>
+              </select>
+              <div class="hint">spine count scales to meet this target (min 2)</div>
+            </div>
+            <div class="field">
               <label for="fe-leaf">Frontend leaf switch</label>
               <select id="fe-leaf" onchange="syncFESpineOptions(); clearResults()"></select>
             </div>
@@ -1609,7 +1619,8 @@ function updateSectionSummaries() {
   if (document.getElementById('summary-fe')) {
     if (feOn) {
       const feSpeed = document.getElementById('fe-nic-speed')?.value || '';
-      let feSummary = 'On · ' + feSpeed + 'G';
+      const feOversub = document.getElementById('fe-oversub')?.value || '';
+      let feSummary = 'On · ' + feSpeed + 'G · ' + feOversub + ':1';
       const feTarget = getFETargetNodes();
       if (feTarget > 0) feSummary += ' · scale→' + feTarget;
       document.getElementById('summary-fe').textContent = feSummary;
@@ -2174,6 +2185,7 @@ function resetInputs() {
   setFEEnabled(false);
   document.getElementById('fe-links-per-server').value = 1;
   document.getElementById('fe-nic-speed').value = '25';
+  document.getElementById('fe-oversub').value = '4';
   document.getElementById('fe-reserved-ports').value = 0;
   setFEScaleOut(false);
   setStorEnabled(false);
@@ -3187,6 +3199,7 @@ function calculateFE(hosts) {
   const feNicSpeed = parseInt(document.getElementById('fe-nic-speed').value) || 25;
   const feLeafName = document.getElementById('fe-leaf').value;
   const feSpineVal = document.getElementById('fe-spine').value;
+  const feOversub = parseInt(document.getElementById('fe-oversub').value) || 4;
 
   const feLeaf = FE_PLATFORMS.find(p => p.name === feLeafName);
   if (!feLeaf) return null;
@@ -3219,7 +3232,9 @@ function calculateFE(hosts) {
         + ' frontend leaves require one port each on every spine, but ' + feSpine.name
         + ' provides only ' + fmtN(feSpine.ports) + ' ports. Select a larger spine (e.g. 7060X6-64PE with 128×400G) or a higher-capacity frontend leaf.' };
     }
-    feSpineCount = 2;
+    const downlinkBW = linksPerLeaf * feNicSpeed;
+    const uplinksNeeded = Math.ceil(downlinkBW / (feLeaf.uplinkSpeed * feOversub));
+    feSpineCount = Math.min(Math.max(2, uplinksNeeded), feLeaf.uplinkPorts);
     bundleSize = 1;
     actualOversub = ((linksPerLeaf * feNicSpeed) / (feSpineCount * feLeaf.uplinkSpeed)).toFixed(1);
   }
