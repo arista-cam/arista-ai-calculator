@@ -3228,16 +3228,17 @@ function calculateFE(hosts) {
     feSpine = FE_SPINE_PLATFORMS[spIdx] || null;
   }
   if (feSpine && feLeaf.uplinkPorts > 0) {
-    if (targetLeafCount > feSpine.ports) {
-      return { error: 'Frontend full mesh is not feasible: ' + fmtN(targetLeafCount)
-        + ' frontend leaves require one port each on every spine, but ' + feSpine.name
-        + ' provides only ' + fmtN(feSpine.ports) + ' ports. Select a larger spine (e.g. 7060X6-64PE with 128×400G) or a higher-capacity frontend leaf.' };
-    }
     const downlinkBW = linksPerLeaf * feNicSpeed;
-    const uplinksNeeded = Math.ceil(downlinkBW / (feLeaf.uplinkSpeed * feOversub));
-    feSpineCount = Math.min(Math.max(2, uplinksNeeded), feLeaf.uplinkPorts);
-    bundleSize = 1;
-    actualOversub = ((linksPerLeaf * feNicSpeed) / (feSpineCount * feLeaf.uplinkSpeed)).toFixed(1);
+    const uplinksPerLeaf = Math.min(Math.ceil(downlinkBW / (feLeaf.uplinkSpeed * feOversub)), feLeaf.uplinkPorts);
+    const totalUplinks = targetLeafCount * uplinksPerLeaf;
+    feSpineCount = Math.max(2, Math.ceil(totalUplinks / feSpine.ports));
+    if (feSpineCount * feSpine.ports < totalUplinks) {
+      return { error: 'Frontend spine capacity exceeded: ' + fmtN(totalUplinks)
+        + ' total uplinks across ' + fmtN(targetLeafCount) + ' leaves, but ' + feSpineCount
+        + ' × ' + feSpine.name + ' (' + feSpine.ports + ' ports) cannot accommodate them. Select a larger spine.' };
+    }
+    bundleSize = Math.ceil(uplinksPerLeaf / feSpineCount);
+    actualOversub = ((linksPerLeaf * feNicSpeed) / (uplinksPerLeaf * feLeaf.uplinkSpeed)).toFixed(1);
   }
 
   const feTotalSwitches = feLeafCount + feSpineCount;
@@ -3245,7 +3246,7 @@ function calculateFE(hosts) {
   const leafDlOptics = Math.ceil(feLinksTotal / feBreakout);
   const hostOptics = feLinksTotal;
   const dlOptics = leafDlOptics + hostOptics;
-  const ulOptics = feSpineCount > 0 ? feLeafCount * feSpineCount * 2 : 0;
+  const ulOptics = feSpineCount > 0 ? feSpineLinks * 2 : 0;
   const feTotalOptics = dlOptics + ulOptics;
   const dlOpticW = leafDlOptics * (OPTIC_POWER[feLeaf.portSpeed]?.conventional || 3.5)
     + hostOptics * (OPTIC_POWER[feNicSpeed]?.conventional || 1.5);
@@ -3260,15 +3261,17 @@ function calculateFE(hosts) {
   const feSwitch80W = Math.round(feSwitchMaxW * 0.8);
   const feOpticW = dlOpticW + ulOpticW;
 
-  const feSpineLinks = feSpineCount > 0 ? feLeafCount * feSpineCount : 0;
-  const feUplinksPerLeaf = feSpineCount;
+  const downlinkBW = linksPerLeaf * feNicSpeed;
+  const uplinksPerLeaf = feSpineCount > 0 ? Math.min(Math.ceil(downlinkBW / (feLeaf.uplinkSpeed * feOversub)), feLeaf.uplinkPorts) : 0;
+  const feSpineLinks = feSpineCount > 0 ? feLeafCount * uplinksPerLeaf : 0;
+  const portsPerSpine = feSpineCount > 0 ? Math.ceil(feSpineLinks / feSpineCount) : 0;
   let switchHtml = '';
   if (feSpineCount > 0) {
     const spineRows = [
       ['Spine platform', feSpine.desc],
       ['Total frontend spines', feSpineCount],
-      ['Downlink ports used', feLeafCount + ' of ' + feSpine.ports],
-      ['Leaf ↔ spine links', fmtN(feSpineLinks) + ' (' + feLeafCount + ' leaves × ' + feSpineCount + ' spines)'],
+      ['Ports used per spine', portsPerSpine + ' of ' + feSpine.ports],
+      ['Leaf ↔ spine links', fmtN(feSpineLinks) + ' (' + feLeafCount + ' leaves × ' + uplinksPerLeaf + ' uplinks)'],
     ];
     if (feTargetNodes > hosts) {
       spineRows.push(['Pre-provisioned for', fmtN(feTargetNodes) + ' nodes (' + fmtN(targetLeafCount) + ' leaves)']);
@@ -3284,12 +3287,12 @@ function calculateFE(hosts) {
   ];
   if (feReservedPorts > 0) leafRows.push(['Reserved ports per leaf', feReservedPorts + ' (for storage, mgmt, or growth)']);
   if (feSpineCount > 0) {
-    leafRows.push(['Uplinks per leaf', feUplinksPerLeaf + ' × ' + feLeaf.uplinkSpeed + 'G (of ' + feLeaf.uplinkPorts + ' available)']);
-    leafRows.push(['Links per spine', bundleSize]);
+    leafRows.push(['Uplinks per leaf', uplinksPerLeaf + ' × ' + feLeaf.uplinkSpeed + 'G (of ' + feLeaf.uplinkPorts + ' available)']);
+    leafRows.push(['Links per spine', bundleSize + ' (uplinks distributed across ' + feSpineCount + ' spines)']);
     leafRows.push(['Oversubscription', actualOversub + ':1']);
   }
   switchHtml += mkSection(iconBranch(), 'Frontend Leaf layer', leafRows,
-  feSpineCount > 0 ? 'Full mesh: each frontend leaf connects to every frontend spine.' : 'Single-tier: all servers connect directly to frontend leaves.');
+  feSpineCount > 0 ? 'Leaf uplinks distributed across ' + feSpineCount + ' spines (' + bundleSize + ' link' + (bundleSize > 1 ? 's' : '') + ' per spine per leaf).' : 'Single-tier: all servers connect directly to frontend leaves.');
 
   if (feSpineCount > 0) {
     const feMaxLeaves = feSpine.ports;
@@ -3304,10 +3307,9 @@ function calculateFE(hosts) {
 
   let optRows = [];
   if (feSpineCount > 0) {
-    const feUplinkTotal = feLeafCount * feSpineCount;
-    optRows.push(['Frontend leaf ↔ spine links', fmtN(feUplinkTotal)]);
-    optRows.push(['In frontend spine · ' + feOpticType(feLeaf.uplinkSpeed), fmtN(feUplinkTotal)]);
-    optRows.push(['In frontend leaf (spine-facing) · ' + feOpticType(feLeaf.uplinkSpeed), fmtN(feUplinkTotal)]);
+    optRows.push(['Frontend leaf ↔ spine links', fmtN(feSpineLinks)]);
+    optRows.push(['In frontend spine · ' + feOpticType(feLeaf.uplinkSpeed), fmtN(feSpineLinks)]);
+    optRows.push(['In frontend leaf (spine-facing) · ' + feOpticType(feLeaf.uplinkSpeed), fmtN(feSpineLinks)]);
     optRows.push(['Frontend fabric subtotal', fmtN(ulOptics), true]);
   }
   optRows.push(['Host ↔ frontend leaf links', fmtN(feLinksTotal), false, feSpineCount > 0]);
@@ -3343,7 +3345,7 @@ function calculateFE(hosts) {
   summaryContent += metric(fmtN(feLeafCount), 'Frontend Leaves', feLeaf.name);
   summaryContent += metric(fmtN(feTotalSwitches), 'Total FE Switches', 'all tiers');
   summaryContent += feSpineCount > 0
-    ? metric(actualOversub + ':1', 'Frontend Oversub', linksPerLeaf + ' links/leaf × ' + feNicSpeed + 'G / ' + feSpineCount + '×' + feLeaf.uplinkSpeed + 'G')
+    ? metric(actualOversub + ':1', 'Frontend Oversub', linksPerLeaf + ' links/leaf × ' + feNicSpeed + 'G / ' + uplinksPerLeaf + '×' + feLeaf.uplinkSpeed + 'G')
     : metric('N/A', 'Frontend Oversub', 'single-tier fabric (no spine layer)');
   summaryContent += '</div>';
 
@@ -3351,7 +3353,7 @@ function calculateFE(hosts) {
   let feNodes = [];
   if (feSpineCount > 0) {
     feNodes.push({ title: '1× Spine Switch', sub: feSpine.name + '\n' + feSpine.ports + '×' + feLeaf.uplinkSpeed + 'G', stacked: feSpineCount > 1 });
-    feNodes.push({ link: (Number.isInteger(bundleSize) ? bundleSize : bundleSize.toFixed(1)) + '× ' + feLeaf.uplinkSpeed + 'G uplinks', optic: { conv: feOpticType(feLeaf.uplinkSpeed), lpo: feOpticType(feLeaf.uplinkSpeed) } });
+    feNodes.push({ link: uplinksPerLeaf + '× ' + feLeaf.uplinkSpeed + 'G uplinks (' + bundleSize + '/spine)', optic: { conv: feOpticType(feLeaf.uplinkSpeed), lpo: feOpticType(feLeaf.uplinkSpeed) } });
   }
   feNodes.push({ title: '1× Leaf Switch', sub: feLeaf.name + '\n' + feLeaf.downlinkPorts + '×' + feLeaf.portSpeed + 'G + ' + feLeaf.uplinkPorts + '×' + feLeaf.uplinkSpeed + 'G', stacked: feLeafCount > 1 });
   feNodes.push({ link: feLinksPerNode + '× ' + feNicSpeed + 'G links', optic: { conv: feOpticType(feLeaf.portSpeed), lpo: feOpticType(feLeaf.portSpeed) } });
