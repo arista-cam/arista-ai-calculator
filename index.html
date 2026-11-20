@@ -1736,6 +1736,7 @@ const FE_SPINE_PLATFORMS = [
   { name: '7280CR3-36S',  ports: 36, speed: 100, desc: '7280CR3-36S (36×100G)',  powerTyp: 254, powerMax: 690, ru: 1 },
   { name: '7280CR3-32P4', ports: 32, speed: 100, desc: '7280CR3-32P4 (32×100G)', powerTyp: 535, powerMax: 849, ru: 1 },
   { name: '7060DX5-64S',  ports: 64,  speed: 400, desc: '7060DX5-64S (64×400G)',              powerTyp: 548, powerMax: 1247, ru: 1 },
+  { name: '7060X6-32PE',  ports: 64,  speed: 400, desc: '7060X6-32PE (64×400G via 2:1 breakout)',  powerTyp: 348, powerMax: 1136, ru: 1 },
   { name: '7060X6-64PE',  ports: 128, speed: 400, desc: '7060X6-64PE (128×400G via 2:1 breakout)', powerTyp: 640, powerMax: 2218, ru: 2 },
   { name: '7060X6-32',    ports: 32, speed: 800, desc: '7060X6 32-port (32×800G)',  powerTyp: 320, powerMax: 600, ru: 1 },
   { name: '7060X6-64',    ports: 64, speed: 800, desc: '7060X6 64-port (64×800G)',  powerTyp: 640, powerMax: 1194, ru: 2 },
@@ -2863,7 +2864,7 @@ function fabricReach(leafPS, spinePS) {
 }
 
 function feOpticType(speed) {
-  return { 10: 'SFP+ 10G-SR', 25: 'SFP28 25G-SR', 100: 'QSFP28 100G-SR4', 200: 'QSFP56 200G SR4', 400: 'OSFP 400G 2DR4', 800: 'OSFP 800G 2DR4' }[speed] || speed + 'G';
+  return { 10: 'SFP+ 10G-SR', 25: 'SFP28 25G-SR', 100: 'QSFP28 100G-SR4', 200: 'QSFP56 200G SR4', 400: 'QSFP-DD 400G-SR8', 800: 'OSFP 800G 2DR4' }[speed] || speed + 'G';
 }
 
 function toggleOpticMode(mode) {
@@ -3241,10 +3242,13 @@ function calculateFE(hosts) {
 
   const feTotalSwitches = feLeafCount + feSpineCount;
 
-  const dlOptics = feLinksTotal * 2;
+  const leafDlOptics = Math.ceil(feLinksTotal / feBreakout);
+  const hostOptics = feLinksTotal;
+  const dlOptics = leafDlOptics + hostOptics;
   const ulOptics = feSpineCount > 0 ? feLeafCount * feSpineCount * 2 : 0;
   const feTotalOptics = dlOptics + ulOptics;
-  const dlOpticW = dlOptics * (OPTIC_POWER[feNicSpeed]?.conventional || 1.5);
+  const dlOpticW = leafDlOptics * (OPTIC_POWER[feLeaf.portSpeed]?.conventional || 3.5)
+    + hostOptics * (OPTIC_POWER[feNicSpeed]?.conventional || 1.5);
   const ulOpticW = ulOptics * (OPTIC_POWER[feLeaf.uplinkSpeed]?.conventional || 3.5);
 
   const feLeafPowerTyp = feLeafCount * feLeaf.powerTyp;
@@ -3307,8 +3311,8 @@ function calculateFE(hosts) {
     optRows.push(['Frontend fabric subtotal', fmtN(ulOptics), true]);
   }
   optRows.push(['Host ↔ frontend leaf links', fmtN(feLinksTotal), false, feSpineCount > 0]);
-  optRows.push(['In frontend leaf (host-facing) · ' + feOpticType(feNicSpeed), fmtN(feLinksTotal)]);
-  optRows.push(['In host NIC · ' + feOpticType(feNicSpeed), fmtN(feLinksTotal)]);
+  optRows.push(['In frontend leaf (host-facing) · ' + feOpticType(feLeaf.portSpeed), fmtN(leafDlOptics) + (feBreakout > 1 ? ' (' + feBreakout + ':1 breakout)' : '')]);
+  optRows.push(['In host NIC · ' + feOpticType(feNicSpeed), fmtN(hostOptics)]);
   optRows.push(['Frontend host subtotal', fmtN(dlOptics), true]);
   optRows.push(['Frontend grand total optics', fmtN(feTotalOptics), true]);
   const optHtml = opticsSection(optRows,
@@ -3349,8 +3353,8 @@ function calculateFE(hosts) {
     feNodes.push({ title: '1× Spine Switch', sub: feSpine.name + '\n' + feSpine.ports + '×' + feLeaf.uplinkSpeed + 'G', stacked: feSpineCount > 1 });
     feNodes.push({ link: (Number.isInteger(bundleSize) ? bundleSize : bundleSize.toFixed(1)) + '× ' + feLeaf.uplinkSpeed + 'G uplinks', optic: { conv: feOpticType(feLeaf.uplinkSpeed), lpo: feOpticType(feLeaf.uplinkSpeed) } });
   }
-  feNodes.push({ title: '1× Leaf Switch', sub: feLeaf.name + '\n' + feLeaf.downlinkPorts + '×' + feNicSpeed + 'G + ' + feLeaf.uplinkPorts + '×' + feLeaf.uplinkSpeed + 'G', stacked: feLeafCount > 1 });
-  feNodes.push({ link: feLinksPerNode + '× ' + feNicSpeed + 'G links', optic: { conv: feOpticType(feNicSpeed), lpo: feOpticType(feNicSpeed) } });
+  feNodes.push({ title: '1× Leaf Switch', sub: feLeaf.name + '\n' + feLeaf.downlinkPorts + '×' + feLeaf.portSpeed + 'G + ' + feLeaf.uplinkPorts + '×' + feLeaf.uplinkSpeed + 'G', stacked: feLeafCount > 1 });
+  feNodes.push({ link: feLinksPerNode + '× ' + feNicSpeed + 'G links', optic: { conv: feOpticType(feLeaf.portSpeed), lpo: feOpticType(feLeaf.portSpeed) } });
   feNodes.push({ title: '1× Compute Node', sub: 'Frontend NIC', stacked: false });
 
   const topoTiers = [{ id: 'feLeaf', label: feLeaf.name, perPlane: feLeafCount, radix: feLeaf.downlinkPorts }];
